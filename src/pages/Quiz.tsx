@@ -3,10 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Clock, ChevronLeft, ChevronRight, Flag } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Question {
   id: string;
@@ -16,12 +18,20 @@ interface Question {
   subject: string;
   marks: number;
   negative_marks: number;
+  type: string;
 }
 
 interface Answer {
   questionId: string;
   selected: string | null;
   isCorrect: boolean;
+  markedForReview?: boolean;
+}
+
+interface SubjectGroup {
+  subject: string;
+  questions: Question[];
+  startIndex: number;
 }
 
 const Quiz = () => {
@@ -33,6 +43,7 @@ const Quiz = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(true);
   const [testName, setTestName] = useState("");
+  const [textAnswer, setTextAnswer] = useState("");
 
   useEffect(() => {
     fetchQuizData();
@@ -52,10 +63,18 @@ const Quiz = () => {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  useEffect(() => {
+    const currentQuestion = questions[currentIndex];
+    if (currentQuestion) {
+      const currentAnswer = answers.get(currentQuestion.id);
+      setTextAnswer(currentAnswer?.selected || "");
+    }
+  }, [currentIndex, questions]);
+
   const fetchQuizData = async () => {
     try {
       const [questionsRes, testRes] = await Promise.all([
-        supabase.from("questions").select("*").eq("test_id", testId),
+        supabase.from("questions").select("id, question_text, options, correct, subject, marks, negative_marks, type").eq("test_id", testId),
         supabase.from("tests").select("name, duration_minutes").eq("id", testId).single()
       ]);
 
@@ -74,13 +93,73 @@ const Quiz = () => {
     }
   };
 
+  const subjectGroups: SubjectGroup[] = questions.reduce((acc, question, index) => {
+    const existingGroup = acc.find(g => g.subject === question.subject);
+    if (existingGroup) {
+      existingGroup.questions.push(question);
+    } else {
+      acc.push({
+        subject: question.subject,
+        questions: [question],
+        startIndex: index
+      });
+    }
+    return acc;
+  }, [] as SubjectGroup[]);
+
   const handleAnswer = (option: string) => {
     const question = questions[currentIndex];
+    const existing = answers.get(question.id);
     setAnswers(new Map(answers.set(question.id, {
       questionId: question.id,
       selected: option,
-      isCorrect: option === question.correct
+      isCorrect: option === question.correct,
+      markedForReview: existing?.markedForReview || false
     })));
+  };
+
+  const handleTextAnswer = (value: string) => {
+    setTextAnswer(value);
+    const question = questions[currentIndex];
+    const existing = answers.get(question.id);
+    setAnswers(new Map(answers.set(question.id, {
+      questionId: question.id,
+      selected: value,
+      isCorrect: value.trim().toLowerCase() === question.correct.toLowerCase(),
+      markedForReview: existing?.markedForReview || false
+    })));
+  };
+
+  const handleMarkForReview = () => {
+    const question = questions[currentIndex];
+    const existing = answers.get(question.id);
+    setAnswers(new Map(answers.set(question.id, {
+      questionId: question.id,
+      selected: existing?.selected || null,
+      isCorrect: existing?.isCorrect || false,
+      markedForReview: true
+    })));
+    toast.success("Marked for review");
+  };
+
+  const handleClear = () => {
+    const question = questions[currentIndex];
+    const newAnswers = new Map(answers);
+    newAnswers.delete(question.id);
+    setAnswers(newAnswers);
+    setTextAnswer("");
+  };
+
+  const handleSkip = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handleSaveAndNext = () => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
   };
 
   const handleSubmit = async () => {
@@ -172,6 +251,7 @@ const Quiz = () => {
   const currentQuestion = questions[currentIndex];
   const currentAnswer = answers.get(currentQuestion.id);
   const options = currentQuestion.options as Record<string, string>;
+  const isTextQuestion = !options || Object.keys(options).length === 0 || currentQuestion.type === 'text';
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
@@ -180,106 +260,245 @@ const Quiz = () => {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const getQuestionStatus = (qId: string) => {
+    const ans = answers.get(qId);
+    if (ans?.markedForReview) return 'marked';
+    if (ans?.selected) return 'answered';
+    return 'unanswered';
+  };
+
+  const answeredCount = Array.from(answers.values()).filter(a => a.selected && !a.markedForReview).length;
+  const markedCount = Array.from(answers.values()).filter(a => a.markedForReview).length;
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="bg-card border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold">{testName}</h1>
-            <div className="flex items-center gap-2 text-lg font-mono">
-              <Clock className="h-5 w-5" />
-              <span className={timeLeft < 300 ? "text-destructive" : ""}>{formatTime(timeLeft)}</span>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top Bar */}
+      <div className="bg-card border-b sticky top-0 z-10 shadow-sm">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-bold">{testName}</h1>
             </div>
-          </div>
-          <Progress value={(currentIndex + 1) / questions.length * 100} className="h-2" />
-          <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
-            <span>Question {currentIndex + 1} of {questions.length}</span>
-            <span>{answers.size} answered</span>
+            
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 text-lg font-mono">
+                <Clock className="h-5 w-5" />
+                <span className={timeLeft < 300 ? "text-destructive" : ""}>{formatTime(timeLeft)}</span>
+              </div>
+              <Button onClick={handleSubmit} size="lg" className="bg-warning hover:bg-warning/90 text-warning-foreground">
+                Submit Test
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      <main className="container mx-auto px-4 py-6 max-w-4xl">
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between mb-4">
-              <Badge variant="secondary">{currentQuestion.subject}</Badge>
-              <span className="text-sm text-muted-foreground">+{currentQuestion.marks} / -{currentQuestion.negative_marks}</span>
+      <div className="flex-1 flex">
+        {/* Question Navigation Sidebar */}
+        <div className="w-80 bg-card border-r hidden lg:block">
+          <div className="p-4 border-b bg-primary/5">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="h-5 w-5" />
+              <h2 className="font-bold">Question Navigation</h2>
             </div>
-            <p className="text-lg mb-6">{currentQuestion.question_text}</p>
-            
-            <div className="space-y-3">
-              {Object.entries(options).map(([key, value]) => (
-                <button
-                  key={key}
-                  onClick={() => handleAnswer(key)}
-                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                    currentAnswer?.selected === key
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/50 hover:bg-muted"
-                  }`}
-                >
-                  <span className="font-semibold mr-2">{key}.</span>
-                  {value}
-                </button>
+            <div className="grid grid-cols-3 gap-2 text-sm mt-3">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-success">{answeredCount}</div>
+                <div className="text-muted-foreground text-xs">Answered</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">{questions.length - answers.size}</div>
+                <div className="text-muted-foreground text-xs">Remaining</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-warning">{markedCount}</div>
+                <div className="text-muted-foreground text-xs">Marked</div>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground text-center mt-2">
+              {Math.round((answers.size / questions.length) * 100)}% Complete
+            </div>
+          </div>
+
+          <ScrollArea className="h-[calc(100vh-220px)]">
+            <div className="p-4 space-y-6">
+              {subjectGroups.map((group, groupIdx) => (
+                <div key={groupIdx}>
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    {group.subject}
+                    <span className="text-xs text-muted-foreground">({group.questions.length} ques.)</span>
+                  </h3>
+                  <div className="grid grid-cols-5 gap-2">
+                    {group.questions.map((q, idx) => {
+                      const globalIdx = questions.findIndex(question => question.id === q.id);
+                      const status = getQuestionStatus(q.id);
+                      return (
+                        <button
+                          key={q.id}
+                          onClick={() => setCurrentIndex(globalIdx)}
+                          className={`w-10 h-10 rounded-lg border-2 font-semibold text-sm transition-all ${
+                            globalIdx === currentIndex
+                              ? "border-primary bg-primary text-primary-foreground shadow-md"
+                              : status === 'answered'
+                              ? "border-success bg-success/10 text-success hover:bg-success/20"
+                              : status === 'marked'
+                              ? "border-warning bg-warning/10 text-warning hover:bg-warning/20"
+                              : "border-border hover:border-primary/50 hover:bg-muted"
+                          }`}
+                        >
+                          {globalIdx + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </ScrollArea>
 
-        <div className="flex items-center justify-between gap-4">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-            disabled={currentIndex === 0}
-          >
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Previous
-          </Button>
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => {
-              if (currentAnswer) {
-                const newAnswers = new Map(answers);
-                newAnswers.delete(currentQuestion.id);
-                setAnswers(newAnswers);
-              }
-            }}>
-              <Flag className="h-4 w-4 mr-2" />
-              Clear
-            </Button>
-            
-            {currentIndex === questions.length - 1 ? (
-              <Button onClick={handleSubmit}>Submit Test</Button>
-            ) : (
-              <Button
-                onClick={() => setCurrentIndex(Math.min(questions.length - 1, currentIndex + 1))}
-              >
-                Next
-                <ChevronRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
+          <div className="p-4 border-t">
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded bg-primary" />
+                <span>Current</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded border-2 border-success bg-success/10" />
+                <span>Answered</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded border-2 border-warning bg-warning/10" />
+                <span>Marked</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded border-2 border-border" />
+                <span>Skipped</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
-          {questions.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentIndex(idx)}
-              className={`w-10 h-10 rounded-lg border-2 font-semibold transition-all ${
-                idx === currentIndex
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : answers.has(questions[idx].id)
-                  ? "border-success bg-success/10 text-success"
-                  : "border-border hover:border-primary/50"
-              }`}
-            >
-              {idx + 1}
-            </button>
-          ))}
-        </div>
-      </main>
+        {/* Mobile Navigation Trigger */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="lg:hidden fixed bottom-4 left-4 z-20 rounded-full shadow-lg">
+              <FileText className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 p-0">
+            <SheetHeader className="p-4 border-b">
+              <SheetTitle>Question Navigation</SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(100vh-80px)]">
+              <div className="p-4 space-y-6">
+                {subjectGroups.map((group, groupIdx) => (
+                  <div key={groupIdx}>
+                    <h3 className="text-sm font-semibold mb-3">{group.subject} ({group.questions.length})</h3>
+                    <div className="grid grid-cols-5 gap-2">
+                      {group.questions.map((q, idx) => {
+                        const globalIdx = questions.findIndex(question => question.id === q.id);
+                        const status = getQuestionStatus(q.id);
+                        return (
+                          <button
+                            key={q.id}
+                            onClick={() => setCurrentIndex(globalIdx)}
+                            className={`w-10 h-10 rounded-lg border-2 font-semibold text-sm ${
+                              globalIdx === currentIndex
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : status === 'answered'
+                                ? "border-success bg-success/10"
+                                : status === 'marked'
+                                ? "border-warning bg-warning/10"
+                                : "border-border"
+                            }`}
+                          >
+                            {globalIdx + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+
+        {/* Main Question Area */}
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto px-4 py-6 max-w-4xl">
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-muted-foreground">Question {currentIndex + 1} of {questions.length}</span>
+                  </div>
+                  <Badge variant="secondary" className="text-sm">{currentQuestion.subject}</Badge>
+                </div>
+                
+                <p className="text-lg mb-6 leading-relaxed">{currentQuestion.question_text}</p>
+                
+                {isTextQuestion ? (
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Your Answer:</label>
+                    <Input
+                      type="text"
+                      placeholder="Type your answer here..."
+                      value={textAnswer}
+                      onChange={(e) => handleTextAnswer(e.target.value)}
+                      className="text-lg py-6"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(options).map(([key, value]) => (
+                      <button
+                        key={key}
+                        onClick={() => handleAnswer(key)}
+                        className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                          currentAnswer?.selected === key
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border hover:border-primary/50 hover:bg-muted"
+                        }`}
+                      >
+                        <span className="font-semibold mr-3">{key}.</span>
+                        {value}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-4 text-sm text-muted-foreground">
+                  <span>Marks: +{currentQuestion.marks}</span>
+                  <span className="mx-2">|</span>
+                  <span>Negative: -{currentQuestion.negative_marks}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleSkip}>
+                  Skip
+                </Button>
+                <Button variant="outline" onClick={handleClear}>
+                  Clear
+                </Button>
+              </div>
+
+              <div className="flex gap-2">
+                <Button variant="default" className="bg-warning hover:bg-warning/90 text-warning-foreground" onClick={handleMarkForReview}>
+                  Mark for Review
+                </Button>
+                <Button onClick={handleSaveAndNext}>
+                  Save & Next
+                </Button>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };

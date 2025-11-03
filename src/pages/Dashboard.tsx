@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, FileText, TrendingUp, User } from "lucide-react";
+import { Clock, FileText, TrendingUp, User, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 
 interface Test {
@@ -32,6 +32,7 @@ const Dashboard = () => {
         .from("tests")
         .select("*")
         .eq("status", "active")
+        .order("stream", { ascending: true })
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -43,6 +44,14 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+  const groupedTests = tests.reduce((acc, test) => {
+    if (!acc[test.stream]) {
+      acc[test.stream] = [];
+    }
+    acc[test.stream].push(test);
+    return acc;
+  }, {} as Record<string, typeof tests>);
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,61 +70,75 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Available Tests</h2>
-          <p className="text-muted-foreground">Choose a test to begin your assessment</p>
+          <h2 className="text-3xl font-bold mb-2">Available Tests by Class</h2>
+          <p className="text-muted-foreground">Choose your class to view available tests</p>
         </div>
 
         {loading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-6 bg-muted rounded w-3/4 mb-2" />
-                  <div className="h-4 bg-muted rounded w-1/2" />
-                </CardHeader>
-                <CardContent>
-                  <div className="h-20 bg-muted rounded" />
-                </CardContent>
-              </Card>
+          <div className="space-y-8">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="space-y-4">
+                <div className="h-8 bg-muted rounded w-48 animate-pulse" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(3)].map((_, j) => (
+                    <Card key={j} className="overflow-hidden">
+                      <CardContent className="p-6">
+                        <div className="space-y-3">
+                          <div className="h-6 bg-muted rounded animate-pulse" />
+                          <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         ) : tests.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No tests available at the moment</p>
+              <p className="text-muted-foreground">No tests available</p>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {tests.map((test) => (
-              <Card key={test.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <CardHeader>
-                  <div className="flex items-start justify-between mb-2">
-                    <CardTitle className="text-xl">{test.name}</CardTitle>
-                    <Badge variant="secondary">{test.stream}</Badge>
-                  </div>
-                  <CardDescription>{test.description || "Test your knowledge"}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      <span>{test.duration_minutes} minutes</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <FileText className="h-4 w-4" />
-                      <span>{test.total_questions} questions</span>
-                    </div>
-                  </div>
-                  <Button 
-                    className="w-full" 
-                    onClick={() => navigate(`/quiz/${test.id}`)}
-                  >
-                    Start Test
-                  </Button>
-                </CardContent>
-              </Card>
+          <div className="space-y-12">
+            {Object.entries(groupedTests).map(([stream, streamTests]) => (
+              <div key={stream} className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold">{stream}</h2>
+                  <Badge variant="outline">{streamTests.length} tests</Badge>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {streamTests.map((test) => (
+                    <Card key={test.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                      <CardHeader>
+                        <CardTitle className="text-xl">{test.name}</CardTitle>
+                        <CardDescription>{test.description || "Test your knowledge"}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3 mb-4">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            <span>{test.duration_minutes} minutes</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <BookOpen className="h-4 w-4" />
+                            <span>{test.total_questions} questions</span>
+                          </div>
+                        </div>
+                        <Button 
+                          className="w-full" 
+                          onClick={() => navigate(`/quiz/${test.id}`)}
+                        >
+                          Start Test
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
