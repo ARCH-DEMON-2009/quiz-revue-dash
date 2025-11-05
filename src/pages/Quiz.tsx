@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface Question {
   id: string;
   question_text: string;
+  image: string | null;
   options: any;
   correct: string;
   subject: string;
@@ -73,8 +74,15 @@ const Quiz = () => {
 
   const fetchQuizData = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please login to take the test");
+        navigate("/auth");
+        return;
+      }
+
       const [questionsRes, testRes] = await Promise.all([
-        supabase.from("questions").select("id, question_text, options, correct, subject, marks, negative_marks, type").eq("test_id", testId),
+        supabase.from("questions").select("id, question_text, image, options, correct, subject, marks, negative_marks, type").eq("test_id", testId),
         supabase.from("tests").select("name, duration_minutes").eq("id", testId).single()
       ]);
 
@@ -195,9 +203,17 @@ const Quiz = () => {
         isCorrect: ans.isCorrect
       }));
 
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please login to submit test");
+        navigate("/auth");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("test_results")
         .insert({
+          user_id: user.id,
           test_id: testId,
           test_name: testName,
           correct,
@@ -436,7 +452,20 @@ const Quiz = () => {
                   <Badge variant="secondary" className="text-sm">{currentQuestion.subject}</Badge>
                 </div>
                 
-                <p className="text-lg mb-6 leading-relaxed">{currentQuestion.question_text}</p>
+                <div className="space-y-4">
+                  {currentQuestion.image && (
+                    <div className="mb-4">
+                      <img 
+                        src={currentQuestion.image} 
+                        alt="Question" 
+                        className="max-w-full h-auto rounded-lg border shadow-sm"
+                      />
+                    </div>
+                  )}
+                  {currentQuestion.question_text && (
+                    <p className="text-lg leading-relaxed">{currentQuestion.question_text}</p>
+                  )}
+                </div>
                 
                 {isTextQuestion ? (
                   <div className="space-y-3">

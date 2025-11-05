@@ -8,6 +8,9 @@ import Quiz from "./pages/Quiz";
 import Results from "./pages/Results";
 import Review from "./pages/Review";
 import Profile from "./pages/Profile";
+import Auth from "./pages/Auth";
+import Analytics from "./pages/Analytics";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,10 +23,13 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/quiz/:testId" element={<Quiz />} />
           <Route path="/results/:resultId" element={<Results />} />
           <Route path="/review/:resultId" element={<Review />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

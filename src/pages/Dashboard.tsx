@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, FileText, TrendingUp, User, BookOpen } from "lucide-react";
+import { Clock, FileText, TrendingUp, User, BookOpen, BarChart, Trophy, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface Test {
   id: string;
@@ -21,11 +22,24 @@ const Dashboard = () => {
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchTests();
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    
+    setUser(user);
+    fetchTests();
+  };
 
   const fetchTests = async () => {
     try {
@@ -51,6 +65,16 @@ const Dashboard = () => {
     ? tests.filter(test => test.stream === selectedClass)
     : [];
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Logged out successfully");
+    navigate("/auth");
+  };
+
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b bg-card">
@@ -59,10 +83,24 @@ const Dashboard = () => {
             <FileText className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold">QuizMaster</h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-            <User className="h-4 w-4 mr-2" />
-            Profile
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/analytics")}>
+              <BarChart className="h-4 w-4 mr-2" />
+              Analytics
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/leaderboard")}>
+              <Trophy className="h-4 w-4 mr-2" />
+              Leaderboard
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+              <User className="h-4 w-4 mr-2" />
+              Profile
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </nav>
 
