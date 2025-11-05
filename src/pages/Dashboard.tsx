@@ -20,6 +20,7 @@ interface Test {
 const Dashboard = () => {
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,13 +46,10 @@ const Dashboard = () => {
     }
   };
 
-  const groupedTests = tests.reduce((acc, test) => {
-    if (!acc[test.stream]) {
-      acc[test.stream] = [];
-    }
-    acc[test.stream].push(test);
-    return acc;
-  }, {} as Record<string, typeof tests>);
+  const availableClasses = Array.from(new Set(tests.map(test => test.stream)));
+  const filteredTests = selectedClass 
+    ? tests.filter(test => test.stream === selectedClass)
+    : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,78 +67,105 @@ const Dashboard = () => {
       </nav>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold mb-2">Available Tests by Class</h2>
-          <p className="text-muted-foreground">Choose your class to view available tests</p>
-        </div>
+        {!selectedClass ? (
+          <>
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-2">Select Your Class</h2>
+              <p className="text-muted-foreground">Choose your class to view available tests</p>
+            </div>
 
-        {loading ? (
-          <div className="space-y-8">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="space-y-4">
-                <div className="h-8 bg-muted rounded w-48 animate-pulse" />
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {[...Array(3)].map((_, j) => (
-                    <Card key={j} className="overflow-hidden">
-                      <CardContent className="p-6">
-                        <div className="space-y-3">
-                          <div className="h-6 bg-muted rounded animate-pulse" />
-                          <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="overflow-hidden">
+                    <CardContent className="p-8">
+                      <div className="space-y-3">
+                        <div className="h-8 bg-muted rounded animate-pulse" />
+                        <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : tests.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No tests available</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-12">
-            {Object.entries(groupedTests).map(([stream, streamTests]) => (
-              <div key={stream} className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-bold">{stream}</h2>
-                  <Badge variant="outline">{streamTests.length} tests</Badge>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {streamTests.map((test) => (
-                    <Card key={test.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+            ) : availableClasses.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No classes available</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {availableClasses.map((className) => {
+                  const classTests = tests.filter(t => t.stream === className);
+                  return (
+                    <Card 
+                      key={className} 
+                      className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                      onClick={() => setSelectedClass(className)}
+                    >
                       <CardHeader>
-                        <CardTitle className="text-xl">{test.name}</CardTitle>
-                        <CardDescription>{test.description || "Test your knowledge"}</CardDescription>
+                        <CardTitle className="text-2xl">{className}</CardTitle>
+                        <CardDescription>Click to view available tests</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-3 mb-4">
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Clock className="h-4 w-4" />
-                            <span>{test.duration_minutes} minutes</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <BookOpen className="h-4 w-4" />
-                            <span>{test.total_questions} questions</span>
-                          </div>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <FileText className="h-5 w-5" />
+                          <span className="text-lg font-semibold">{classTests.length} Tests Available</span>
                         </div>
-                        <Button 
-                          className="w-full" 
-                          onClick={() => navigate(`/quiz/${test.id}`)}
-                        >
-                          Start Test
-                        </Button>
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="mb-8">
+              <Button 
+                variant="ghost" 
+                onClick={() => setSelectedClass(null)}
+                className="mb-4"
+              >
+                ← Back to Classes
+              </Button>
+              <div className="flex items-center gap-3">
+                <h2 className="text-3xl font-bold">{selectedClass}</h2>
+                <Badge variant="outline">{filteredTests.length} tests</Badge>
+              </div>
+              <p className="text-muted-foreground mt-2">Select a test to begin</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTests.map((test) => (
+                <Card key={test.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <CardHeader>
+                    <CardTitle className="text-xl">{test.name}</CardTitle>
+                    <CardDescription>{test.description || "Test your knowledge"}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>{test.duration_minutes} minutes</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <BookOpen className="h-4 w-4" />
+                        <span>{test.total_questions} questions</span>
+                      </div>
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => navigate(`/quiz/${test.id}`)}
+                    >
+                      Start Test
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </main>
     </div>
