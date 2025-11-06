@@ -40,32 +40,72 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      // Fetch top performers from user_analytics joined with user_profiles
-      const { data, error } = await supabase
-        .from("user_analytics")
+      // Fetch all users' test results
+      const { data: allResults, error: resultsError } = await supabase
+        .from("test_results")
         .select(`
           user_id,
-          average_score,
-          total_tests,
-          overall_accuracy,
-          rank_percentile,
+          percentage,
+          correct,
+          total,
           user_profiles!inner(name)
-        `)
-        .order("average_score", { ascending: false })
-        .limit(50);
+        `);
 
-      if (error) throw error;
+      if (resultsError) throw resultsError;
 
-      const formatted = data?.map((entry: any) => ({
-        user_id: entry.user_id,
-        name: entry.user_profiles?.name || "Unknown User",
-        average_score: entry.average_score,
-        total_tests: entry.total_tests,
-        overall_accuracy: entry.overall_accuracy,
-        rank_percentile: entry.rank_percentile
-      })) || [];
+      if (!allResults || allResults.length === 0) {
+        setLeaderboard([]);
+        setLoading(false);
+        return;
+      }
 
-      setLeaderboard(formatted);
+      // Group by user_id and calculate stats
+      const userStatsMap = new Map<string, {
+        name: string;
+        totalTests: number;
+        totalScore: number;
+        totalCorrect: number;
+        totalQuestions: number;
+      }>();
+
+      allResults.forEach((result: any) => {
+        const userId = result.user_id;
+        const existing = userStatsMap.get(userId) || {
+          name: result.user_profiles?.name || "Unknown User",
+          totalTests: 0,
+          totalScore: 0,
+          totalCorrect: 0,
+          totalQuestions: 0
+        };
+
+        existing.totalTests += 1;
+        existing.totalScore += result.percentage || 0;
+        existing.totalCorrect += result.correct || 0;
+        existing.totalQuestions += result.total || 0;
+
+        userStatsMap.set(userId, existing);
+      });
+
+      // Convert to array and calculate averages
+      const leaderboardData = Array.from(userStatsMap.entries()).map(([userId, stats]) => ({
+        user_id: userId,
+        name: stats.name,
+        average_score: stats.totalTests > 0 ? stats.totalScore / stats.totalTests : 0,
+        total_tests: stats.totalTests,
+        overall_accuracy: stats.totalQuestions > 0 ? (stats.totalCorrect / stats.totalQuestions) * 100 : 0,
+        rank_percentile: 0 // Will be calculated after sorting
+      }));
+
+      // Sort by average score
+      leaderboardData.sort((a, b) => b.average_score - a.average_score);
+
+      // Calculate percentiles
+      const totalUsers = leaderboardData.length;
+      leaderboardData.forEach((entry, index) => {
+        entry.rank_percentile = totalUsers > 0 ? ((totalUsers - index) / totalUsers) * 100 : 0;
+      });
+
+      setLeaderboard(leaderboardData.slice(0, 50));
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
       toast.error("Failed to load leaderboard");

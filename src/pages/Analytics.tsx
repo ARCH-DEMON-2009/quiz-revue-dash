@@ -43,14 +43,71 @@ const Analytics = () => {
 
   const fetchAnalytics = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("user_analytics")
+      // Fetch test results to calculate analytics
+      const { data: results, error: resultsError } = await supabase
+        .from("test_results")
         .select("*")
-        .eq("user_id", userId)
-        .single();
+        .eq("user_id", userId);
 
-      if (error) throw error;
-      setAnalytics(data);
+      if (resultsError) throw resultsError;
+
+      if (!results || results.length === 0) {
+        setAnalytics(null);
+        setLoading(false);
+        return;
+      }
+
+      // Calculate analytics from results
+      const totalTests = results.length;
+      const totalQuestions = results.reduce((sum, r) => sum + (r.total || 0), 0);
+      const totalCorrect = results.reduce((sum, r) => sum + (r.correct || 0), 0);
+      const averageScore = results.reduce((sum, r) => sum + (r.percentage || 0), 0) / totalTests;
+      const overallAccuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+
+      // Calculate subject-wise accuracy
+      let physicsCorrect = 0, physicsTotal = 0;
+      let chemistryCorrect = 0, chemistryTotal = 0;
+      let mathsCorrect = 0, mathsTotal = 0;
+
+      results.forEach(result => {
+        const subjectStats = result.subject_stats as any;
+        if (subjectStats) {
+          if (subjectStats.Physics) {
+            physicsCorrect += subjectStats.Physics.correct || 0;
+            physicsTotal += subjectStats.Physics.total || 0;
+          }
+          if (subjectStats.Chemistry) {
+            chemistryCorrect += subjectStats.Chemistry.correct || 0;
+            chemistryTotal += subjectStats.Chemistry.total || 0;
+          }
+          if (subjectStats.Mathematics) {
+            mathsCorrect += subjectStats.Mathematics.correct || 0;
+            mathsTotal += subjectStats.Mathematics.total || 0;
+          }
+        }
+      });
+
+      const physicsAccuracy = physicsTotal > 0 ? (physicsCorrect / physicsTotal) * 100 : 0;
+      const chemistryAccuracy = chemistryTotal > 0 ? (chemistryCorrect / chemistryTotal) * 100 : 0;
+      const mathsAccuracy = mathsTotal > 0 ? (mathsCorrect / mathsTotal) * 100 : 0;
+
+      // Calculate study time (sum of time_taken in minutes, convert to hours)
+      const studyTimeHours = Math.floor(
+        results.reduce((sum, r) => sum + (r.time_taken || 0), 0) / 60
+      );
+
+      setAnalytics({
+        total_tests: totalTests,
+        total_questions: totalQuestions,
+        total_correct: totalCorrect,
+        average_score: averageScore,
+        overall_accuracy: overallAccuracy,
+        physics_accuracy: physicsAccuracy,
+        chemistry_accuracy: chemistryAccuracy,
+        maths_accuracy: mathsAccuracy,
+        study_time_hours: studyTimeHours,
+        rank_percentile: 0 // This would need a separate calculation based on all users
+      });
     } catch (error) {
       console.error("Error fetching analytics:", error);
       toast.error("Failed to load analytics");

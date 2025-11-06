@@ -169,6 +169,7 @@ const Review = () => {
                     {Object.entries(options).map(([key, value]) => {
                       const isUserAnswer = answer?.selected === key;
                       const isCorrectAnswer = question.correct === key;
+                      const showCorrectAnswer = isCorrectAnswer || (!answer?.isCorrect);
 
                       return (
                         <div
