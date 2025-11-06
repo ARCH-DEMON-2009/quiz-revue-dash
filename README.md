@@ -71,23 +71,3 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
-
-## Deploying to Vercel
-
-This project is a Vite + React + TypeScript app and can be deployed to Vercel as a static site.
-
-1. Connect your Git repository to Vercel (or use the `vercel` CLI).
-2. Vercel will run `npm run build` which uses `vite build` and output files to the `dist/` folder.
-3. This repo includes a `vercel.json` configured to use `@vercel/static-build` and a SPA fallback so client-side routing works.
-
-Notes:
-- Do not commit any `.env` files. Add environment variables in the Vercel dashboard under Project Settings > Environment Variables.
-- For local testing you can run:
-
-```bash
-npm install
-npm run build
-npm run start # runs `vite preview --port $PORT`
-```
-
-If you need serverless endpoints, add them under the `/api` directory and Vercel will deploy them as serverless functions.
