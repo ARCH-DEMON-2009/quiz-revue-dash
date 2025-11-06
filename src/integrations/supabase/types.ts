@@ -14,48 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      payment_transactions: {
-        Row: {
-          amount: number
-          created_at: string | null
-          currency: string | null
-          gateway_response: Json | null
-          id: string
-          order_id: string | null
-          payment_id: string
-          payment_method: string | null
-          status: string
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          currency?: string | null
-          gateway_response?: Json | null
-          id?: string
-          order_id?: string | null
-          payment_id: string
-          payment_method?: string | null
-          status: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          currency?: string | null
-          gateway_response?: Json | null
-          id?: string
-          order_id?: string | null
-          payment_id?: string
-          payment_method?: string | null
-          status?: string
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       premium_users: {
         Row: {
           created_at: string | null
@@ -66,6 +24,8 @@ export type Database = {
           name: string
           original_amount: number | null
           payment_id: string
+          plan_duration_type: string | null
+          plan_duration_value: number | null
           plan_months: number | null
           promo_code_used: string | null
           start_date: string | null
@@ -82,6 +42,8 @@ export type Database = {
           name: string
           original_amount?: number | null
           payment_id: string
+          plan_duration_type?: string | null
+          plan_duration_value?: number | null
           plan_months?: number | null
           promo_code_used?: string | null
           start_date?: string | null
@@ -98,6 +60,8 @@ export type Database = {
           name?: string
           original_amount?: number | null
           payment_id?: string
+          plan_duration_type?: string | null
+          plan_duration_value?: number | null
           plan_months?: number | null
           promo_code_used?: string | null
           start_date?: string | null
@@ -455,6 +419,7 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          is_blocked: boolean | null
           name: string
           profile_photo: string | null
           profile_picture: string | null
@@ -468,6 +433,7 @@ export type Database = {
           created_at?: string | null
           email: string
           id?: string
+          is_blocked?: boolean | null
           name: string
           profile_photo?: string | null
           profile_picture?: string | null
@@ -481,6 +447,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          is_blocked?: boolean | null
           name?: string
           profile_photo?: string | null
           profile_picture?: string | null
@@ -606,6 +573,22 @@ export type Database = {
       }
     }
     Views: {
+      admin_user_stats: {
+        Row: {
+          account_type: string | null
+          average_score: number | null
+          email: string | null
+          is_blocked: boolean | null
+          member_since: string | null
+          name: string | null
+          premium_expiry: string | null
+          total_tests: number | null
+          trial_start: string | null
+          user_id: string | null
+          whatsapp_number: string | null
+        }
+        Relationships: []
+      }
       user_dashboard_view: {
         Row: {
           access_status: string | null
@@ -631,6 +614,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: never; Returns: boolean }
       is_service_role: { Args: never; Returns: boolean }
     }
     Enums: {

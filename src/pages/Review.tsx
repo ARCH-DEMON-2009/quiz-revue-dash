@@ -14,6 +14,7 @@ interface Question {
   options: any;
   correct: string;
   subject: string;
+  image?: string;
 }
 
 interface UserAnswer {
@@ -163,6 +164,15 @@ const Review = () => {
                     <span className="text-sm text-muted-foreground">Q{idx + 1}</span>
                   </div>
 
+                  {question.image && (
+                    <div className="mb-4">
+                      <img 
+                        src={question.image} 
+                        alt="Question" 
+                        className="max-w-full h-auto rounded-lg border"
+                      />
+                    </div>
+                  )}
                   <p className="text-lg mb-4">{question.question_text}</p>
 
                   <div className="space-y-2">
