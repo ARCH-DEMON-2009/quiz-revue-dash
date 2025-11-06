@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, Target, Award, ChevronLeft, Clock } from "lucide-react";
+import { TrendingUp, Target, Award, ChevronLeft, Clock, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Stats {
@@ -98,10 +98,17 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/")}>
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
+          >
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Help & Support
           </Button>
         </div>
       </nav>
