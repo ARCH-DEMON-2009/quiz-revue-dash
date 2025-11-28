@@ -266,8 +266,25 @@ const Quiz = () => {
 
   const currentQuestion = questions[currentIndex];
   const currentAnswer = answers.get(currentQuestion.id);
-  const options = currentQuestion.options as Record<string, string>;
-  const isTextQuestion = !options || Object.keys(options).length === 0 || currentQuestion.type === 'text';
+  
+  // Parse options - handle both string and object formats
+  const parseOptions = (opts: any): Record<string, string> => {
+    if (!opts) return {};
+    if (typeof opts === 'string') {
+      try {
+        return JSON.parse(opts);
+      } catch {
+        return {};
+      }
+    }
+    if (typeof opts === 'object' && !Array.isArray(opts)) {
+      return opts;
+    }
+    return {};
+  };
+  
+  const options = parseOptions(currentQuestion.options);
+  const isTextQuestion = Object.keys(options).length === 0 || currentQuestion.type === 'text';
 
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
