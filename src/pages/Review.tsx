@@ -148,7 +148,24 @@ const Review = () => {
         <div className="space-y-6">
           {filteredQuestions.map((question, idx) => {
             const answer = getAnswerForQuestion(question.id);
-            const options = question.options as Record<string, string>;
+            
+            // Parse options - handle both string and object formats
+            const parseOptions = (opts: any): Record<string, string> => {
+              if (!opts) return {};
+              if (typeof opts === 'string') {
+                try {
+                  return JSON.parse(opts);
+                } catch {
+                  return {};
+                }
+              }
+              if (typeof opts === 'object' && !Array.isArray(opts)) {
+                return opts;
+              }
+              return {};
+            };
+            
+            const options = parseOptions(question.options);
 
             return (
               <Card key={question.id}>
@@ -179,7 +196,6 @@ const Review = () => {
                     {Object.entries(options).map(([key, value]) => {
                       const isUserAnswer = answer?.selected === key;
                       const isCorrectAnswer = question.correct === key;
-                      const showCorrectAnswer = isCorrectAnswer || (!answer?.isCorrect);
 
                       return (
                         <div
@@ -208,6 +224,16 @@ const Review = () => {
                       );
                     })}
                   </div>
+
+                  {/* Show correct answer summary for wrong/skipped questions */}
+                  {(!answer?.isCorrect || !answer?.selected) && (
+                    <div className="mt-4 p-3 bg-success/5 border border-success/20 rounded-lg">
+                      <p className="text-sm font-medium text-success">
+                        Correct Answer: {question.correct}
+                        {options[question.correct] && ` - ${options[question.correct]}`}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );

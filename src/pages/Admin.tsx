@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Search, Users, Crown, Clock, LogOut } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface UserData {
@@ -25,6 +26,8 @@ interface UserData {
   trial_start: string | null;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 const Admin = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -34,24 +37,46 @@ const Admin = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
+  const [subjects, setSubjects] = useState<string[]>([]);
 
   useEffect(() => {
     const adminAuth = sessionStorage.getItem("adminAuth");
     if (adminAuth === "authenticated") {
       setIsAuthenticated(true);
       fetchUsers();
+      fetchSubjects();
     }
   }, []);
 
   useEffect(() => {
     filterUsers();
+    setCurrentPage(1);
   }, [searchQuery, users, activeTab]);
+
+  const fetchSubjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("questions")
+        .select("subject")
+        .neq("subject", null);
+
+      if (error) throw error;
+      
+      const uniqueSubjects = [...new Set((data || []).map(q => q.subject))].filter(Boolean);
+      setSubjects(uniqueSubjects);
+    } catch (error) {
+      console.error("Error fetching subjects:", error);
+    }
+  };
 
   const handleLogin = () => {
     if (password === "admin123") {
       sessionStorage.setItem("adminAuth", "authenticated");
       setIsAuthenticated(true);
       fetchUsers();
+      fetchSubjects();
       toast.success("Welcome to Admin Panel");
     } else {
       toast.error("Invalid password");
@@ -67,7 +92,6 @@ const Admin = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Fetch all users from user_profiles table
       const { data: profiles, error: profilesError } = await supabase
         .from("user_profiles")
         .select("*");
@@ -77,34 +101,24 @@ const Admin = () => {
         throw profilesError;
       }
 
-      // Fetch premium users
       const { data: premiumUsers, error: premiumError } = await supabase
         .from("premium_users")
         .select("user_id, expiry_date");
 
-      if (premiumError) {
-        console.error("Premium users error:", premiumError);
-      }
+      if (premiumError) console.error("Premium users error:", premiumError);
 
-      // Fetch trial users
       const { data: trialUsers, error: trialError } = await supabase
         .from("user_trials")
         .select("user_id, start_date");
 
-      if (trialError) {
-        console.error("Trial users error:", trialError);
-      }
+      if (trialError) console.error("Trial users error:", trialError);
 
-      // Fetch test results for stats
       const { data: testResults, error: resultsError } = await supabase
         .from("test_results")
         .select("user_id, percentage");
 
-      if (resultsError) {
-        console.error("Results error:", resultsError);
-      }
+      if (resultsError) console.error("Results error:", resultsError);
 
-      // Create lookup maps
       const premiumMap = new Map(
         (premiumUsers || []).map((p) => [p.user_id, p.expiry_date])
       );
@@ -112,7 +126,6 @@ const Admin = () => {
         (trialUsers || []).map((t) => [t.user_id, t.start_date])
       );
 
-      // Calculate stats per user
       const userStats = new Map<string, { total: number; avgScore: number }>();
       (testResults || []).forEach((r) => {
         if (!r.user_id) return;
@@ -123,16 +136,12 @@ const Admin = () => {
         userStats.set(r.user_id, { total: newTotal, avgScore: newAvg });
       });
 
-      // Map profiles to UserData
       const combinedUsers: UserData[] = (profiles || []).map((profile) => {
         const isPremium = premiumMap.has(profile.user_id);
         const premiumExpiry = premiumMap.get(profile.user_id);
         const isTrial = trialMap.has(profile.user_id);
         const trialStart = trialMap.get(profile.user_id);
-        const stats = userStats.get(profile.user_id || "") || {
-          total: 0,
-          avgScore: 0,
-        };
+        const stats = userStats.get(profile.user_id || "") || { total: 0, avgScore: 0 };
 
         let accountType: "premium" | "trial" | "free" = "free";
         if (isPremium && premiumExpiry && new Date(premiumExpiry) > new Date()) {
@@ -156,7 +165,6 @@ const Admin = () => {
         };
       });
 
-      console.log("Fetched users:", combinedUsers.length);
       setUsers(combinedUsers);
       setFilteredUsers(combinedUsers);
     } catch (error) {
@@ -170,7 +178,6 @@ const Admin = () => {
   const filterUsers = () => {
     let filtered = users;
 
-    // Filter by tab
     if (activeTab === "premium") {
       filtered = filtered.filter((u) => u.account_type === "premium");
     } else if (activeTab === "trial") {
@@ -179,7 +186,6 @@ const Admin = () => {
       filtered = filtered.filter((u) => u.is_blocked);
     }
 
-    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -213,6 +219,13 @@ const Admin = () => {
       toast.error("Failed to update user status");
     }
   };
+
+  // Pagination
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   if (!isAuthenticated) {
     return (
@@ -318,6 +331,30 @@ const Admin = () => {
           </Card>
         </div>
 
+        {/* Subject Filter */}
+        <Card className="mb-4">
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex-1 min-w-[200px]">
+                <label className="text-sm font-medium mb-2 block">Filter by Subject</label>
+                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Subjects</SelectItem>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject} value={subject}>
+                        {subject}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-4">
@@ -347,65 +384,101 @@ const Admin = () => {
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
                   </div>
                 ) : (
-                  <div className="rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>WhatsApp</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Tests</TableHead>
-                          <TableHead>Avg Score</TableHead>
-                          <TableHead>Joined</TableHead>
-                          <TableHead>Block</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredUsers.length === 0 ? (
+                  <>
+                    <div className="rounded-md border overflow-x-auto">
+                      <Table>
+                        <TableHeader>
                           <TableRow>
-                            <TableCell colSpan={8} className="text-center text-muted-foreground">
-                              No users found
-                            </TableCell>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>WhatsApp</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Tests</TableHead>
+                            <TableHead>Avg Score</TableHead>
+                            <TableHead>Joined</TableHead>
+                            <TableHead>Block</TableHead>
                           </TableRow>
-                        ) : (
-                          filteredUsers.map((user) => (
-                            <TableRow key={user.user_id}>
-                              <TableCell className="font-medium">{user.name}</TableCell>
-                              <TableCell>{user.email}</TableCell>
-                              <TableCell>{user.whatsapp_number || "N/A"}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant={
-                                    user.account_type === "premium"
-                                      ? "default"
-                                      : user.account_type === "trial"
-                                      ? "secondary"
-                                      : "outline"
-                                  }
-                                >
-                                  {user.account_type}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{user.total_tests}</TableCell>
-                              <TableCell>{user.average_score.toFixed(1)}%</TableCell>
-                              <TableCell>
-                                {new Date(user.member_since).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>
-                                <Switch
-                                  checked={user.is_blocked}
-                                  onCheckedChange={() =>
-                                    handleBlockToggle(user.user_id, user.is_blocked)
-                                  }
-                                />
+                        </TableHeader>
+                        <TableBody>
+                          {paginatedUsers.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center text-muted-foreground">
+                                No users found
                               </TableCell>
                             </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
+                          ) : (
+                            paginatedUsers.map((user) => (
+                              <TableRow key={user.user_id}>
+                                <TableCell className="font-medium">{user.name}</TableCell>
+                                <TableCell>{user.email}</TableCell>
+                                <TableCell>{user.whatsapp_number || "N/A"}</TableCell>
+                                <TableCell>
+                                  <Badge
+                                    variant={
+                                      user.account_type === "premium"
+                                        ? "default"
+                                        : user.account_type === "trial"
+                                        ? "secondary"
+                                        : "outline"
+                                    }
+                                  >
+                                    {user.account_type}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>{user.total_tests}</TableCell>
+                                <TableCell>{user.average_score.toFixed(1)}%</TableCell>
+                                <TableCell>
+                                  {new Date(user.member_since).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <Switch
+                                    checked={user.is_blocked}
+                                    onCheckedChange={() =>
+                                      handleBlockToggle(user.user_id, user.is_blocked)
+                                    }
+                                  />
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between mt-4">
+                        <p className="text-sm text-muted-foreground">
+                          Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
+                          {Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)} of{" "}
+                          {filteredUsers.length} users
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                          </Button>
+                          <span className="text-sm">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </TabsContent>
             </Tabs>
