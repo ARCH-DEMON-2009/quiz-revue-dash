@@ -67,30 +67,94 @@ const Admin = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Use the admin_user_stats view which aggregates all user data
-      const { data: adminStats, error: adminError } = await supabase
-        .from("admin_user_stats")
+      // Fetch all users from user_profiles table
+      const { data: profiles, error: profilesError } = await supabase
+        .from("user_profiles")
         .select("*");
 
-      if (adminError) {
-        console.error("Admin stats error:", adminError);
-        throw adminError;
+      if (profilesError) {
+        console.error("Profiles error:", profilesError);
+        throw profilesError;
       }
 
-      // Map the admin_user_stats view data to UserData interface
-      const combinedUsers: UserData[] = (adminStats || []).map((stat) => ({
-        user_id: stat.user_id || "",
-        name: stat.name || "Unknown",
-        email: stat.email || "",
-        whatsapp_number: stat.whatsapp_number,
-        is_blocked: stat.is_blocked || false,
-        member_since: stat.member_since || new Date().toISOString(),
-        total_tests: stat.total_tests || 0,
-        average_score: stat.average_score || 0,
-        account_type: (stat.account_type as "premium" | "trial" | "free") || "free",
-        premium_expiry: stat.premium_expiry,
-        trial_start: stat.trial_start,
-      }));
+      // Fetch premium users
+      const { data: premiumUsers, error: premiumError } = await supabase
+        .from("premium_users")
+        .select("user_id, expiry_date");
+
+      if (premiumError) {
+        console.error("Premium users error:", premiumError);
+      }
+
+      // Fetch trial users
+      const { data: trialUsers, error: trialError } = await supabase
+        .from("user_trials")
+        .select("user_id, start_date");
+
+      if (trialError) {
+        console.error("Trial users error:", trialError);
+      }
+
+      // Fetch test results for stats
+      const { data: testResults, error: resultsError } = await supabase
+        .from("test_results")
+        .select("user_id, percentage");
+
+      if (resultsError) {
+        console.error("Results error:", resultsError);
+      }
+
+      // Create lookup maps
+      const premiumMap = new Map(
+        (premiumUsers || []).map((p) => [p.user_id, p.expiry_date])
+      );
+      const trialMap = new Map(
+        (trialUsers || []).map((t) => [t.user_id, t.start_date])
+      );
+
+      // Calculate stats per user
+      const userStats = new Map<string, { total: number; avgScore: number }>();
+      (testResults || []).forEach((r) => {
+        if (!r.user_id) return;
+        const existing = userStats.get(r.user_id) || { total: 0, avgScore: 0 };
+        const newTotal = existing.total + 1;
+        const newAvg =
+          (existing.avgScore * existing.total + (r.percentage || 0)) / newTotal;
+        userStats.set(r.user_id, { total: newTotal, avgScore: newAvg });
+      });
+
+      // Map profiles to UserData
+      const combinedUsers: UserData[] = (profiles || []).map((profile) => {
+        const isPremium = premiumMap.has(profile.user_id);
+        const premiumExpiry = premiumMap.get(profile.user_id);
+        const isTrial = trialMap.has(profile.user_id);
+        const trialStart = trialMap.get(profile.user_id);
+        const stats = userStats.get(profile.user_id || "") || {
+          total: 0,
+          avgScore: 0,
+        };
+
+        let accountType: "premium" | "trial" | "free" = "free";
+        if (isPremium && premiumExpiry && new Date(premiumExpiry) > new Date()) {
+          accountType = "premium";
+        } else if (isTrial) {
+          accountType = "trial";
+        }
+
+        return {
+          user_id: profile.user_id || profile.id,
+          name: profile.name || "Unknown",
+          email: profile.email || "",
+          whatsapp_number: profile.whatsapp_number,
+          is_blocked: profile.is_blocked || false,
+          member_since: profile.created_at || new Date().toISOString(),
+          total_tests: stats.total,
+          average_score: stats.avgScore,
+          account_type: accountType,
+          premium_expiry: premiumExpiry || null,
+          trial_start: trialStart || null,
+        };
+      });
 
       console.log("Fetched users:", combinedUsers.length);
       setUsers(combinedUsers);
