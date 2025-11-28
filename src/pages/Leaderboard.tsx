@@ -40,16 +40,10 @@ const Leaderboard = () => {
 
   const fetchLeaderboard = async () => {
     try {
-      // Fetch all users' test results
+      // Fetch all test results
       const { data: allResults, error: resultsError } = await supabase
         .from("test_results")
-        .select(`
-          user_id,
-          percentage,
-          correct,
-          total,
-          user_profiles!inner(name)
-        `);
+        .select("user_id, percentage, correct, total");
 
       if (resultsError) throw resultsError;
 
@@ -58,6 +52,24 @@ const Leaderboard = () => {
         setLoading(false);
         return;
       }
+
+      // Get unique user IDs
+      const userIds = [...new Set(allResults.map(r => r.user_id).filter(Boolean))];
+
+      // Fetch user profiles separately
+      const { data: profiles, error: profilesError } = await supabase
+        .from("user_profiles")
+        .select("user_id, name")
+        .in("user_id", userIds);
+
+      if (profilesError) {
+        console.error("Profiles error:", profilesError);
+      }
+
+      // Create user name lookup
+      const userNameMap = new Map(
+        (profiles || []).map(p => [p.user_id, p.name])
+      );
 
       // Group by user_id and calculate stats
       const userStatsMap = new Map<string, {
@@ -70,8 +82,10 @@ const Leaderboard = () => {
 
       allResults.forEach((result: any) => {
         const userId = result.user_id;
+        if (!userId) return;
+        
         const existing = userStatsMap.get(userId) || {
-          name: result.user_profiles?.name || "Unknown User",
+          name: userNameMap.get(userId) || "Unknown User",
           totalTests: 0,
           totalScore: 0,
           totalCorrect: 0,
@@ -93,7 +107,7 @@ const Leaderboard = () => {
         average_score: stats.totalTests > 0 ? stats.totalScore / stats.totalTests : 0,
         total_tests: stats.totalTests,
         overall_accuracy: stats.totalQuestions > 0 ? (stats.totalCorrect / stats.totalQuestions) * 100 : 0,
-        rank_percentile: 0 // Will be calculated after sorting
+        rank_percentile: 0
       }));
 
       // Sort by average score
