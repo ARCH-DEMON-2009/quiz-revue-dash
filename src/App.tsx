@@ -13,6 +13,7 @@ import Analytics from "./pages/Analytics";
 import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import { BlockedUserGuard } from "./components/BlockedUserGuard";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <BlockedUserGuard />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/auth" element={<Auth />} />

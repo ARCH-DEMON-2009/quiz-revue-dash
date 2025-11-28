@@ -4,10 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, FileText, TrendingUp, User, BookOpen, BarChart, Trophy, LogOut } from "lucide-react";
+import { Clock, FileText, User, BookOpen, BarChart, Trophy, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import { BlockedUserDialog } from "@/components/BlockedUserDialog";
 
 interface Test {
   id: string;
@@ -24,7 +23,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [isBlocked, setIsBlocked] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,19 +34,6 @@ const Dashboard = () => {
     
     if (!user) {
       navigate("/auth");
-      return;
-    }
-    
-    // Check if user is blocked
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("is_blocked")
-      .eq("user_id", user.id)
-      .single();
-    
-    if (profile?.is_blocked) {
-      setIsBlocked(true);
-      await supabase.auth.signOut();
       return;
     }
     
@@ -92,7 +77,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <BlockedUserDialog open={isBlocked} />
       <nav className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
