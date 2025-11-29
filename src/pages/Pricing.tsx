@@ -118,7 +118,7 @@ const Pricing = () => {
         .maybeSingle();
 
       const options = {
-        key: "rzp_live_YOUR_KEY_ID", // Replace with your Razorpay key
+        key: "rzp_live_zxasMqJyhIe3pG", // Your Razorpay key
         amount: finalPrice * 100, // Razorpay expects amount in paise
         currency: "INR",
         name: "TestSagar Premium",
