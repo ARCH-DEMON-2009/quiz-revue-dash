@@ -107,6 +107,7 @@ const Pricing = () => {
     }
 
     setLoading(true);
+    setSelectedPlan(plan);
     const finalPrice = calculateFinalPrice(plan);
 
     try {
@@ -117,21 +118,29 @@ const Pricing = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
+      // Ensure Razorpay is loaded
+      if (!window.Razorpay) {
+        toast.error("Payment gateway not loaded. Please refresh the page.");
+        setLoading(false);
+        return;
+      }
+
       const options = {
-        key: "rzp_live_zxasMqJyhIe3pG", // Your Razorpay key
+        key: "rzp_live_zxasMqJyhIe3pG",
         amount: finalPrice * 100, // Razorpay expects amount in paise
         currency: "INR",
         name: "TestSagar Premium",
         description: `${plan.name} Premium Subscription`,
+        image: "https://testsagar.com/logo.png",
         handler: async function (response: any) {
-          // Payment successful
+          // Payment successful - save to database
           try {
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + plan.durationDays);
 
             const { error } = await supabase.from("premium_users").insert({
               user_id: user.id,
-              email: user.email,
+              email: user.email || "",
               name: profile?.name || "User",
               payment_id: response.razorpay_payment_id,
               expiry_date: expiryDate.toISOString(),
@@ -142,7 +151,11 @@ const Pricing = () => {
               status: "active",
             });
 
-            if (error) throw error;
+            if (error) {
+              console.error("Database error:", error);
+              toast.error("Payment received but error activating premium. Contact support with payment ID: " + response.razorpay_payment_id);
+              return;
+            }
 
             toast.success("Payment successful! Welcome to Premium!");
             navigate("/");
@@ -153,7 +166,13 @@ const Pricing = () => {
         },
         prefill: {
           name: profile?.name || "",
-          email: user.email,
+          email: user.email || "",
+          contact: "",
+        },
+        notes: {
+          plan_id: plan.id,
+          plan_name: plan.name,
+          user_id: user.id,
         },
         theme: {
           color: "#6366f1",
@@ -161,20 +180,25 @@ const Pricing = () => {
         modal: {
           ondismiss: function() {
             setLoading(false);
-          }
+            toast.info("Payment cancelled");
+          },
+          escape: true,
+          backdropclose: false,
         }
       };
 
-      if (window.Razorpay) {
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-      } else {
-        toast.error("Payment gateway not loaded. Please refresh.");
-      }
+      const rzp = new window.Razorpay(options);
+      
+      rzp.on('payment.failed', function (response: any) {
+        console.error("Payment failed:", response.error);
+        toast.error(`Payment failed: ${response.error.description}`);
+        setLoading(false);
+      });
+      
+      rzp.open();
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Failed to initiate payment");
-    } finally {
+      toast.error("Failed to initiate payment. Please try again.");
       setLoading(false);
     }
   };

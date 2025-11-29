@@ -15,6 +15,7 @@ interface Question {
   correct: string;
   subject: string;
   image?: string;
+  type?: string;
 }
 
 interface UserAnswer {
@@ -149,23 +150,49 @@ const Review = () => {
           {filteredQuestions.map((question, idx) => {
             const answer = getAnswerForQuestion(question.id);
             
-            // Parse options - handle both string and object formats
+            // Parse options - handle various formats from database
             const parseOptions = (opts: any): Record<string, string> => {
               if (!opts) return {};
-              if (typeof opts === 'string') {
-                try {
-                  return JSON.parse(opts);
-                } catch {
-                  return {};
+              
+              // If it's already a proper object with A, B, C, D keys
+              if (typeof opts === 'object' && !Array.isArray(opts)) {
+                // Check if it has valid option keys
+                const keys = Object.keys(opts);
+                if (keys.some(k => ['A', 'B', 'C', 'D', 'a', 'b', 'c', 'd'].includes(k))) {
+                  return opts;
                 }
               }
-              if (typeof opts === 'object' && !Array.isArray(opts)) {
-                return opts;
+              
+              // If it's a string, try to parse it
+              if (typeof opts === 'string') {
+                try {
+                  const parsed = JSON.parse(opts);
+                  if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                    return parsed;
+                  }
+                } catch {
+                  // Not valid JSON
+                }
               }
+              
+              // If it's an array, convert to object
+              if (Array.isArray(opts)) {
+                const result: Record<string, string> = {};
+                const optionKeys = ['A', 'B', 'C', 'D', 'E', 'F'];
+                opts.forEach((val, i) => {
+                  if (i < optionKeys.length && typeof val === 'string') {
+                    result[optionKeys[i]] = val;
+                  }
+                });
+                return result;
+              }
+              
               return {};
             };
             
             const options = parseOptions(question.options);
+            const hasOptions = Object.keys(options).length > 0;
+            const isTextQuestion = !hasOptions || question.type === 'text';
 
             return (
               <Card key={question.id}>
@@ -192,44 +219,62 @@ const Review = () => {
                   )}
                   <p className="text-lg mb-4">{question.question_text}</p>
 
-                  <div className="space-y-2">
-                    {Object.entries(options).map(([key, value]) => {
-                      const isUserAnswer = answer?.selected === key;
-                      const isCorrectAnswer = question.correct === key;
+                  {/* MCQ Options */}
+                  {hasOptions && !isTextQuestion && (
+                    <div className="space-y-2">
+                      {Object.entries(options).map(([key, value]) => {
+                        const isUserAnswer = answer?.selected === key;
+                        const isCorrectAnswer = question.correct === key || question.correct?.toUpperCase() === key.toUpperCase();
 
-                      return (
-                        <div
-                          key={key}
-                          className={`p-4 rounded-lg border-2 ${
-                            isCorrectAnswer
-                              ? "border-success bg-success/10"
-                              : isUserAnswer
-                              ? "border-destructive bg-destructive/10"
-                              : "border-border"
-                          }`}
-                        >
-                          <div className="flex items-start gap-2">
-                            <span className="font-semibold">{key}.</span>
-                            <div className="flex-1">
-                              <p>{value}</p>
-                              {isCorrectAnswer && (
-                                <p className="text-sm text-success mt-1 font-medium">✓ Correct Answer</p>
-                              )}
-                              {isUserAnswer && !isCorrectAnswer && (
-                                <p className="text-sm text-destructive mt-1 font-medium">✗ Your Answer</p>
-                              )}
+                        return (
+                          <div
+                            key={key}
+                            className={`p-4 rounded-lg border-2 ${
+                              isCorrectAnswer
+                                ? "border-success bg-success/10"
+                                : isUserAnswer
+                                ? "border-destructive bg-destructive/10"
+                                : "border-border"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="font-semibold">{key}.</span>
+                              <div className="flex-1">
+                                <p>{value}</p>
+                                {isCorrectAnswer && (
+                                  <p className="text-sm text-success mt-1 font-medium">✓ Correct Answer</p>
+                                )}
+                                {isUserAnswer && !isCorrectAnswer && (
+                                  <p className="text-sm text-destructive mt-1 font-medium">✗ Your Answer</p>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
-                  {/* Show correct answer summary for wrong/skipped questions */}
+                  {/* Text Answer Display */}
+                  {isTextQuestion && (
+                    <div className="space-y-3">
+                      {answer?.selected && (
+                        <div className={`p-4 rounded-lg border-2 ${
+                          answer.isCorrect ? "border-success bg-success/10" : "border-destructive bg-destructive/10"
+                        }`}>
+                          <p className="text-sm text-muted-foreground mb-1">Your Answer:</p>
+                          <p className="font-medium">{answer.selected}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Show correct answer for wrong/skipped questions */}
                   {(!answer?.isCorrect || !answer?.selected) && (
                     <div className="mt-4 p-3 bg-success/5 border border-success/20 rounded-lg">
-                      <p className="text-sm font-medium text-success">
-                        Correct Answer: {question.correct}
+                      <p className="text-sm text-muted-foreground mb-1">Correct Answer:</p>
+                      <p className="font-medium text-success">
+                        {question.correct}
                         {options[question.correct] && ` - ${options[question.correct]}`}
                       </p>
                     </div>

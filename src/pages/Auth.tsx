@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { User, Session } from "@supabase/supabase-js";
+import { isValidEmailProvider } from "@/lib/emailValidator";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -61,9 +62,16 @@ const Auth = () => {
         return;
       }
 
+      // Validate email provider
+      const emailValidation = isValidEmailProvider(email);
+      if (!emailValidation.valid) {
+        toast.error(emailValidation.message);
+        return;
+      }
+
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -84,7 +92,21 @@ const Auth = () => {
         return;
       }
 
-      toast.success("Account created! Please check your email to confirm.");
+      // Create 3-day free trial for new user
+      if (data.user) {
+        const { error: trialError } = await supabase.from("user_trials").insert({
+          user_id: data.user.id,
+          email: email,
+          name: name.trim(),
+          start_date: new Date().toISOString(),
+        });
+
+        if (trialError) {
+          console.error("Trial creation error:", trialError);
+        }
+      }
+
+      toast.success("Account created with 3-day free trial! Please check your email to confirm.");
     } catch (error: any) {
       toast.error(error.message || "An error occurred during sign up");
     } finally {

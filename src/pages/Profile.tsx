@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, Target, Award, ChevronLeft, Clock, HelpCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Target, Award, ChevronLeft, HelpCircle, Crown, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 interface Stats {
@@ -16,6 +17,12 @@ interface Stats {
   physicsAccuracy: number;
   chemistryAccuracy: number;
   mathsAccuracy: number;
+}
+
+interface AccessStatus {
+  type: 'premium' | 'trial' | 'expired';
+  daysLeft: number;
+  expiryDate: string | null;
 }
 
 const Profile = () => {
@@ -32,10 +39,58 @@ const Profile = () => {
   });
   const [recentTests, setRecentTests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [accessStatus, setAccessStatus] = useState<AccessStatus | null>(null);
 
   useEffect(() => {
     fetchProfileData();
+    checkAccessStatus();
   }, []);
+
+  const checkAccessStatus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check premium status
+      const { data: premium } = await supabase
+        .from("premium_users")
+        .select("expiry_date, status")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (premium && new Date(premium.expiry_date) > new Date()) {
+        const daysLeft = Math.ceil((new Date(premium.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        setAccessStatus({
+          type: 'premium',
+          daysLeft,
+          expiryDate: premium.expiry_date
+        });
+        return;
+      }
+
+      // Check trial status
+      const { data: trial } = await supabase
+        .from("user_trials")
+        .select("start_date")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (trial) {
+        const trialEnd = new Date(trial.start_date);
+        trialEnd.setDate(trialEnd.getDate() + 3); // 3-day trial
+        const daysLeft = Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        
+        setAccessStatus({
+          type: daysLeft > 0 ? 'trial' : 'expired',
+          daysLeft: Math.max(0, daysLeft),
+          expiryDate: trialEnd.toISOString()
+        });
+      }
+    } catch (error) {
+      console.error("Error checking access status:", error);
+    }
+  };
 
   const fetchProfileData = async () => {
     try {
@@ -103,17 +158,62 @@ const Profile = () => {
             <ChevronLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
-          >
-            <HelpCircle className="h-4 w-4 mr-2" />
-            Help & Support
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
+            >
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Help & Support
+            </Button>
+          </div>
         </div>
       </nav>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
+        {/* Access Status Card */}
+        {accessStatus && (
+          <Card className={`mb-8 ${accessStatus.type === 'expired' ? 'border-destructive' : accessStatus.type === 'premium' ? 'border-primary' : 'border-warning'}`}>
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  {accessStatus.type === 'premium' ? (
+                    <Crown className="h-8 w-8 text-primary" />
+                  ) : (
+                    <Calendar className="h-8 w-8 text-warning" />
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold">
+                        {accessStatus.type === 'premium' ? 'Premium Active' : 
+                         accessStatus.type === 'trial' ? 'Free Trial' : 'Trial Expired'}
+                      </h3>
+                      <Badge variant={accessStatus.type === 'premium' ? 'default' : accessStatus.type === 'trial' ? 'secondary' : 'destructive'}>
+                        {accessStatus.type === 'expired' ? 'Expired' : `${accessStatus.daysLeft} days left`}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {accessStatus.type === 'premium' 
+                        ? `Your premium expires on ${new Date(accessStatus.expiryDate!).toLocaleDateString()}`
+                        : accessStatus.type === 'trial'
+                        ? 'Enjoy your free trial! Upgrade anytime for uninterrupted access.'
+                        : 'Your trial has ended. Buy premium to continue accessing tests.'}
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => navigate("/pricing")}
+                  variant={accessStatus.type === 'expired' ? 'default' : 'outline'}
+                  className="shrink-0"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  {accessStatus.type === 'premium' ? 'Extend Premium' : 'Buy Premium'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Your Performance</h1>
           <p className="text-muted-foreground">Track your progress and achievements</p>
