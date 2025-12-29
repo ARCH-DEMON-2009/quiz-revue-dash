@@ -214,164 +214,57 @@ const Pricing = () => {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-4">
+          <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive px-4 py-2 rounded-full mb-4">
             <Crown className="h-5 w-5" />
-            <span className="font-medium">Premium Plans</span>
+            <span className="font-medium">Service Temporarily Unavailable</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Unlock Your Full Potential
+            Premium Purchase Paused
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Get unlimited access to all tests, detailed analytics, and exclusive features
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
+            We are currently facing some technical issues with our payment system. 
+            If you want to buy premium, please contact our admin directly.
           </p>
         </div>
 
-        {/* Promo Code Section */}
-        <Card className="mb-8 max-w-md mx-auto">
-          <CardContent className="pt-6">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Enter promo code"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  className="pl-10"
-                  disabled={!!appliedPromo}
-                />
-              </div>
-              {appliedPromo ? (
-                <Button variant="destructive" onClick={removePromoCode}>
-                  Remove
-                </Button>
-              ) : (
-                <Button onClick={applyPromoCode}>Apply</Button>
-              )}
-            </div>
-            {appliedPromo && (
-              <p className="text-sm text-success mt-2 flex items-center gap-1">
-                <Check className="h-4 w-4" />
-                {appliedPromo.code} - {appliedPromo.discount}% discount applied!
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Pricing Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plans.map((plan) => {
-            const finalPrice = calculateFinalPrice(plan);
-            const hasDiscount = appliedPromo && finalPrice !== plan.price;
-
-            return (
-              <Card
-                key={plan.id}
-                className={`relative overflow-hidden transition-all hover:shadow-xl ${
-                  plan.popular ? "border-primary border-2 shadow-lg" : ""
-                } ${selectedPlan?.id === plan.id ? "ring-2 ring-primary" : ""}`}
-              >
-                {plan.popular && (
-                  <div className="absolute top-0 right-0">
-                    <Badge className="rounded-none rounded-bl-lg">Most Popular</Badge>
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.duration}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold">₹{finalPrice}</span>
-                      {(plan.originalPrice || hasDiscount) && (
-                        <span className="text-lg text-muted-foreground line-through">
-                          ₹{plan.originalPrice || plan.price}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      ₹{plan.perMonth}/month
-                    </p>
-                    {hasDiscount && (
-                      <Badge variant="secondary" className="bg-success/10 text-success">
-                        Save ₹{plan.price - finalPrice}
-                      </Badge>
-                    )}
-                  </div>
-
-                  <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-success" />
-                      Unlimited test access
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-success" />
-                      Detailed analytics
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-success" />
-                      Performance tracking
-                    </li>
-                    <li className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-success" />
-                      Priority support
-                    </li>
-                  </ul>
-
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? "default" : "outline"}
-                    onClick={() => handlePayment(plan)}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      `Get ${plan.name}`
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        {/* Features Section */}
-        <Card className="mt-12">
-          <CardHeader>
-            <CardTitle>What's included in Premium?</CardTitle>
+        <Card className="max-w-lg mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle>Contact Admin to Buy Premium</CardTitle>
+            <CardDescription>
+              Our team will help you complete your purchase manually
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Check className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold mb-1">Unlimited Tests</h3>
-                <p className="text-sm text-muted-foreground">Access all available tests</p>
-              </div>
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Check className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold mb-1">Detailed Analytics</h3>
-                <p className="text-sm text-muted-foreground">Track your progress</p>
-              </div>
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Check className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold mb-1">Leaderboard Access</h3>
-                <p className="text-sm text-muted-foreground">Compare with others</p>
-              </div>
-              <div className="text-center p-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Check className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="font-semibold mb-1">Priority Support</h3>
-                <p className="text-sm text-muted-foreground">Get help faster</p>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              <Button 
+                size="lg" 
+                className="w-full"
+                onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
+              >
+                <Crown className="h-5 w-5 mr-2" />
+                Contact Help Bot
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="w-full"
+                onClick={() => window.open("https://t.me/Its_trms", "_blank")}
+              >
+                Contact Admin Directly
+              </Button>
+            </div>
+
+            <div className="pt-4 border-t">
+              <h3 className="font-semibold mb-3 text-center">Available Plans</h3>
+              <div className="space-y-2">
+                {plans.map((plan) => (
+                  <div key={plan.id} className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
+                    <span className="font-medium">{plan.name}</span>
+                    <span className="text-primary font-bold">₹{plan.price}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </CardContent>

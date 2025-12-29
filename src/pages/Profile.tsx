@@ -201,14 +201,27 @@ const Profile = () => {
                     </p>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => navigate("/pricing")}
-                  variant={accessStatus.type === 'expired' ? 'default' : 'outline'}
-                  className="shrink-0"
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {accessStatus.type === 'premium' ? 'Extend Premium' : 'Buy Premium'}
-                </Button>
+                <div className="flex flex-col gap-2 shrink-0">
+                  <p className="text-sm text-muted-foreground text-center">
+                    To buy premium, contact:
+                  </p>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Help Bot
+                    </Button>
+                    <Button 
+                      onClick={() => window.open("https://t.me/Its_trms", "_blank")}
+                      variant="default"
+                      size="sm"
+                    >
+                      Contact Admin
+                    </Button>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
