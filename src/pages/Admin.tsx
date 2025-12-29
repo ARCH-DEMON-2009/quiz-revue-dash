@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { toast } from "sonner";
+import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
 
 interface UserData {
   user_id: string;
@@ -92,6 +93,7 @@ const Admin = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      // Fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("user_profiles")
         .select("*");
@@ -101,31 +103,49 @@ const Admin = () => {
         throw profilesError;
       }
 
+      // Fetch all premium users with active status and valid expiry
       const { data: premiumUsers, error: premiumError } = await supabase
         .from("premium_users")
-        .select("user_id, expiry_date");
+        .select("user_id, email, expiry_date, status")
+        .eq("status", "active");
 
       if (premiumError) console.error("Premium users error:", premiumError);
 
+      // Fetch all trial users
       const { data: trialUsers, error: trialError } = await supabase
         .from("user_trials")
-        .select("user_id, start_date");
+        .select("user_id, start_date, email");
 
       if (trialError) console.error("Trial users error:", trialError);
 
+      // Fetch all test results
       const { data: testResults, error: resultsError } = await supabase
         .from("test_results")
         .select("user_id, percentage");
 
       if (resultsError) console.error("Results error:", resultsError);
 
-      const premiumMap = new Map(
-        (premiumUsers || []).map((p) => [p.user_id, p.expiry_date])
-      );
-      const trialMap = new Map(
-        (trialUsers || []).map((t) => [t.user_id, t.start_date])
-      );
+      // Create maps for quick lookups - use email as fallback key
+      const premiumByUserId = new Map<string, string>();
+      const premiumByEmail = new Map<string, string>();
+      
+      (premiumUsers || []).forEach((p) => {
+        const isValid = p.expiry_date && new Date(p.expiry_date) > new Date();
+        if (isValid) {
+          if (p.user_id) premiumByUserId.set(p.user_id, p.expiry_date);
+          if (p.email) premiumByEmail.set(p.email.toLowerCase(), p.expiry_date);
+        }
+      });
 
+      const trialByUserId = new Map<string, string>();
+      const trialByEmail = new Map<string, string>();
+      
+      (trialUsers || []).forEach((t) => {
+        if (t.user_id) trialByUserId.set(t.user_id, t.start_date);
+        if (t.email) trialByEmail.set(t.email.toLowerCase(), t.start_date);
+      });
+
+      // Calculate user stats
       const userStats = new Map<string, { total: number; avgScore: number }>();
       (testResults || []).forEach((r) => {
         if (!r.user_id) return;
@@ -136,22 +156,35 @@ const Admin = () => {
         userStats.set(r.user_id, { total: newTotal, avgScore: newAvg });
       });
 
+      // Combine all data
       const combinedUsers: UserData[] = (profiles || []).map((profile) => {
-        const isPremium = premiumMap.has(profile.user_id);
-        const premiumExpiry = premiumMap.get(profile.user_id);
-        const isTrial = trialMap.has(profile.user_id);
-        const trialStart = trialMap.get(profile.user_id);
-        const stats = userStats.get(profile.user_id || "") || { total: 0, avgScore: 0 };
+        const userId = profile.user_id || profile.id;
+        const email = (profile.email || "").toLowerCase();
+        
+        // Check premium by user_id first, then by email
+        const premiumExpiry = premiumByUserId.get(userId) || premiumByEmail.get(email);
+        const isPremium = !!premiumExpiry;
+        
+        // Check trial by user_id first, then by email
+        const trialStart = trialByUserId.get(userId) || trialByEmail.get(email);
+        const isTrial = !!trialStart;
+        
+        const stats = userStats.get(userId) || { total: 0, avgScore: 0 };
 
         let accountType: "premium" | "trial" | "free" = "free";
-        if (isPremium && premiumExpiry && new Date(premiumExpiry) > new Date()) {
+        if (isPremium) {
           accountType = "premium";
         } else if (isTrial) {
-          accountType = "trial";
+          // Check if trial is still valid (3 days)
+          const trialEndDate = new Date(trialStart);
+          trialEndDate.setDate(trialEndDate.getDate() + 3);
+          if (trialEndDate > new Date()) {
+            accountType = "trial";
+          }
         }
 
         return {
-          user_id: profile.user_id || profile.id,
+          user_id: userId,
           name: profile.name || "Unknown",
           email: profile.email || "",
           whatsapp_number: profile.whatsapp_number,
@@ -164,6 +197,8 @@ const Admin = () => {
           trial_start: trialStart || null,
         };
       });
+
+      console.log(`Loaded ${combinedUsers.length} users, ${combinedUsers.filter(u => u.account_type === 'premium').length} premium`);
 
       setUsers(combinedUsers);
       setFilteredUsers(combinedUsers);
@@ -266,10 +301,31 @@ const Admin = () => {
       <nav className="border-b bg-card sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Admin Panel</h1>
-          <Button variant="ghost" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <AddPremiumUserDialog onSuccess={fetchUsers} />
+            <Button 
+              variant="outline" 
+              onClick={async () => {
+                toast.info("Checking trial expiry notifications...");
+                try {
+                  const { data, error } = await supabase.functions.invoke('send-trial-expiry-notification');
+                  if (error) throw error;
+                  toast.success(`Found ${data?.count || 0} users to notify`);
+                  console.log("Notification data:", data);
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Failed to check notifications");
+                }
+              }}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Check Expiry
+            </Button>
+            <Button variant="ghost" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </nav>
 
