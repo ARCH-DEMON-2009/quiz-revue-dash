@@ -22,7 +22,7 @@ interface UserData {
   member_since: string;
   total_tests: number;
   average_score: number;
-  account_type: "premium" | "trial" | "free";
+  account_type: "premium" | "trial" | "expired";
   premium_expiry: string | null;
   trial_start: string | null;
 }
@@ -171,7 +171,7 @@ const Admin = () => {
         
         const stats = userStats.get(userId) || { total: 0, avgScore: 0 };
 
-        let accountType: "premium" | "trial" | "free" = "free";
+        let accountType: "premium" | "trial" | "expired" = "expired";
         if (isPremium) {
           accountType = "premium";
         } else if (isTrial) {
@@ -180,6 +180,8 @@ const Admin = () => {
           trialEndDate.setDate(trialEndDate.getDate() + 3);
           if (trialEndDate > new Date()) {
             accountType = "trial";
+          } else {
+            accountType = "expired"; // Trial expired
           }
         }
 
@@ -217,6 +219,8 @@ const Admin = () => {
       filtered = filtered.filter((u) => u.account_type === "premium");
     } else if (activeTab === "trial") {
       filtered = filtered.filter((u) => u.account_type === "trial");
+    } else if (activeTab === "expired") {
+      filtered = filtered.filter((u) => u.account_type === "expired");
     } else if (activeTab === "blocked") {
       filtered = filtered.filter((u) => u.is_blocked);
     }
@@ -293,6 +297,7 @@ const Admin = () => {
     total: users.length,
     premium: users.filter((u) => u.account_type === "premium").length,
     trial: users.filter((u) => u.account_type === "trial").length,
+    expired: users.filter((u) => u.account_type === "expired").length,
     blocked: users.filter((u) => u.is_blocked).length,
   };
 
@@ -362,7 +367,7 @@ const Admin = () => {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Trial Users
+                Active Trial
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -376,12 +381,12 @@ const Admin = () => {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Blocked Users
+                Expired Trial
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-destructive">{stats.blocked}</span>
+                <span className="text-3xl font-bold text-warning">{stats.expired}</span>
               </div>
             </CardContent>
           </Card>
@@ -427,10 +432,11 @@ const Admin = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="all">All Users</TabsTrigger>
                 <TabsTrigger value="premium">Premium</TabsTrigger>
-                <TabsTrigger value="trial">Trial</TabsTrigger>
+                <TabsTrigger value="trial">Active Trial</TabsTrigger>
+                <TabsTrigger value="expired">Expired</TabsTrigger>
                 <TabsTrigger value="blocked">Blocked</TabsTrigger>
               </TabsList>
 
@@ -475,10 +481,10 @@ const Admin = () => {
                                         ? "default"
                                         : user.account_type === "trial"
                                         ? "secondary"
-                                        : "outline"
+                                        : "destructive"
                                     }
                                   >
-                                    {user.account_type}
+                                    {user.account_type === "expired" ? "Expired Trial" : user.account_type}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>{user.total_tests}</TableCell>

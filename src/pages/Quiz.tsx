@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Clock, FileText } from "lucide-react";
+import { Clock, FileText, AlertTriangle, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { AccessGuard } from "@/components/AccessGuard";
 
 interface Question {
   id: string;
@@ -304,6 +305,7 @@ const Quiz = () => {
   const markedCount = Array.from(answers.values()).filter(a => a.markedForReview).length;
 
   return (
+    <AccessGuard>
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
       <div className="bg-card border-b sticky top-0 z-10 shadow-sm">
@@ -546,6 +548,7 @@ const Quiz = () => {
         </main>
       </div>
     </div>
+    </AccessGuard>
   );
 };
 

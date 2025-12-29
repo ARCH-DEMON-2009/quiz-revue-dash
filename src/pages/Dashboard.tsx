@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, FileText, User, BookOpen, BarChart, Trophy, LogOut } from "lucide-react";
+import { Clock, FileText, User, BookOpen, BarChart, Trophy, LogOut, Crown, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import { useAccessStatus } from "@/components/AccessGuard";
 
 interface Test {
   id: string;
@@ -24,6 +25,7 @@ const Dashboard = () => {
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const navigate = useNavigate();
+  const { accessStatus, loading: accessLoading } = useAccessStatus();
 
   useEffect(() => {
     checkAuth();
@@ -75,13 +77,15 @@ const Dashboard = () => {
     return null;
   }
 
+  const hasAccess = accessStatus?.hasAccess;
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold">QuizMaster</h1>
+            <h1 className="text-2xl font-bold">Test Sagar</h1>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/analytics")}>
@@ -103,6 +107,55 @@ const Dashboard = () => {
           </div>
         </div>
       </nav>
+
+      {/* Access Status Banner */}
+      {accessStatus && !accessLoading && (
+        <div className={`border-b ${!hasAccess ? 'bg-destructive/10' : accessStatus.type === 'trial' ? 'bg-warning/10' : 'bg-primary/10'}`}>
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {!hasAccess ? (
+                <>
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">
+                    Trial expired - Contact admin to buy premium
+                  </span>
+                </>
+              ) : accessStatus.type === 'trial' ? (
+                <>
+                  <Clock className="h-5 w-5 text-warning" />
+                  <span className="text-sm font-medium">
+                    Free Trial: {accessStatus.daysLeft} day{accessStatus.daysLeft !== 1 ? 's' : ''} left
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Crown className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium">
+                    Premium Active: {accessStatus.daysLeft} days left
+                  </span>
+                </>
+              )}
+            </div>
+            {!hasAccess && (
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
+                >
+                  Help Bot
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => window.open("https://t.me/Its_trms", "_blank")}
+                >
+                  Contact Admin
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <main className="container mx-auto px-4 py-8">
         {!selectedClass ? (
@@ -196,8 +249,9 @@ const Dashboard = () => {
                     <Button 
                       className="w-full" 
                       onClick={() => navigate(`/quiz/${test.id}`)}
+                      disabled={!hasAccess}
                     >
-                      Start Test
+                      {hasAccess ? 'Start Test' : 'Access Required'}
                     </Button>
                   </CardContent>
                 </Card>
