@@ -309,19 +309,20 @@ const Quiz = () => {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
       <div className="bg-card border-b sticky top-0 z-10 shadow-sm">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-lg font-bold">{testName}</h1>
+        <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+              <h1 className="text-sm sm:text-lg font-bold truncate">{testName}</h1>
             </div>
             
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 text-lg font-mono">
-                <Clock className="h-5 w-5" />
+            <div className="flex items-center gap-2 sm:gap-6 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 text-sm sm:text-lg font-mono">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className={timeLeft < 300 ? "text-destructive" : ""}>{formatTime(timeLeft)}</span>
               </div>
-              <Button onClick={handleSubmit} size="lg" className="bg-warning hover:bg-warning/90 text-warning-foreground">
-                Submit Test
+              <Button onClick={handleSubmit} size="sm" className="bg-warning hover:bg-warning/90 text-warning-foreground text-xs sm:text-sm px-2 sm:px-4">
+                <span className="hidden sm:inline">Submit Test</span>
+                <span className="sm:hidden">Submit</span>
               </Button>
             </div>
           </div>
@@ -329,24 +330,24 @@ const Quiz = () => {
       </div>
 
       <div className="flex-1 flex">
-        {/* Question Navigation Sidebar */}
-        <div className="w-80 bg-card border-r hidden lg:block">
-          <div className="p-4 border-b bg-primary/5">
+        {/* Question Navigation Sidebar - Hidden on mobile, shown on lg+ */}
+        <div className="w-64 xl:w-80 bg-card border-r hidden lg:block">
+          <div className="p-3 xl:p-4 border-b bg-primary/5">
             <div className="flex items-center gap-2 mb-2">
-              <FileText className="h-5 w-5" />
-              <h2 className="font-bold">Question Navigation</h2>
+              <FileText className="h-4 w-4 xl:h-5 xl:w-5" />
+              <h2 className="font-bold text-sm xl:text-base">Question Navigation</h2>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-sm mt-3">
+            <div className="grid grid-cols-3 gap-2 text-xs xl:text-sm mt-3">
               <div className="text-center">
-                <div className="text-2xl font-bold text-success">{answeredCount}</div>
+                <div className="text-lg xl:text-2xl font-bold text-success">{answeredCount}</div>
                 <div className="text-muted-foreground text-xs">Answered</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold">{questions.length - answers.size}</div>
+                <div className="text-lg xl:text-2xl font-bold">{questions.length - answers.size}</div>
                 <div className="text-muted-foreground text-xs">Remaining</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-warning">{markedCount}</div>
+                <div className="text-lg xl:text-2xl font-bold text-warning">{markedCount}</div>
                 <div className="text-muted-foreground text-xs">Marked</div>
               </div>
             </div>
@@ -355,15 +356,15 @@ const Quiz = () => {
             </div>
           </div>
 
-          <ScrollArea className="h-[calc(100vh-220px)]">
-            <div className="p-4 space-y-6">
+          <ScrollArea className="h-[calc(100vh-200px)] xl:h-[calc(100vh-220px)]">
+            <div className="p-3 xl:p-4 space-y-4 xl:space-y-6">
               {subjectGroups.map((group, groupIdx) => (
                 <div key={groupIdx}>
-                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <h3 className="text-xs xl:text-sm font-semibold mb-2 xl:mb-3 flex items-center gap-2">
                     {group.subject}
-                    <span className="text-xs text-muted-foreground">({group.questions.length} ques.)</span>
+                    <span className="text-xs text-muted-foreground">({group.questions.length})</span>
                   </h3>
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-5 gap-1.5 xl:gap-2">
                     {group.questions.map((q, idx) => {
                       const globalIdx = questions.findIndex(question => question.id === q.id);
                       const status = getQuestionStatus(q.id);
@@ -371,7 +372,7 @@ const Quiz = () => {
                         <button
                           key={q.id}
                           onClick={() => setCurrentIndex(globalIdx)}
-                          className={`w-10 h-10 rounded-lg border-2 font-semibold text-sm transition-all ${
+                          className={`w-8 h-8 xl:w-10 xl:h-10 rounded-lg border-2 font-semibold text-xs xl:text-sm transition-all ${
                             globalIdx === currentIndex
                               ? "border-primary bg-primary text-primary-foreground shadow-md"
                               : status === 'answered'
@@ -461,17 +462,17 @@ const Quiz = () => {
 
         {/* Main Question Area */}
         <main className="flex-1 overflow-auto">
-          <div className="container mx-auto px-4 py-6 max-w-4xl">
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-muted-foreground">Question {currentIndex + 1} of {questions.length}</span>
+          <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 max-w-4xl">
+            <Card className="mb-4 sm:mb-6">
+              <CardContent className="p-3 sm:p-4 lg:pt-6">
+                <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <span className="text-xs sm:text-sm font-medium text-muted-foreground">Q{currentIndex + 1}/{questions.length}</span>
                   </div>
-                  <Badge variant="secondary" className="text-sm">{currentQuestion.subject}</Badge>
+                  <Badge variant="secondary" className="text-xs sm:text-sm shrink-0">{currentQuestion.subject}</Badge>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {currentQuestion.image && (
                     <div className="mb-4">
                       <img 

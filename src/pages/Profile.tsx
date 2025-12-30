@@ -152,57 +152,59 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Button variant="ghost" onClick={() => navigate("/")}>
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+      <nav className="border-b bg-card sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="-ml-2">
+            <ChevronLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Button>
           <div className="flex gap-2">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
             >
-              <HelpCircle className="h-4 w-4 mr-2" />
-              Help & Support
+              <HelpCircle className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Help & Support</span>
             </Button>
           </div>
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
+      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
         {/* Access Status Card */}
         {accessStatus && (
-          <Card className={`mb-8 ${accessStatus.type === 'expired' ? 'border-destructive' : accessStatus.type === 'premium' ? 'border-primary' : 'border-warning'}`}>
-            <CardContent className="pt-6">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+          <Card className={`mb-4 sm:mb-6 lg:mb-8 ${accessStatus.type === 'expired' ? 'border-destructive' : accessStatus.type === 'premium' ? 'border-primary' : 'border-warning'}`}>
+            <CardContent className="p-3 sm:p-4 lg:pt-6">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-start gap-3">
                   {accessStatus.type === 'premium' ? (
-                    <Crown className="h-8 w-8 text-primary" />
+                    <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
                   ) : (
-                    <Calendar className="h-8 w-8 text-warning" />
+                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-warning shrink-0" />
                   )}
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-semibold">
                         {accessStatus.type === 'premium' ? 'Premium Active' : 
                          accessStatus.type === 'trial' ? 'Free Trial' : 'Trial Expired'}
                       </h3>
-                      <Badge variant={accessStatus.type === 'premium' ? 'default' : accessStatus.type === 'trial' ? 'secondary' : 'destructive'}>
+                      <Badge variant={accessStatus.type === 'premium' ? 'default' : accessStatus.type === 'trial' ? 'secondary' : 'destructive'} className="text-xs">
                         {accessStatus.type === 'expired' ? 'Expired' : `${accessStatus.daysLeft} days left`}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       {accessStatus.type === 'premium' 
-                        ? `Your premium expires on ${new Date(accessStatus.expiryDate!).toLocaleDateString()}`
+                        ? `Expires: ${new Date(accessStatus.expiryDate!).toLocaleDateString()}`
                         : accessStatus.type === 'trial'
-                        ? 'Enjoy your free trial! Upgrade anytime for uninterrupted access.'
-                        : 'Your trial has ended. Buy premium to continue accessing tests.'}
+                        ? 'Enjoy your free trial!'
+                        : 'Buy premium to continue.'}
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-col gap-2 shrink-0">
-                  <p className="text-sm text-muted-foreground text-center">
+                <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     To buy premium, contact:
                   </p>
                   <div className="flex gap-2">
@@ -210,6 +212,7 @@ const Profile = () => {
                       onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
                       variant="outline"
                       size="sm"
+                      className="flex-1 sm:flex-none text-xs sm:text-sm"
                     >
                       Help Bot
                     </Button>
@@ -217,6 +220,7 @@ const Profile = () => {
                       onClick={() => window.open("https://t.me/Its_trms", "_blank")}
                       variant="default"
                       size="sm"
+                      className="flex-1 sm:flex-none text-xs sm:text-sm"
                     >
                       Contact Admin
                     </Button>
@@ -227,118 +231,118 @@ const Profile = () => {
           </Card>
         )}
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Your Performance</h1>
-          <p className="text-muted-foreground">Track your progress and achievements</p>
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">Your Performance</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Track your progress and achievements</p>
         </div>
 
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading profile...</p>
+          <div className="text-center py-8 sm:py-12">
+            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-sm sm:text-base text-muted-foreground">Loading profile...</p>
           </div>
         ) : (
           <>
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <TrendingUp className="h-6 w-6 text-primary" />
+                <CardContent className="p-3 sm:p-4 lg:pt-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-3 rounded-lg bg-primary/10">
+                      <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
                     <div>
-                      <div className="text-3xl font-bold">{stats.overallAccuracy.toFixed(1)}%</div>
-                      <p className="text-sm text-muted-foreground">Accuracy</p>
+                      <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.overallAccuracy.toFixed(1)}%</div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Accuracy</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-lg bg-success/10">
-                      <Target className="h-6 w-6 text-success" />
+                <CardContent className="p-3 sm:p-4 lg:pt-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-3 rounded-lg bg-success/10">
+                      <Target className="h-5 w-5 sm:h-6 sm:w-6 text-success" />
                     </div>
                     <div>
-                      <div className="text-3xl font-bold">{stats.totalTests}</div>
-                      <p className="text-sm text-muted-foreground">Tests Taken</p>
+                      <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.totalTests}</div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Tests Taken</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-lg bg-warning/10">
-                      <Award className="h-6 w-6 text-warning" />
+                <CardContent className="p-3 sm:p-4 lg:pt-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-3 rounded-lg bg-warning/10">
+                      <Award className="h-5 w-5 sm:h-6 sm:w-6 text-warning" />
                     </div>
                     <div>
-                      <div className="text-3xl font-bold">{stats.averageScore.toFixed(1)}%</div>
-                      <p className="text-sm text-muted-foreground">Avg Score</p>
+                      <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.averageScore.toFixed(1)}%</div>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Avg Score</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle>Subject-wise Performance</CardTitle>
+            <Card className="mb-4 sm:mb-6 lg:mb-8">
+              <CardHeader className="p-3 sm:p-4 lg:p-6">
+                <CardTitle className="text-base sm:text-lg lg:text-xl">Subject-wise Performance</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="p-3 sm:p-4 lg:p-6 pt-0 space-y-4 sm:space-y-6">
                 <div>
                   <div className="flex justify-between mb-2">
-                    <span className="font-medium">Physics</span>
-                    <span className="text-sm text-muted-foreground">{stats.physicsAccuracy.toFixed(1)}%</span>
+                    <span className="text-sm sm:text-base font-medium">Physics</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">{stats.physicsAccuracy.toFixed(1)}%</span>
                   </div>
-                  <Progress value={stats.physicsAccuracy} className="h-3" />
+                  <Progress value={stats.physicsAccuracy} className="h-2 sm:h-3" />
                 </div>
 
                 <div>
                   <div className="flex justify-between mb-2">
-                    <span className="font-medium">Chemistry</span>
-                    <span className="text-sm text-muted-foreground">{stats.chemistryAccuracy.toFixed(1)}%</span>
+                    <span className="text-sm sm:text-base font-medium">Chemistry</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">{stats.chemistryAccuracy.toFixed(1)}%</span>
                   </div>
-                  <Progress value={stats.chemistryAccuracy} className="h-3" />
+                  <Progress value={stats.chemistryAccuracy} className="h-2 sm:h-3" />
                 </div>
 
                 <div>
                   <div className="flex justify-between mb-2">
-                    <span className="font-medium">Mathematics</span>
-                    <span className="text-sm text-muted-foreground">{stats.mathsAccuracy.toFixed(1)}%</span>
+                    <span className="text-sm sm:text-base font-medium">Mathematics</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">{stats.mathsAccuracy.toFixed(1)}%</span>
                   </div>
-                  <Progress value={stats.mathsAccuracy} className="h-3" />
+                  <Progress value={stats.mathsAccuracy} className="h-2 sm:h-3" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Tests</CardTitle>
+              <CardHeader className="p-3 sm:p-4 lg:p-6">
+                <CardTitle className="text-base sm:text-lg lg:text-xl">Recent Tests</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
                 {recentTests.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No tests taken yet</p>
+                  <p className="text-center text-sm sm:text-base text-muted-foreground py-6 sm:py-8">No tests taken yet</p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {recentTests.map((test) => (
                       <div
                         key={test.id}
-                        className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-3 sm:p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer gap-3"
                         onClick={() => navigate(`/results/${test.id}`)}
                       >
-                        <div className="flex-1">
-                          <h3 className="font-semibold mb-1">{test.test_name}</h3>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm sm:text-base mb-1 truncate">{test.test_name}</h3>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                             <span>{test.correct}/{test.total} correct</span>
-                            <span>•</span>
+                            <span className="hidden sm:inline">•</span>
                             <span>{test.percentage.toFixed(1)}%</span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className={`text-2xl font-bold ${
+                        <div className="text-right shrink-0">
+                          <div className={`text-lg sm:text-2xl font-bold ${
                             test.percentage >= 75 ? "text-success" :
                             test.percentage >= 50 ? "text-warning" : "text-destructive"
                           }`}>
