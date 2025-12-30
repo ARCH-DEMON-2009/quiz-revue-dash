@@ -78,130 +78,130 @@ const Results = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold">Test Results</h1>
+      <nav className="border-b bg-card sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4">
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Test Results</h1>
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-2xl">{result.test_name}</CardTitle>
+      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl">
+        <Card className="mb-4 sm:mb-6">
+          <CardHeader className="p-3 sm:p-4 lg:p-6">
+            <CardTitle className="text-lg sm:text-xl lg:text-2xl">{result.test_name}</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="text-center">
-                <div className={`text-6xl font-bold mb-2 ${getPerformanceColor(result.percentage)}`}>
+                <div className={`text-4xl sm:text-5xl lg:text-6xl font-bold mb-1 sm:mb-2 ${getPerformanceColor(result.percentage)}`}>
                   {result.percentage.toFixed(1)}%
                 </div>
-                <p className="text-muted-foreground">Overall Score</p>
+                <p className="text-sm sm:text-base text-muted-foreground">Overall Score</p>
               </div>
               
               <div className="space-y-2">
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm sm:text-base">
                   <span>Marks Obtained</span>
                   <span className="font-semibold">{result.marks_obtained.toFixed(2)} / {result.max_marks}</span>
                 </div>
-                <Progress value={(result.marks_obtained / result.max_marks) * 100} className="h-3" />
+                <Progress value={(result.marks_obtained / result.max_marks) * 100} className="h-2 sm:h-3" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-success/10">
-                  <CheckCircle2 className="h-6 w-6 text-success" />
+            <CardContent className="p-3 sm:p-4 lg:pt-6">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                <div className="p-2 sm:p-3 rounded-lg bg-success/10">
+                  <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-success" />
                 </div>
-                <div>
-                  <div className="text-2xl font-bold">{result.correct}</div>
-                  <p className="text-sm text-muted-foreground">Correct</p>
+                <div className="text-center sm:text-left">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold">{result.correct}</div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Correct</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-destructive/10">
-                  <XCircle className="h-6 w-6 text-destructive" />
+            <CardContent className="p-3 sm:p-4 lg:pt-6">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                <div className="p-2 sm:p-3 rounded-lg bg-destructive/10">
+                  <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />
                 </div>
-                <div>
-                  <div className="text-2xl font-bold">{result.incorrect}</div>
-                  <p className="text-sm text-muted-foreground">Incorrect</p>
+                <div className="text-center sm:text-left">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold">{result.incorrect}</div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Incorrect</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-warning/10">
-                  <Circle className="h-6 w-6 text-warning" />
+            <CardContent className="p-3 sm:p-4 lg:pt-6">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                <div className="p-2 sm:p-3 rounded-lg bg-warning/10">
+                  <Circle className="h-5 w-5 sm:h-6 sm:w-6 text-warning" />
                 </div>
-                <div>
-                  <div className="text-2xl font-bold">{result.skipped}</div>
-                  <p className="text-sm text-muted-foreground">Skipped</p>
+                <div className="text-center sm:text-left">
+                  <div className="text-lg sm:text-xl lg:text-2xl font-bold">{result.skipped}</div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Skipped</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Subject-wise Performance</CardTitle>
+        <Card className="mb-4 sm:mb-6">
+          <CardHeader className="p-3 sm:p-4 lg:p-6">
+            <CardTitle className="text-base sm:text-lg lg:text-xl">Subject-wise Performance</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
+            <div className="space-y-3 sm:space-y-4">
               {Object.entries(result.subject_stats || {}).map(([subject, stats]: [string, any]) => (
                 <div key={subject}>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">{subject}</span>
-                    <span className="text-sm text-muted-foreground">
+                  <div className="flex justify-between mb-1 sm:mb-2">
+                    <span className="text-sm sm:text-base font-medium">{subject}</span>
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                       {stats.correct} / {stats.total}
                     </span>
                   </div>
-                  <Progress value={(stats.correct / stats.total) * 100} className="h-2" />
+                  <Progress value={(stats.correct / stats.total) * 100} className="h-1.5 sm:h-2" />
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 mb-2">
-                <Clock className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Time Taken</span>
+            <CardContent className="p-3 sm:p-4 lg:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                <span className="text-xs sm:text-sm text-muted-foreground">Time Taken</span>
               </div>
-              <p className="text-2xl font-bold">{formatTime(result.time_taken || 0)}</p>
+              <p className="text-base sm:text-xl lg:text-2xl font-bold">{formatTime(result.time_taken || 0)}</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 mb-2">
-                <FileText className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Questions Attempted</span>
+            <CardContent className="p-3 sm:p-4 lg:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                <span className="text-xs sm:text-sm text-muted-foreground">Attempted</span>
               </div>
-              <p className="text-2xl font-bold">{result.correct + result.incorrect} / {result.total}</p>
+              <p className="text-base sm:text-xl lg:text-2xl font-bold">{result.correct + result.incorrect} / {result.total}</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="flex gap-4">
-          <Button onClick={() => navigate(`/review/${resultId}`)} className="flex-1">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          <Button onClick={() => navigate(`/review/${resultId}`)} className="flex-1 text-sm sm:text-base">
             <FileText className="h-4 w-4 mr-2" />
             Review Answers
           </Button>
-          <Button variant="outline" onClick={() => navigate("/")} className="flex-1">
+          <Button variant="outline" onClick={() => navigate("/")} className="flex-1 text-sm sm:text-base">
             Back to Dashboard
           </Button>
         </div>

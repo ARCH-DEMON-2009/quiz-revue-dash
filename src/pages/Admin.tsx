@@ -304,12 +304,13 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
-          <div className="flex items-center gap-2">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex flex-wrap justify-between items-center gap-2">
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Admin Panel</h1>
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
             <AddPremiumUserDialog onSuccess={fetchUsers} />
             <Button 
               variant="outline" 
+              size="sm"
               onClick={async () => {
                 toast.info("Checking trial expiry notifications...");
                 try {
@@ -322,87 +323,88 @@ const Admin = () => {
                   toast.error("Failed to check notifications");
                 }
               }}
+              className="text-xs sm:text-sm"
             >
-              <Send className="h-4 w-4 mr-2" />
-              Check Expiry
+              <Send className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Check Expiry</span>
             </Button>
-            <Button variant="ghost" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Logout</span>
             </Button>
           </div>
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="p-3 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Total Users
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-0">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                <span className="text-3xl font-bold">{stats.total}</span>
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <span className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.total}</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Premium Users
+            <CardHeader className="p-3 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                Premium
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-0">
               <div className="flex items-center gap-2">
-                <Crown className="h-5 w-5 text-yellow-500" />
-                <span className="text-3xl font-bold">{stats.premium}</span>
+                <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
+                <span className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.premium}</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="p-3 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Active Trial
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-0">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-blue-500" />
-                <span className="text-3xl font-bold">{stats.trial}</span>
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+                <span className="text-xl sm:text-2xl lg:text-3xl font-bold">{stats.trial}</span>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Expired Trial
+            <CardHeader className="p-3 sm:pb-3">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                Expired
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-0">
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-warning">{stats.expired}</span>
+                <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-warning">{stats.expired}</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Subject Filter */}
-        <Card className="mb-4">
-          <CardContent className="pt-6">
-            <div className="flex flex-wrap gap-4 items-center">
-              <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium mb-2 block">Filter by Subject</label>
+        <Card className="mb-3 sm:mb-4">
+          <CardContent className="p-3 sm:p-4 lg:pt-6">
+            <div className="flex flex-wrap gap-3 sm:gap-4 items-center">
+              <div className="flex-1 min-w-[150px] sm:min-w-[200px]">
+                <label className="text-xs sm:text-sm font-medium mb-1 sm:mb-2 block">Filter by Subject</label>
                 <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="text-xs sm:text-sm">
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-card z-50">
                     <SelectItem value="all">All Subjects</SelectItem>
                     {subjects.map((subject) => (
                       <SelectItem key={subject} value={subject}>
@@ -417,27 +419,27 @@ const Admin = () => {
         </Card>
 
         <Card>
-          <CardHeader>
-            <div className="flex items-center gap-4">
+          <CardHeader className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by name, email, or WhatsApp number..."
+                  placeholder="Search users..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-7 sm:pl-10 text-xs sm:text-sm"
                 />
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4 lg:p-6 pt-0">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="all">All Users</TabsTrigger>
-                <TabsTrigger value="premium">Premium</TabsTrigger>
-                <TabsTrigger value="trial">Active Trial</TabsTrigger>
-                <TabsTrigger value="expired">Expired</TabsTrigger>
-                <TabsTrigger value="blocked">Blocked</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-5 text-xs sm:text-sm h-auto">
+                <TabsTrigger value="all" className="py-1.5 sm:py-2 px-1 sm:px-3">All</TabsTrigger>
+                <TabsTrigger value="premium" className="py-1.5 sm:py-2 px-1 sm:px-3">Premium</TabsTrigger>
+                <TabsTrigger value="trial" className="py-1.5 sm:py-2 px-1 sm:px-3">Trial</TabsTrigger>
+                <TabsTrigger value="expired" className="py-1.5 sm:py-2 px-1 sm:px-3">Expired</TabsTrigger>
+                <TabsTrigger value="blocked" className="py-1.5 sm:py-2 px-1 sm:px-3">Blocked</TabsTrigger>
               </TabsList>
 
               <TabsContent value={activeTab} className="mt-4">
