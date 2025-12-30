@@ -75,10 +75,10 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold">QuizMaster</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Zap variant="ghost" size="sm" onClick={() => navigate("/analytics")} className="shadow-sm">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/analytics")} className="shadow-sm">
               <BarChart className="h-4 w-4 mr-2" />
               Analytics
-            </Zap>
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/leaderboard")}>
               <Trophy className="h-4 w-4 mr-2" />
               Leaderboard

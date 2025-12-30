@@ -147,7 +147,7 @@ const Review = () => {
         </div>
 
         <div className="space-y-6">
-          {filteredQuestions.map((question, idx) => {
+        {filteredQuestions.map((question, idx) => {
             const answer = getAnswerForQuestion(question.id);
             
             // Parse options - handle various formats from database
@@ -193,6 +193,31 @@ const Review = () => {
             const options = parseOptions(question.options);
             const hasOptions = Object.keys(options).length > 0;
             const isTextQuestion = !hasOptions || question.type === 'text';
+            
+            // Map numeric answers (1, 2, 3, 4) to option keys (A, B, C, D)
+            const optionKeys = Object.keys(options).sort();
+            const numericToKeyMap: Record<string, string> = {};
+            optionKeys.forEach((key, index) => {
+              numericToKeyMap[String(index + 1)] = key;
+            });
+            
+            // Normalize answer to option key
+            const normalizeToKey = (ans: string | null | undefined): string | null => {
+              if (!ans) return null;
+              const upperAns = ans.toUpperCase();
+              // If it's already a valid key (A, B, C, D)
+              if (optionKeys.map(k => k.toUpperCase()).includes(upperAns)) {
+                return upperAns;
+              }
+              // If it's a numeric answer (1, 2, 3, 4), map to key
+              if (numericToKeyMap[ans]) {
+                return numericToKeyMap[ans].toUpperCase();
+              }
+              return ans;
+            };
+            
+            const userAnswerKey = normalizeToKey(answer?.selected);
+            const correctAnswerKey = normalizeToKey(question.correct);
 
             return (
               <Card key={question.id}>
@@ -223,8 +248,9 @@ const Review = () => {
                   {hasOptions && !isTextQuestion && (
                     <div className="space-y-2">
                       {Object.entries(options).map(([key, value]) => {
-                        const isUserAnswer = answer?.selected === key;
-                        const isCorrectAnswer = question.correct === key || question.correct?.toUpperCase() === key.toUpperCase();
+                        const keyUpper = key.toUpperCase();
+                        const isUserAnswer = userAnswerKey === keyUpper;
+                        const isCorrectAnswer = correctAnswerKey === keyUpper;
 
                         return (
                           <div
