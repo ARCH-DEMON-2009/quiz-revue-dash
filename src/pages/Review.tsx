@@ -300,8 +300,8 @@ const Review = () => {
                     <div className="mt-4 p-3 bg-success/5 border border-success/20 rounded-lg">
                       <p className="text-sm text-muted-foreground mb-1">Correct Answer:</p>
                       <p className="font-medium text-success">
-                        {question.correct}
-                        {options[question.correct] && ` - ${options[question.correct]}`}
+                        {correctAnswerKey || question.correct}
+                        {(options[correctAnswerKey || question.correct] || options[question.correct]) && ` - ${options[correctAnswerKey || question.correct] || options[question.correct]}`}
                       </p>
                     </div>
                   )}
