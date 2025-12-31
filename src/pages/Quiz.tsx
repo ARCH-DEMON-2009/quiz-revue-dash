@@ -268,19 +268,37 @@ const Quiz = () => {
   const currentQuestion = questions[currentIndex];
   const currentAnswer = answers.get(currentQuestion.id);
   
-  // Parse options - handle both string and object formats
+  // Parse options - handle both string, object, and array formats
   const parseOptions = (opts: any): Record<string, string> => {
     if (!opts) return {};
+    
+    // If it's a string, try to parse it
     if (typeof opts === 'string') {
       try {
-        return JSON.parse(opts);
+        const parsed = JSON.parse(opts);
+        return parseOptions(parsed); // Recursively parse
       } catch {
         return {};
       }
     }
-    if (typeof opts === 'object' && !Array.isArray(opts)) {
+    
+    // If it's an array, convert to object with A, B, C, D keys
+    if (Array.isArray(opts)) {
+      const result: Record<string, string> = {};
+      const optionKeys = ['A', 'B', 'C', 'D', 'E', 'F'];
+      opts.forEach((val, i) => {
+        if (i < optionKeys.length) {
+          result[optionKeys[i]] = String(val);
+        }
+      });
+      return result;
+    }
+    
+    // If it's an object, return as is
+    if (typeof opts === 'object') {
       return opts;
     }
+    
     return {};
   };
   
