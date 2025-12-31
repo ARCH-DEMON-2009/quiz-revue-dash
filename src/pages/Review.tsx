@@ -194,28 +194,34 @@ const Review = () => {
             const hasOptions = Object.keys(options).length > 0;
             const isTextQuestion = !hasOptions || question.type === 'text';
             
-            // Map numeric answers (0, 1, 2, 3) to option keys (A, B, C, D)
+            // Create mapping from numeric indices to option keys
             const optionKeys = Object.keys(options).sort();
-            const numericToKeyMap: Record<string, string> = {};
-            optionKeys.forEach((key, index) => {
-              // Map both 0-based (0, 1, 2, 3) and 1-based (1, 2, 3, 4) to keys
-              numericToKeyMap[String(index)] = key;
-              numericToKeyMap[String(index + 1)] = key;
-            });
             
             // Normalize answer to option key
+            // Handles: "A", "B", "0", "1", etc.
             const normalizeToKey = (ans: string | null | undefined): string | null => {
               if (!ans) return null;
               const trimmedAns = ans.trim();
               const upperAns = trimmedAns.toUpperCase();
+              
               // If it's already a valid key (A, B, C, D)
               if (optionKeys.map(k => k.toUpperCase()).includes(upperAns)) {
                 return upperAns;
               }
-              // If it's a numeric answer (0, 1, 2, 3 or 1, 2, 3, 4), map to key
-              if (numericToKeyMap[trimmedAns]) {
-                return numericToKeyMap[trimmedAns].toUpperCase();
+              
+              // If it's a numeric answer, map to key
+              const numericVal = parseInt(trimmedAns, 10);
+              if (!isNaN(numericVal)) {
+                // Handle 0-based index (0->A, 1->B, 2->C, 3->D)
+                if (numericVal >= 0 && numericVal < optionKeys.length) {
+                  return optionKeys[numericVal].toUpperCase();
+                }
+                // Handle 1-based index (1->A, 2->B, 3->C, 4->D)
+                if (numericVal >= 1 && numericVal <= optionKeys.length) {
+                  return optionKeys[numericVal - 1].toUpperCase();
+                }
               }
+              
               return trimmedAns;
             };
             
