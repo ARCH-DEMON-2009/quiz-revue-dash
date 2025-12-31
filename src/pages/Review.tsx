@@ -194,26 +194,29 @@ const Review = () => {
             const hasOptions = Object.keys(options).length > 0;
             const isTextQuestion = !hasOptions || question.type === 'text';
             
-            // Map numeric answers (1, 2, 3, 4) to option keys (A, B, C, D)
+            // Map numeric answers (0, 1, 2, 3) to option keys (A, B, C, D)
             const optionKeys = Object.keys(options).sort();
             const numericToKeyMap: Record<string, string> = {};
             optionKeys.forEach((key, index) => {
+              // Map both 0-based (0, 1, 2, 3) and 1-based (1, 2, 3, 4) to keys
+              numericToKeyMap[String(index)] = key;
               numericToKeyMap[String(index + 1)] = key;
             });
             
             // Normalize answer to option key
             const normalizeToKey = (ans: string | null | undefined): string | null => {
               if (!ans) return null;
-              const upperAns = ans.toUpperCase();
+              const trimmedAns = ans.trim();
+              const upperAns = trimmedAns.toUpperCase();
               // If it's already a valid key (A, B, C, D)
               if (optionKeys.map(k => k.toUpperCase()).includes(upperAns)) {
                 return upperAns;
               }
-              // If it's a numeric answer (1, 2, 3, 4), map to key
-              if (numericToKeyMap[ans]) {
-                return numericToKeyMap[ans].toUpperCase();
+              // If it's a numeric answer (0, 1, 2, 3 or 1, 2, 3, 4), map to key
+              if (numericToKeyMap[trimmedAns]) {
+                return numericToKeyMap[trimmedAns].toUpperCase();
               }
-              return ans;
+              return trimmedAns;
             };
             
             const userAnswerKey = normalizeToKey(answer?.selected);
@@ -301,8 +304,17 @@ const Review = () => {
                       <p className="text-sm text-muted-foreground mb-1">Correct Answer:</p>
                       <p className="font-medium text-success">
                         {correctAnswerKey || question.correct}
-                        {(options[correctAnswerKey || question.correct] || options[question.correct]) && ` - ${options[correctAnswerKey || question.correct] || options[question.correct]}`}
+                        {options[correctAnswerKey] && ` - ${options[correctAnswerKey]}`}
                       </p>
+                      {answer?.selected && !answer.isCorrect && (
+                        <div className="mt-2 pt-2 border-t border-destructive/20">
+                          <p className="text-sm text-muted-foreground mb-1">Your Answer:</p>
+                          <p className="font-medium text-destructive">
+                            {userAnswerKey || answer.selected}
+                            {options[userAnswerKey || ''] && ` - ${options[userAnswerKey || '']}`}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>
