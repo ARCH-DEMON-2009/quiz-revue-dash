@@ -253,9 +253,9 @@ const Review = () => {
                   )}
                   <p className="text-lg mb-4">{question.question_text}</p>
 
-                  {/* MCQ Options */}
+                  {/* MCQ Options - Show all options with highlighting */}
                   {hasOptions && !isTextQuestion && (
-                    <div className="space-y-2">
+                    <div className="space-y-2 mt-4">
                       {Object.entries(options).map(([key, value]) => {
                         const keyUpper = key.toUpperCase();
                         const isUserAnswer = userAnswerKey === keyUpper;
@@ -264,24 +264,33 @@ const Review = () => {
                         return (
                           <div
                             key={key}
-                            className={`p-4 rounded-lg border-2 ${
-                              isCorrectAnswer
+                            className={`p-3 sm:p-4 rounded-lg border-2 transition-all ${
+                              isCorrectAnswer && isUserAnswer
+                                ? "border-success bg-success/15"
+                                : isCorrectAnswer
                                 ? "border-success bg-success/10"
                                 : isUserAnswer
                                 ? "border-destructive bg-destructive/10"
-                                : "border-border"
+                                : "border-border bg-muted/30"
                             }`}
                           >
-                            <div className="flex items-start gap-2">
-                              <span className="font-semibold">{key}.</span>
+                            <div className="flex items-start gap-3">
+                              <span className={`font-bold text-lg ${
+                                isCorrectAnswer ? "text-success" : isUserAnswer ? "text-destructive" : "text-muted-foreground"
+                              }`}>{keyUpper}.</span>
                               <div className="flex-1">
-                                <p>{value}</p>
-                                {isCorrectAnswer && (
-                                  <p className="text-sm text-success mt-1 font-medium">✓ Correct Answer</p>
-                                )}
-                                {isUserAnswer && !isCorrectAnswer && (
-                                  <p className="text-sm text-destructive mt-1 font-medium">✗ Your Answer</p>
-                                )}
+                                <p className="text-base">{value}</p>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {isCorrectAnswer && isUserAnswer && (
+                                    <span className="text-xs font-medium text-success bg-success/20 px-2 py-0.5 rounded">✓ Correct! You selected this</span>
+                                  )}
+                                  {isCorrectAnswer && !isUserAnswer && (
+                                    <span className="text-xs font-medium text-success bg-success/20 px-2 py-0.5 rounded">✓ Correct Answer</span>
+                                  )}
+                                  {isUserAnswer && !isCorrectAnswer && (
+                                    <span className="text-xs font-medium text-destructive bg-destructive/20 px-2 py-0.5 rounded">✗ Your Answer (Wrong)</span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -290,35 +299,43 @@ const Review = () => {
                     </div>
                   )}
 
+                  {/* Summary box for quick reference */}
+                  <div className="mt-4 p-3 bg-muted/50 border rounded-lg">
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Correct Answer: </span>
+                        <span className="font-semibold text-success">
+                          {correctAnswerKey || question.correct}
+                          {options[correctAnswerKey] && ` (${options[correctAnswerKey]})`}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Your Answer: </span>
+                        {answer?.selected ? (
+                          <span className={`font-semibold ${answer.isCorrect ? "text-success" : "text-destructive"}`}>
+                            {userAnswerKey || answer.selected}
+                            {options[userAnswerKey || ''] && ` (${options[userAnswerKey || '']})`}
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-warning">Skipped</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Text Answer Display */}
                   {isTextQuestion && (
-                    <div className="space-y-3">
+                    <div className="space-y-3 mt-4">
+                      <div className="p-3 bg-muted/50 border rounded-lg">
+                        <p className="text-sm text-muted-foreground mb-1">Correct Answer:</p>
+                        <p className="font-medium text-success">{question.correct}</p>
+                      </div>
                       {answer?.selected && (
-                        <div className={`p-4 rounded-lg border-2 ${
+                        <div className={`p-3 rounded-lg border-2 ${
                           answer.isCorrect ? "border-success bg-success/10" : "border-destructive bg-destructive/10"
                         }`}>
                           <p className="text-sm text-muted-foreground mb-1">Your Answer:</p>
-                          <p className="font-medium">{answer.selected}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Show correct answer for wrong/skipped questions */}
-                  {(!answer?.isCorrect || !answer?.selected) && (
-                    <div className="mt-4 p-3 bg-success/5 border border-success/20 rounded-lg">
-                      <p className="text-sm text-muted-foreground mb-1">Correct Answer:</p>
-                      <p className="font-medium text-success">
-                        {correctAnswerKey || question.correct}
-                        {options[correctAnswerKey] && ` - ${options[correctAnswerKey]}`}
-                      </p>
-                      {answer?.selected && !answer.isCorrect && (
-                        <div className="mt-2 pt-2 border-t border-destructive/20">
-                          <p className="text-sm text-muted-foreground mb-1">Your Answer:</p>
-                          <p className="font-medium text-destructive">
-                            {userAnswerKey || answer.selected}
-                            {options[userAnswerKey || ''] && ` - ${options[userAnswerKey || '']}`}
-                          </p>
+                          <p className={`font-medium ${answer.isCorrect ? "text-success" : "text-destructive"}`}>{answer.selected}</p>
                         </div>
                       )}
                     </div>
