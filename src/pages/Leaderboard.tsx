@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Award, ArrowLeft } from "lucide-react";
+import { Trophy, Medal, Award } from "lucide-react";
 import { toast } from "sonner";
+import NavigationHeader from "@/components/NavigationHeader";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -151,19 +152,16 @@ const Leaderboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background p-4 md:p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+      <NavigationHeader />
+      <div className="p-4 md:p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Leaderboard
             </h1>
             <p className="text-muted-foreground mt-1">Top performers across all tests</p>
           </div>
-        </div>
 
         <Card>
           <CardHeader>
@@ -217,6 +215,7 @@ const Leaderboard = () => {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { BarChart, TrendingUp, Award, Clock, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import NavigationHeader from "@/components/NavigationHeader";
 
 interface Analytics {
   total_tests: number;
@@ -140,19 +141,16 @@ const Analytics = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+      <NavigationHeader />
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Performance Analytics
             </h1>
             <p className="text-muted-foreground mt-1">Track your progress and insights</p>
           </div>
-        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
@@ -242,6 +240,7 @@ const Analytics = () => {
         </Card>
       </div>
     </div>
+  </div>
   );
 };
 
