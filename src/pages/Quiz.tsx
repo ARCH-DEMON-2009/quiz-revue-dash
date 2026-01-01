@@ -84,11 +84,17 @@ const Quiz = () => {
 
       const [questionsRes, testRes] = await Promise.all([
         supabase.from("questions").select("id, question_text, image, options, correct, subject, marks, negative_marks, type").eq("test_id", testId),
-        supabase.from("tests").select("name, duration_minutes").eq("id", testId).single()
+        supabase.from("tests").select("name, duration_minutes").eq("id", testId).maybeSingle()
       ]);
 
       if (questionsRes.error) throw questionsRes.error;
       if (testRes.error) throw testRes.error;
+      
+      if (!testRes.data) {
+        toast.error("Test not found");
+        navigate("/");
+        return;
+      }
 
       setQuestions(questionsRes.data || []);
       setTestName(testRes.data.name);

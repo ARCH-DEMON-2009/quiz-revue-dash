@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Award, ChevronLeft, HelpCircle, Crown, Calendar } from "lucide-react";
+import { TrendingUp, Target, Award, HelpCircle, Crown, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import NavigationHeader from "@/components/NavigationHeader";
 
 interface Stats {
   totalTests: number;
@@ -152,25 +153,19 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="-ml-2">
-            <ChevronLeft className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Back to Dashboard</span>
-            <span className="sm:hidden">Back</span>
+      <NavigationHeader />
+      <div className="border-b bg-card">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-2 flex justify-end">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
+          >
+            <HelpCircle className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Help & Support</span>
           </Button>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
-            >
-              <HelpCircle className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Help & Support</span>
-            </Button>
-          </div>
         </div>
-      </nav>
+      </div>
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
         {/* Access Status Card */}

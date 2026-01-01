@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, FileText, User, BookOpen, BarChart, Trophy, LogOut, Zap } from "lucide-react";
+import { Clock, FileText, BookOpen, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
+import NavigationHeader from "@/components/NavigationHeader";
 interface Test {
   id: string;
   name: string;
@@ -68,43 +69,7 @@ const Dashboard = () => {
     return null;
   }
   return <div className="min-h-screen bg-background">
-      <nav className="border-b bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold">Test Sagar</h1>
-          </div>
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/analytics")} className="hidden sm:flex shadow-sm">
-              <BarChart className="h-4 w-4 mr-2" />
-              <span className="hidden md:inline">Analytics</span>
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/leaderboard")} className="hidden sm:flex">
-              <Trophy className="h-4 w-4 mr-2" />
-              <span className="hidden md:inline">Leaderboard</span>
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
-              <User className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Profile</span>
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
-          </div>
-        </div>
-        {/* Mobile bottom nav */}
-        <div className="sm:hidden flex justify-around border-t py-2 bg-card">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/analytics")} className="flex-col h-auto py-1">
-            <BarChart className="h-4 w-4" />
-            <span className="text-xs">Analytics</span>
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/leaderboard")} className="flex-col h-auto py-1">
-            <Trophy className="h-4 w-4" />
-            <span className="text-xs">Ranks</span>
-          </Button>
-        </div>
-      </nav>
+      <NavigationHeader showFullNav onLogout={handleLogout} />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
         {!selectedClass ? <>

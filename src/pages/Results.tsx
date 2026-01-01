@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, Circle, TrendingUp, Clock, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, Circle, Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
+import NavigationHeader from "@/components/NavigationHeader";
 
 interface TestResult {
   id: string;
@@ -78,11 +79,7 @@ const Results = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4">
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Test Results</h1>
-        </div>
-      </nav>
+      <NavigationHeader />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl">
         <Card className="mb-4 sm:mb-6">

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Circle, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
+import NavigationHeader from "@/components/NavigationHeader";
 
 interface Question {
   id: string;
@@ -117,14 +118,7 @@ const Review = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate(`/results/${resultId}`)}>
-            <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to Results
-          </Button>
-        </div>
-      </nav>
+      <NavigationHeader />
 
       <main className="container mx-auto px-4 py-8 max-w-5xl">
         <div className="mb-6">
