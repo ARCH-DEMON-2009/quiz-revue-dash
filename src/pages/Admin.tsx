@@ -116,7 +116,11 @@ const Admin = () => {
         .from("user_trials")
         .select("user_id, start_date, email");
 
-      if (trialError) console.error("Trial users error:", trialError);
+      if (trialError) {
+        console.error("Trial users error:", trialError);
+      } else {
+        console.log(`Fetched ${trialUsers?.length || 0} trial users`);
+      }
 
       // Fetch all test results
       const { data: testResults, error: resultsError } = await supabase
@@ -174,11 +178,12 @@ const Admin = () => {
         let accountType: "premium" | "trial" | "expired" = "expired";
         if (isPremium) {
           accountType = "premium";
-        } else if (isTrial) {
+        } else if (isTrial && trialStart) {
           // Check if trial is still valid (3 days)
-          const trialEndDate = new Date(trialStart);
-          trialEndDate.setDate(trialEndDate.getDate() + 3);
-          if (trialEndDate > new Date()) {
+          const trialStartDate = new Date(trialStart);
+          const trialEndDate = new Date(trialStartDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+          const now = new Date();
+          if (trialEndDate > now) {
             accountType = "trial";
           } else {
             accountType = "expired"; // Trial expired
@@ -200,7 +205,10 @@ const Admin = () => {
         };
       });
 
-      console.log(`Loaded ${combinedUsers.length} users, ${combinedUsers.filter(u => u.account_type === 'premium').length} premium`);
+      const trialCount = combinedUsers.filter(u => u.account_type === 'trial').length;
+      const expiredCount = combinedUsers.filter(u => u.account_type === 'expired').length;
+      console.log(`Loaded ${combinedUsers.length} users: ${combinedUsers.filter(u => u.account_type === 'premium').length} premium, ${trialCount} trial, ${expiredCount} expired`);
+      console.log("Trial users sample:", combinedUsers.filter(u => u.account_type === 'trial').slice(0, 3));
 
       setUsers(combinedUsers);
       setFilteredUsers(combinedUsers);
