@@ -300,7 +300,8 @@ const Review = () => {
                         <span className="text-muted-foreground">Correct Answer: </span>
                         <span className="font-semibold text-success">
                           {correctAnswerKey || question.correct}
-                          {options[correctAnswerKey] && ` (${options[correctAnswerKey]})`}
+                          {(options[correctAnswerKey || ''] || options[(correctAnswerKey || '').toLowerCase()]) && 
+                            ` (${options[correctAnswerKey || ''] || options[(correctAnswerKey || '').toLowerCase()]})`}
                         </span>
                       </div>
                       <div>
@@ -308,7 +309,8 @@ const Review = () => {
                         {answer?.selected ? (
                           <span className={`font-semibold ${answer.isCorrect ? "text-success" : "text-destructive"}`}>
                             {userAnswerKey || answer.selected}
-                            {options[userAnswerKey || ''] && ` (${options[userAnswerKey || '']})`}
+                            {(options[userAnswerKey || ''] || options[(userAnswerKey || '').toLowerCase()]) && 
+                              ` (${options[userAnswerKey || ''] || options[(userAnswerKey || '').toLowerCase()]})`}
                           </span>
                         ) : (
                           <span className="font-semibold text-warning">Skipped</span>
