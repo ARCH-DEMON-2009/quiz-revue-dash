@@ -32,7 +32,7 @@ const ITEMS_PER_PAGE = 20;
 const Admin = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<UserData[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,13 +43,43 @@ const Admin = () => {
   const [subjects, setSubjects] = useState<string[]>([]);
 
   useEffect(() => {
-    const adminAuth = sessionStorage.getItem("adminAuth");
-    if (adminAuth === "authenticated") {
+    checkAdminAuth();
+  }, []);
+
+  const checkAdminAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      // Check if user has admin role using the is_admin function
+      const { data: isAdmin, error } = await supabase.rpc('is_admin');
+      
+      if (error) {
+        console.error("Error checking admin status:", error);
+        toast.error("Failed to verify admin access");
+        navigate("/");
+        return;
+      }
+
+      if (!isAdmin) {
+        toast.error("Access denied. Admin privileges required.");
+        navigate("/");
+        return;
+      }
+
       setIsAuthenticated(true);
       fetchUsers();
       fetchSubjects();
+    } catch (error) {
+      console.error("Auth error:", error);
+      navigate("/");
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     filterUsers();
@@ -72,22 +102,9 @@ const Admin = () => {
     }
   };
 
-  const handleLogin = () => {
-    if (password === "admin123") {
-      sessionStorage.setItem("adminAuth", "authenticated");
-      setIsAuthenticated(true);
-      fetchUsers();
-      fetchSubjects();
-      toast.success("Welcome to Admin Panel");
-    } else {
-      toast.error("Invalid password");
-    }
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("adminAuth");
-    setIsAuthenticated(false);
-    setPassword("");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
   };
 
   const fetchUsers = async () => {
@@ -274,23 +291,30 @@ const Admin = () => {
     currentPage * ITEMS_PER_PAGE
   );
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Verifying admin access...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle className="text-2xl text-center">Admin Login</CardTitle>
+            <CardTitle className="text-2xl text-center">Admin Access Required</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Enter admin password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleLogin()}
-            />
-            <Button onClick={handleLogin} className="w-full">
-              Login
+            <p className="text-center text-muted-foreground">
+              You need admin privileges to access this page.
+            </p>
+            <Button onClick={() => navigate("/auth")} className="w-full">
+              Login with Admin Account
             </Button>
             <Button variant="ghost" onClick={() => navigate("/")} className="w-full">
               Back to Dashboard
