@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart, Trophy, User, LogOut } from "lucide-react";
+import { BarChart, Trophy, User, LogOut, Sparkles } from "lucide-react";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
@@ -10,8 +10,12 @@ interface NavigationHeaderProps {
 const NavigationHeader = ({ showFullNav = false, onLogout }: NavigationHeaderProps) => {
   const navigate = useNavigate();
 
+  const handleAIQuiz = () => {
+    window.open("https://test-sagar-jet.vercel.app/", "_blank");
+  };
+
   return (
-    <nav className="border-b bg-card sticky top-0 z-50">
+    <nav className="border-b border-border/50 bg-card/80 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
         <div 
           className="flex items-center gap-2 cursor-pointer" 
@@ -20,14 +24,25 @@ const NavigationHeader = ({ showFullNav = false, onLogout }: NavigationHeaderPro
           <img 
             src="/logo.png" 
             alt="Test Sagar Logo" 
-            className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
+            className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-xl shadow-md"
           />
-          <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold">Test Sagar</h1>
+          <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Test Sagar
+          </h1>
         </div>
         
         {showFullNav && (
           <div className="flex items-center gap-1 sm:gap-2">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/analytics")} className="hidden sm:flex shadow-sm">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleAIQuiz} 
+              className="hidden sm:flex bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 hover:border-primary hover:bg-primary/20 transition-all"
+            >
+              <Sparkles className="h-4 w-4 mr-2 text-primary" />
+              <span className="hidden md:inline">Make Quiz with AI</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/analytics")} className="hidden sm:flex">
               <BarChart className="h-4 w-4 mr-2" />
               <span className="hidden md:inline">Analytics</span>
             </Button>
@@ -40,7 +55,7 @@ const NavigationHeader = ({ showFullNav = false, onLogout }: NavigationHeaderPro
               <span className="hidden sm:inline">Profile</span>
             </Button>
             {onLogout && (
-              <Button variant="ghost" size="sm" onClick={onLogout}>
+              <Button variant="destructive" size="sm" onClick={onLogout}>
                 <LogOut className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>
@@ -51,7 +66,11 @@ const NavigationHeader = ({ showFullNav = false, onLogout }: NavigationHeaderPro
       
       {/* Mobile bottom nav */}
       {showFullNav && (
-        <div className="sm:hidden flex justify-around border-t py-2 bg-card">
+        <div className="sm:hidden flex justify-around border-t border-border/50 py-2 bg-card/80 backdrop-blur-xl">
+          <Button variant="ghost" size="sm" onClick={handleAIQuiz} className="flex-col h-auto py-1">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-xs">AI Quiz</span>
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate("/analytics")} className="flex-col h-auto py-1">
             <BarChart className="h-4 w-4" />
             <span className="text-xs">Analytics</span>
@@ -60,6 +79,12 @@ const NavigationHeader = ({ showFullNav = false, onLogout }: NavigationHeaderPro
             <Trophy className="h-4 w-4" />
             <span className="text-xs">Ranks</span>
           </Button>
+          {onLogout && (
+            <Button variant="ghost" size="sm" onClick={onLogout} className="flex-col h-auto py-1">
+              <LogOut className="h-4 w-4 text-destructive" />
+              <span className="text-xs">Logout</span>
+            </Button>
+          )}
         </div>
       )}
     </nav>
