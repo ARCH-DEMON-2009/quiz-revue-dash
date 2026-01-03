@@ -16,7 +16,6 @@ interface Question {
   question_text: string;
   image: string | null;
   options: any;
-  correct: string;
   subject: string;
   marks: number;
   negative_marks: number;
@@ -26,7 +25,6 @@ interface Question {
 interface Answer {
   questionId: string;
   selected: string | null;
-  isCorrect: boolean;
   markedForReview?: boolean;
 }
 
@@ -83,7 +81,7 @@ const Quiz = () => {
       }
 
       const [questionsRes, testRes] = await Promise.all([
-        supabase.from("questions").select("id, question_text, image, options, correct, subject, marks, negative_marks, type").eq("test_id", testId),
+        supabase.from("questions").select("id, question_text, image, options, subject, marks, negative_marks, type").eq("test_id", testId),
         supabase.from("tests").select("name, duration_minutes").eq("id", testId).maybeSingle()
       ]);
 
@@ -128,7 +126,6 @@ const Quiz = () => {
     setAnswers(new Map(answers.set(question.id, {
       questionId: question.id,
       selected: option,
-      isCorrect: option === question.correct,
       markedForReview: existing?.markedForReview || false
     })));
   };
@@ -140,7 +137,6 @@ const Quiz = () => {
     setAnswers(new Map(answers.set(question.id, {
       questionId: question.id,
       selected: value,
-      isCorrect: value.trim().toLowerCase() === question.correct.toLowerCase(),
       markedForReview: existing?.markedForReview || false
     })));
   };
@@ -151,7 +147,6 @@ const Quiz = () => {
     setAnswers(new Map(answers.set(question.id, {
       questionId: question.id,
       selected: existing?.selected || null,
-      isCorrect: existing?.isCorrect || false,
       markedForReview: true
     })));
     toast.success("Marked for review");
@@ -179,68 +174,39 @@ const Quiz = () => {
 
   const handleSubmit = async () => {
     try {
-      const correct = Array.from(answers.values()).filter(a => a.isCorrect).length;
-      const incorrect = Array.from(answers.values()).filter(a => !a.isCorrect && a.selected).length;
-      const skipped = questions.length - answers.size;
-      
-      const marksObtained = Array.from(answers.values()).reduce((total, ans) => {
-        const q = questions.find(q => q.id === ans.questionId);
-        if (!q) return total;
-        if (ans.isCorrect) return total + (q.marks || 4);
-        if (ans.selected) return total - (q.negative_marks || 1);
-        return total;
-      }, 0);
-
-      const maxMarks = questions.reduce((total, q) => total + (q.marks || 4), 0);
-      const percentage = (marksObtained / maxMarks) * 100;
-
-      const subjectStats: any = {};
-      questions.forEach(q => {
-        if (!subjectStats[q.subject]) {
-          subjectStats[q.subject] = { correct: 0, total: 0 };
-        }
-        subjectStats[q.subject].total++;
-        const ans = answers.get(q.id);
-        if (ans?.isCorrect) subjectStats[q.subject].correct++;
-      });
-
-      const userAnswers = Array.from(answers.entries()).map(([qId, ans]) => ({
-        questionId: qId,
-        selected: ans.selected,
-        isCorrect: ans.isCorrect
-      }));
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         toast.error("Please login to submit test");
         navigate("/auth");
         return;
       }
 
-      const { data, error } = await supabase
-        .from("test_results")
-        .insert({
-          user_id: user.id,
-          test_id: testId,
-          test_name: testName,
-          correct,
-          incorrect,
-          skipped,
-          total: questions.length,
-          marks_obtained: marksObtained,
-          max_marks: maxMarks,
-          percentage: percentage,
-          user_answers: userAnswers,
-          subject_stats: subjectStats,
-          time_taken: ((questions[0] ? 180 : 0) * 60) - timeLeft
-        })
-        .select()
-        .single();
+      // Prepare user answers for server-side validation
+      const userAnswersArray = Array.from(answers.entries()).map(([qId, ans]) => ({
+        questionId: qId,
+        selected: ans.selected
+      }));
+
+      const timeTaken = ((questions[0] ? 180 : 0) * 60) - timeLeft;
+
+      // Submit to Edge Function for secure validation
+      const { data, error } = await supabase.functions.invoke('validate-quiz-answers', {
+        body: {
+          testId,
+          userAnswers: userAnswersArray,
+          timeTaken,
+          testName
+        }
+      });
 
       if (error) throw error;
       
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to validate answers');
+      }
+      
       toast.success("Test submitted successfully!");
-      navigate(`/results/${data.id}`);
+      navigate(`/results/${data.resultId}`);
     } catch (error) {
       toast.error("Failed to submit test");
       console.error(error);
