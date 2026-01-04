@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Trophy, Medal, Award, Star } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 
@@ -16,12 +15,14 @@ interface LeaderboardEntry {
   total_tests: number;
   overall_accuracy: number;
   rank_percentile: number;
+  global_rank: number;
 }
 
 const Leaderboard = () => {
   const navigate = useNavigate();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuthAndFetchData();
@@ -36,23 +37,24 @@ const Leaderboard = () => {
       return;
     }
 
+    setCurrentUserId(user.id);
     fetchLeaderboard();
   };
 
   const fetchLeaderboard = async () => {
     try {
-      // Use the security definer function to get leaderboard data
       const { data, error } = await supabase.rpc('get_leaderboard_data');
 
       if (error) throw error;
 
       const leaderboardData: LeaderboardEntry[] = (data || []).map((entry: any) => ({
         user_id: entry.user_id,
-        name: entry.name || 'Unknown User',
+        name: entry.name || 'Student',
         average_score: Number(entry.average_score) || 0,
         total_tests: Number(entry.total_tests) || 0,
         overall_accuracy: Number(entry.overall_accuracy) || 0,
-        rank_percentile: Number(entry.rank_percentile) || 0
+        rank_percentile: Number(entry.rank_percentile) || 0,
+        global_rank: Number(entry.global_rank) || 0
       }));
 
       setLeaderboard(leaderboardData);
@@ -64,19 +66,21 @@ const Leaderboard = () => {
     }
   };
 
-  const getRankIcon = (index: number) => {
-    if (index === 0) return <Trophy className="h-6 w-6 text-yellow-500" />;
-    if (index === 1) return <Medal className="h-6 w-6 text-gray-400" />;
-    if (index === 2) return <Award className="h-6 w-6 text-orange-600" />;
+  const getRankIcon = (rank: number) => {
+    if (rank === 1) return <Trophy className="h-6 w-6 text-yellow-500" />;
+    if (rank === 2) return <Medal className="h-6 w-6 text-gray-400" />;
+    if (rank === 3) return <Award className="h-6 w-6 text-orange-600" />;
     return null;
   };
 
-  const getRankBadge = (index: number) => {
-    if (index === 0) return "bg-gradient-to-r from-yellow-400 to-yellow-600";
-    if (index === 1) return "bg-gradient-to-r from-gray-300 to-gray-500";
-    if (index === 2) return "bg-gradient-to-r from-orange-400 to-orange-600";
-    return "bg-muted";
+  const getRankBadge = (rank: number) => {
+    if (rank === 1) return "bg-gradient-to-r from-yellow-400 to-yellow-600";
+    if (rank === 2) return "bg-gradient-to-r from-gray-300 to-gray-500";
+    if (rank === 3) return "bg-gradient-to-r from-orange-400 to-orange-600";
+    return "bg-card";
   };
+
+  const isCurrentUser = (userId: string) => currentUserId === userId;
 
   if (loading) {
     return (
@@ -85,6 +89,10 @@ const Leaderboard = () => {
       </div>
     );
   }
+
+  // Separate current user if they're outside top 50
+  const top50 = leaderboard.filter(e => e.global_rank <= 50);
+  const currentUserEntry = leaderboard.find(e => e.user_id === currentUserId && e.global_rank > 50);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
@@ -98,58 +106,112 @@ const Leaderboard = () => {
             <p className="text-muted-foreground mt-1">Top performers across all tests</p>
           </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-primary" />
-              Top 50 Students
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {leaderboard.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No data available yet</p>
-            ) : (
-              leaderboard.map((entry, index) => (
-                <div
-                  key={entry.user_id}
-                  className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
-                    index < 3 ? getRankBadge(index) + " shadow-lg" : "bg-card hover:bg-accent/5"
-                  }`}
-                >
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-background/50">
-                    {getRankIcon(index) || (
-                      <span className="font-bold text-lg">{index + 1}</span>
-                    )}
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                Top 50 Students
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {top50.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No data available yet</p>
+              ) : (
+                <>
+                  {top50.map((entry) => (
+                    <div
+                      key={entry.user_id}
+                      className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
+                        isCurrentUser(entry.user_id) 
+                          ? "ring-2 ring-primary bg-primary/10 shadow-lg" 
+                          : entry.global_rank <= 3 
+                            ? getRankBadge(entry.global_rank) + " shadow-lg" 
+                            : "bg-card hover:bg-accent/5"
+                      }`}
+                    >
+                      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-background/50">
+                        {getRankIcon(entry.global_rank) || (
+                          <span className="font-bold text-lg">{entry.global_rank}</span>
+                        )}
+                      </div>
+                      
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                          {entry.name.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold truncate">{entry.name}</p>
+                          {isCurrentUser(entry.user_id) && (
+                            <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
+                              <Star className="h-3 w-3 mr-1" />
+                              You
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {entry.total_tests} tests • {entry.overall_accuracy.toFixed(1)}% accuracy
+                        </p>
+                      </div>
+                      
+                      <div className="text-right">
+                        <p className="font-bold text-lg">{entry.average_score.toFixed(1)}%</p>
+                        <Badge variant="outline" className="text-xs">
+                          Top {(100 - entry.rank_percentile).toFixed(0)}%
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
 
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                      {entry.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-semibold truncate ${index < 3 ? "text-white" : ""}`}>
-                      {entry.name}
-                    </p>
-                    <p className={`text-sm ${index < 3 ? "text-white/80" : "text-muted-foreground"}`}>
-                      {entry.total_tests} tests • {entry.overall_accuracy.toFixed(1)}% accuracy
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <p className={`text-xl font-bold ${index < 3 ? "text-white" : "text-primary"}`}>
-                      {entry.average_score.toFixed(1)}%
-                    </p>
-                    <Badge variant={index < 3 ? "secondary" : "outline"} className="mt-1">
-                      {entry.rank_percentile.toFixed(1)}th percentile
-                    </Badge>
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                  {/* Show current user's rank if outside top 50 */}
+                  {currentUserEntry && (
+                    <>
+                      <div className="flex items-center gap-2 py-2">
+                        <div className="flex-1 border-t border-dashed border-muted-foreground/30" />
+                        <span className="text-sm text-muted-foreground">Your Position</span>
+                        <div className="flex-1 border-t border-dashed border-muted-foreground/30" />
+                      </div>
+                      <div
+                        className="flex items-center gap-4 p-4 rounded-lg ring-2 ring-primary bg-primary/10 shadow-lg"
+                      >
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-background/50">
+                          <span className="font-bold text-lg">{currentUserEntry.global_rank}</span>
+                        </div>
+                        
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                            {currentUserEntry.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold truncate">{currentUserEntry.name}</p>
+                            <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
+                              <Star className="h-3 w-3 mr-1" />
+                              You
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {currentUserEntry.total_tests} tests • {currentUserEntry.overall_accuracy.toFixed(1)}% accuracy
+                          </p>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="font-bold text-lg">{currentUserEntry.average_score.toFixed(1)}%</p>
+                          <Badge variant="outline" className="text-xs">
+                            Top {(100 - currentUserEntry.rank_percentile).toFixed(0)}%
+                          </Badge>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
