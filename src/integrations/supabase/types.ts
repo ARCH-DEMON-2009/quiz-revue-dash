@@ -611,6 +611,7 @@ export type Database = {
         Args: never
         Returns: {
           average_score: number
+          global_rank: number
           name: string
           overall_accuracy: number
           rank_percentile: number
