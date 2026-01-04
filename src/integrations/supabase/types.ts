@@ -607,6 +607,17 @@ export type Database = {
       }
     }
     Functions: {
+      get_leaderboard_data: {
+        Args: never
+        Returns: {
+          average_score: number
+          name: string
+          overall_accuracy: number
+          rank_percentile: number
+          total_tests: number
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
