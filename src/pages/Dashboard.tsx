@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, FileText, BookOpen, Zap } from "lucide-react";
+import { Clock, FileText, BookOpen } from "lucide-react";
 import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import NavigationHeader from "@/components/NavigationHeader";
+import FloatingBackground from "@/components/FloatingBackground";
 interface Test {
   id: string;
   name: string;
@@ -60,16 +61,12 @@ const Dashboard = () => {
   };
   const availableClasses = Array.from(new Set(tests.map(test => test.stream)));
   const filteredTests = selectedClass ? tests.filter(test => test.stream === selectedClass) : [];
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast.success("Logged out successfully");
-    navigate("/auth");
-  };
   if (!user) {
     return null;
   }
-  return <div className="min-h-screen bg-background">
-      <NavigationHeader showFullNav onLogout={handleLogout} />
+  return <div className="min-h-screen bg-background relative">
+      <FloatingBackground />
+      <NavigationHeader showFullNav />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
         {!selectedClass ? <>

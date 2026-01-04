@@ -1,17 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart, Trophy, User, LogOut, Sparkles } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles } from "lucide-react";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
-  onLogout?: () => void;
 }
 
-const NavigationHeader = ({ showFullNav = false, onLogout }: NavigationHeaderProps) => {
+const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const navigate = useNavigate();
 
   const handleAIQuiz = () => {
-    window.open("https://test-sagar-jet.vercel.app/", "_blank");
+    window.open("https://shashank-quiz-maker.vercel.app/", "_blank");
   };
 
   return (
@@ -54,12 +53,6 @@ const NavigationHeader = ({ showFullNav = false, onLogout }: NavigationHeaderPro
               <User className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Profile</span>
             </Button>
-            {onLogout && (
-              <Button variant="destructive" size="sm" onClick={onLogout}>
-                <LogOut className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            )}
           </div>
         )}
       </div>
@@ -79,12 +72,10 @@ const NavigationHeader = ({ showFullNav = false, onLogout }: NavigationHeaderPro
             <Trophy className="h-4 w-4" />
             <span className="text-xs">Ranks</span>
           </Button>
-          {onLogout && (
-            <Button variant="ghost" size="sm" onClick={onLogout} className="flex-col h-auto py-1">
-              <LogOut className="h-4 w-4 text-destructive" />
-              <span className="text-xs">Logout</span>
-            </Button>
-          )}
+          <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="flex-col h-auto py-1">
+            <User className="h-4 w-4" />
+            <span className="text-xs">Profile</span>
+          </Button>
         </div>
       )}
     </nav>

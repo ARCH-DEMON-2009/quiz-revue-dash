@@ -217,7 +217,7 @@ const Auth = () => {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-2">
             <button
               type="button"
               onClick={() => {
@@ -225,12 +225,21 @@ const Auth = () => {
                 setName("");
                 setWhatsappNumber("");
               }}
-              className="text-sm text-primary hover:underline"
+              className="text-sm text-primary hover:underline block w-full"
             >
               {isLogin
                 ? "Don't have an account? Sign up"
                 : "Already have an account? Login"}
             </button>
+            {isLogin && (
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="text-sm text-muted-foreground hover:text-primary hover:underline"
+              >
+                Forgot your password?
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>

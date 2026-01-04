@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Award, HelpCircle, Crown, Calendar } from "lucide-react";
+import { TrendingUp, Target, Award, HelpCircle, Crown, Calendar, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 
@@ -151,11 +151,17 @@ const Profile = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Logged out successfully");
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <NavigationHeader />
       <div className="border-b bg-card">
-        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-2 flex justify-end">
+        <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-2 flex justify-end gap-2">
           <Button 
             variant="outline" 
             size="sm"
@@ -163,6 +169,14 @@ const Profile = () => {
           >
             <HelpCircle className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Help & Support</span>
+          </Button>
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Logout</span>
           </Button>
         </div>
       </div>

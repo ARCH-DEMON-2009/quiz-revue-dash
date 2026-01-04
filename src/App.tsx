@@ -9,6 +9,7 @@ import Results from "./pages/Results";
 import Review from "./pages/Review";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
 import Analytics from "./pages/Analytics";
 import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
@@ -28,6 +29,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/quiz/:testId" element={<Quiz />} />
           <Route path="/results/:resultId" element={<Results />} />
           <Route path="/review/:resultId" element={<Review />} />
