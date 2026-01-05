@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import NavigationHeader from "@/components/NavigationHeader";
 import FloatingBackground from "@/components/FloatingBackground";
+import TelegramPopup from "@/components/TelegramPopup";
 interface Test {
   id: string;
   name: string;
@@ -67,6 +68,7 @@ const Dashboard = () => {
   return <div className="min-h-screen bg-background relative">
       <FloatingBackground />
       <NavigationHeader showFullNav />
+      <TelegramPopup />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
         {!selectedClass ? <>

@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BarChart, Trophy, User, Sparkles } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles, Shield } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
@@ -8,6 +10,15 @@ interface NavigationHeaderProps {
 
 const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data } = await supabase.rpc('is_admin');
+      setIsAdmin(data === true);
+    };
+    checkAdmin();
+  }, []);
 
   const handleAIQuiz = () => {
     window.open("https://shashank-quiz-maker.vercel.app/", "_blank");
@@ -32,6 +43,17 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
         
         {showFullNav && (
           <div className="flex items-center gap-1 sm:gap-2">
+            {isAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/admin")} 
+                className="hidden sm:flex bg-gradient-to-r from-destructive/10 to-primary/10 border-destructive/30 hover:border-destructive hover:bg-destructive/20 transition-all"
+              >
+                <Shield className="h-4 w-4 mr-2 text-destructive" />
+                <span className="hidden md:inline">Admin</span>
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
@@ -60,6 +82,12 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
       {/* Mobile bottom nav */}
       {showFullNav && (
         <div className="sm:hidden flex justify-around border-t border-border/50 py-2 bg-card/80 backdrop-blur-xl">
+          {isAdmin && (
+            <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="flex-col h-auto py-1">
+              <Shield className="h-4 w-4 text-destructive" />
+              <span className="text-xs">Admin</span>
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={handleAIQuiz} className="flex-col h-auto py-1">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-xs">AI Quiz</span>
