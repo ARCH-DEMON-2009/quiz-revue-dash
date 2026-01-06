@@ -22,7 +22,7 @@ interface UserData {
   member_since: string;
   total_tests: number;
   average_score: number;
-  account_type: "premium" | "trial" | "expired";
+  account_type: "premium" | "trial" | "expired" | "new";
   premium_expiry: string | null;
   trial_start: string | null;
 }
@@ -110,14 +110,26 @@ const Admin = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Fetch all profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from("user_profiles")
-        .select("*");
+      // Fetch all profiles - use range to get all records beyond default 1000 limit
+      let allProfiles: any[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      
+      while (true) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .range(from, from + batchSize - 1);
 
-      if (profilesError) {
-        console.error("Profiles error:", profilesError);
-        throw profilesError;
+        if (profilesError) {
+          console.error("Profiles error:", profilesError);
+          throw profilesError;
+        }
+        
+        if (!profiles || profiles.length === 0) break;
+        allProfiles = [...allProfiles, ...profiles];
+        if (profiles.length < batchSize) break;
+        from += batchSize;
       }
 
       // Fetch all premium users with active status and valid expiry
@@ -178,7 +190,7 @@ const Admin = () => {
       });
 
       // Combine all data
-      const combinedUsers: UserData[] = (profiles || []).map((profile) => {
+      const combinedUsers: UserData[] = allProfiles.map((profile) => {
         const userId = profile.user_id || profile.id;
         const email = (profile.email || "").toLowerCase();
         
@@ -192,7 +204,7 @@ const Admin = () => {
         
         const stats = userStats.get(userId) || { total: 0, avgScore: 0 };
 
-        let accountType: "premium" | "trial" | "expired" = "expired";
+        let accountType: "premium" | "trial" | "expired" | "new" = "new";
         if (isPremium) {
           accountType = "premium";
         } else if (isTrial && trialStart) {
@@ -209,7 +221,7 @@ const Admin = () => {
 
         return {
           user_id: userId,
-          name: profile.name || "Unknown",
+          name: profile.name,
           email: profile.email || "",
           whatsapp_number: profile.whatsapp_number,
           is_blocked: profile.is_blocked || false,
@@ -243,7 +255,13 @@ const Admin = () => {
     if (activeTab === "premium") {
       filtered = filtered.filter((u) => u.account_type === "premium");
     } else if (activeTab === "trial") {
-      filtered = filtered.filter((u) => u.account_type === "trial");
+      // Show users who are: not blocked, not premium, trial active OR new users
+      filtered = filtered.filter((u) => 
+        !u.is_blocked && 
+        u.account_type !== "premium" && 
+        u.account_type !== "expired" &&
+        (u.account_type === "trial" || u.account_type === "new")
+      );
     } else if (activeTab === "expired") {
       filtered = filtered.filter((u) => u.account_type === "expired");
     } else if (activeTab === "blocked") {
@@ -328,7 +346,7 @@ const Admin = () => {
   const stats = {
     total: users.length,
     premium: users.filter((u) => u.account_type === "premium").length,
-    trial: users.filter((u) => u.account_type === "trial").length,
+    trial: users.filter((u) => !u.is_blocked && (u.account_type === "trial" || u.account_type === "new")).length,
     expired: users.filter((u) => u.account_type === "expired").length,
     blocked: users.filter((u) => u.is_blocked).length,
   };
@@ -515,10 +533,12 @@ const Admin = () => {
                                         ? "default"
                                         : user.account_type === "trial"
                                         ? "secondary"
+                                        : user.account_type === "new"
+                                        ? "outline"
                                         : "destructive"
                                     }
                                   >
-                                    {user.account_type === "expired" ? "Expired Trial" : user.account_type}
+                                    {user.account_type === "expired" ? "Expired" : user.account_type === "new" ? "New User" : user.account_type}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>{user.total_tests}</TableCell>
