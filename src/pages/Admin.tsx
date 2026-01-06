@@ -9,11 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send } from "lucide-react";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
+import { ManagePremiumDialog } from "@/components/ManagePremiumDialog";
 
-interface UserData {
+export interface UserData {
   user_id: string;
   name: string;
   email: string;
@@ -41,6 +42,8 @@ const Admin = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [subjects, setSubjects] = useState<string[]>([]);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [manageDialogOpen, setManageDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAdminAuth();
@@ -255,14 +258,13 @@ const Admin = () => {
     if (activeTab === "premium") {
       filtered = filtered.filter((u) => u.account_type === "premium");
     } else if (activeTab === "trial") {
-      // Show users who are: not blocked, not premium, trial active OR new users
+      // Show ONLY users with active trial (not expired, not new, not premium)
       filtered = filtered.filter((u) => 
         !u.is_blocked && 
-        u.account_type !== "premium" && 
-        u.account_type !== "expired" &&
-        (u.account_type === "trial" || u.account_type === "new")
+        u.account_type === "trial"
       );
     } else if (activeTab === "expired") {
+      // Show users with expired trial or expired premium
       filtered = filtered.filter((u) => u.account_type === "expired");
     } else if (activeTab === "blocked") {
       filtered = filtered.filter((u) => u.is_blocked);
@@ -346,7 +348,7 @@ const Admin = () => {
   const stats = {
     total: users.length,
     premium: users.filter((u) => u.account_type === "premium").length,
-    trial: users.filter((u) => !u.is_blocked && (u.account_type === "trial" || u.account_type === "new")).length,
+    trial: users.filter((u) => !u.is_blocked && u.account_type === "trial").length,
     expired: users.filter((u) => u.account_type === "expired").length,
     blocked: users.filter((u) => u.is_blocked).length,
   };
@@ -511,12 +513,13 @@ const Admin = () => {
                             <TableHead>Avg Score</TableHead>
                             <TableHead>Joined</TableHead>
                             <TableHead>Block</TableHead>
+                            <TableHead>Manage</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {paginatedUsers.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={8} className="text-center text-muted-foreground">
+                              <TableCell colSpan={9} className="text-center text-muted-foreground">
                                 No users found
                               </TableCell>
                             </TableRow>
@@ -553,6 +556,18 @@ const Admin = () => {
                                       handleBlockToggle(user.user_id, user.is_blocked)
                                     }
                                   />
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedUser(user);
+                                      setManageDialogOpen(true);
+                                    }}
+                                  >
+                                    <Settings className="h-4 w-4" />
+                                  </Button>
                                 </TableCell>
                               </TableRow>
                             ))
@@ -601,6 +616,14 @@ const Admin = () => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Manage Premium Dialog */}
+      <ManagePremiumDialog
+        user={selectedUser}
+        open={manageDialogOpen}
+        onOpenChange={setManageDialogOpen}
+        onSuccess={fetchUsers}
+      />
     </div>
   );
 };
