@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Check, ArrowLeft, Percent, Crown, Loader2 } from "lucide-react";
+import { Check, ArrowLeft, Percent, Crown, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface PricingPlan {
@@ -126,7 +126,7 @@ const Pricing = () => {
       }
 
       const options = {
-        key: "rzp_live_zxasMqJyhIe3pG",
+        key: "rzp_live_R63a8lDucvDTrH", // Using the new Razorpay key
         amount: finalPrice * 100, // Razorpay expects amount in paise
         currency: "INR",
         name: "TestSagar Premium",
@@ -214,61 +214,167 @@ const Pricing = () => {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-destructive/10 text-destructive px-4 py-2 rounded-full mb-4">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-4">
             <Crown className="h-5 w-5" />
-            <span className="font-medium">Service Temporarily Unavailable</span>
+            <span className="font-medium">Upgrade to Premium</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Premium Purchase Paused
+            Choose Your Plan
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
-            We are currently facing some technical issues with our payment system. 
-            If you want to buy premium, please contact our admin directly.
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Unlock unlimited access to all tests, detailed analytics, and premium features
           </p>
         </div>
 
-        <Card className="max-w-lg mx-auto">
-          <CardHeader className="text-center">
-            <CardTitle>Contact Admin to Buy Premium</CardTitle>
-            <CardDescription>
-              Our team will help you complete your purchase manually
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <Button 
-                size="lg" 
-                className="w-full"
-                onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
-              >
-                <Crown className="h-5 w-5 mr-2" />
-                Contact Help Bot
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="w-full"
-                onClick={() => window.open("https://t.me/Its_trms", "_blank")}
-              >
-                Contact Admin Directly
-              </Button>
-            </div>
+        {/* Plans Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {plans.map((plan) => (
+            <Card 
+              key={plan.id} 
+              className={`relative cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] ${
+                selectedPlan?.id === plan.id ? 'ring-2 ring-primary' : ''
+              } ${plan.popular ? 'border-primary' : ''}`}
+              onClick={() => setSelectedPlan(plan)}
+            >
+              {plan.popular && (
+                <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  Most Popular
+                </Badge>
+              )}
+              <CardHeader className="text-center pb-2">
+                <CardTitle className="text-xl">{plan.name}</CardTitle>
+                <CardDescription>{plan.duration}</CardDescription>
+              </CardHeader>
+              <CardContent className="text-center space-y-4">
+                <div>
+                  {plan.originalPrice && (
+                    <span className="text-muted-foreground line-through text-lg mr-2">
+                      ₹{plan.originalPrice}
+                    </span>
+                  )}
+                  <span className="text-4xl font-bold">₹{calculateFinalPrice(plan)}</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  ₹{appliedPromo ? Math.round(calculateFinalPrice(plan) / (plan.durationDays / 30)) : plan.perMonth}/month
+                </p>
+                {plan.originalPrice && (
+                  <Badge variant="secondary" className="bg-green-500/10 text-green-600">
+                    Save {Math.round((1 - plan.price / plan.originalPrice) * 100)}%
+                  </Badge>
+                )}
+                <div className="pt-4">
+                  <Button 
+                    className="w-full" 
+                    variant={selectedPlan?.id === plan.id ? "default" : "outline"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPlan(plan);
+                    }}
+                  >
+                    {selectedPlan?.id === plan.id ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2" />
+                        Selected
+                      </>
+                    ) : (
+                      "Select Plan"
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold mb-3 text-center">Available Plans</h3>
-              <div className="space-y-2">
-                {plans.map((plan) => (
-                  <div key={plan.id} className="flex justify-between items-center p-3 rounded-lg bg-muted/50">
-                    <span className="font-medium">{plan.name}</span>
-                    <span className="text-primary font-bold">₹{plan.price}</span>
-                  </div>
-                ))}
+        {/* Promo Code Section */}
+        <Card className="max-w-md mx-auto mb-8">
+          <CardContent className="pt-6">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Enter promo code"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  className="pl-10"
+                  disabled={!!appliedPromo}
+                />
               </div>
+              {appliedPromo ? (
+                <Button variant="outline" onClick={removePromoCode}>
+                  <X className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button onClick={applyPromoCode}>Apply</Button>
+              )}
             </div>
+            {appliedPromo && (
+              <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                <Check className="h-4 w-4" />
+                {appliedPromo.discount}% discount applied!
+              </p>
+            )}
           </CardContent>
         </Card>
+
+        {/* Payment Button */}
+        <div className="text-center">
+          <Button
+            size="lg"
+            className="min-w-[200px]"
+            disabled={!selectedPlan || loading}
+            onClick={() => selectedPlan && handlePayment(selectedPlan)}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Crown className="h-5 w-5 mr-2" />
+                {selectedPlan ? `Pay ₹${calculateFinalPrice(selectedPlan)}` : "Select a plan"}
+              </>
+            )}
+          </Button>
+          <p className="text-xs text-muted-foreground mt-3">
+            Secure payment powered by Razorpay
+          </p>
+        </div>
+
+        {/* Features */}
+        <div className="mt-12 max-w-2xl mx-auto">
+          <h3 className="text-xl font-semibold text-center mb-6">What's Included</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              "Unlimited test attempts",
+              "Detailed performance analytics",
+              "Subject-wise analysis",
+              "Priority support",
+              "Ad-free experience",
+              "Access to all tests",
+            ].map((feature) => (
+              <div key={feature} className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
+                <span>{feature}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Contact Support */}
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          <p>Having issues? Contact us on{" "}
+            <button 
+              onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
+              className="text-primary hover:underline"
+            >
+              Telegram
+            </button>
+          </p>
+        </div>
       </main>
     </div>
   );
