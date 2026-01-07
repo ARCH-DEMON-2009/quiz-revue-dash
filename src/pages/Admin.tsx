@@ -135,11 +135,10 @@ const Admin = () => {
         from += batchSize;
       }
 
-      // Fetch all premium users with active status and valid expiry
+      // Fetch ALL premium users (active and inactive) to track expired ones too
       const { data: premiumUsers, error: premiumError } = await supabase
         .from("premium_users")
-        .select("user_id, email, expiry_date, status")
-        .eq("status", "active");
+        .select("user_id, email, expiry_date, status");
 
       if (premiumError) console.error("Premium users error:", premiumError);
 
