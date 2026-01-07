@@ -207,9 +207,19 @@ const Admin = () => {
         
         const stats = userStats.get(userId) || { total: 0, avgScore: 0 };
 
+        // Check if premium was expired (user has premium record but it's expired)
+        const expiredPremium = (premiumUsers || []).find(p => 
+          (p.user_id === userId || (p.email && p.email.toLowerCase() === email)) &&
+          p.expiry_date && new Date(p.expiry_date) <= new Date()
+        );
+        const hasPremiumExpired = !!expiredPremium;
+
         let accountType: "premium" | "trial" | "expired" | "new" = "new";
         if (isPremium) {
           accountType = "premium";
+        } else if (hasPremiumExpired) {
+          // Premium expired
+          accountType = "expired";
         } else if (isTrial && trialStart) {
           // Check if trial is still valid (3 days)
           const trialStartDate = new Date(trialStart);

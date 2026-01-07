@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Crown, Clock, AlertTriangle } from "lucide-react";
+import { Crown, Clock, AlertTriangle, CreditCard } from "lucide-react";
 
 interface AccessStatus {
   hasAccess: boolean;
@@ -144,29 +144,40 @@ export const AccessGuard = ({ children }: AccessGuardProps) => {
               <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
             <CardTitle className="text-2xl">
-              {accessStatus?.type === 'expired' ? 'Trial Expired' : 'Access Required'}
+              {accessStatus?.type === 'expired' ? 'Subscription Expired' : 'Access Required'}
             </CardTitle>
             <CardDescription>
               {accessStatus?.type === 'expired' 
-                ? 'Your 3-day free trial has ended. Please buy premium to continue accessing tests.'
+                ? 'Your subscription has ended. Please renew to continue accessing tests.'
                 : 'You need a premium subscription to access this feature.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* View Plans Button */}
+            <Link to="/pricing" className="block">
+              <Button className="w-full" size="lg">
+                <CreditCard className="h-4 w-4 mr-2" />
+                View Plans & Pricing
+              </Button>
+            </Link>
+            
             <div className="bg-muted/50 p-4 rounded-lg text-center">
               <p className="text-sm text-muted-foreground mb-2">
-                To buy premium, please contact our admin:
+                Or contact our admin for assistance:
               </p>
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button 
                   onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
                   variant="outline"
+                  size="sm"
                 >
                   <Clock className="h-4 w-4 mr-2" />
                   Help Bot
                 </Button>
                 <Button 
                   onClick={() => window.open("https://t.me/Its_trms", "_blank")}
+                  variant="outline"
+                  size="sm"
                 >
                   <Crown className="h-4 w-4 mr-2" />
                   Contact Admin
