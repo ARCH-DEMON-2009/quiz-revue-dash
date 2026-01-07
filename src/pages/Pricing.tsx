@@ -38,8 +38,15 @@ const Pricing = () => {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
   const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discount: number } | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{ 
+    code: string; 
+    discount_type: string;
+    discount_value: number;
+    discount_amount: number;
+    final_price: number;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [promoLoading, setPromoLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -70,20 +77,41 @@ const Pricing = () => {
       return;
     }
 
-    // Simulated promo codes - in production, fetch from database
-    const promoCodes: Record<string, number> = {
-      "WELCOME10": 10,
-      "SAVE20": 20,
-      "PREMIUM30": 30,
-      "SPECIAL50": 50,
-    };
+    if (!selectedPlan) {
+      toast.error("Please select a plan first");
+      return;
+    }
 
-    const discount = promoCodes[promoCode.toUpperCase()];
-    if (discount) {
-      setAppliedPromo({ code: promoCode.toUpperCase(), discount });
-      toast.success(`Promo code applied! ${discount}% off`);
-    } else {
-      toast.error("Invalid promo code");
+    setPromoLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('validate-promo-code', {
+        body: {
+          code: promoCode.trim(),
+          plan_id: selectedPlan.id,
+          plan_price: selectedPlan.price,
+          user_id: user?.id
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.valid) {
+        setAppliedPromo({
+          code: data.code,
+          discount_type: data.discount_type,
+          discount_value: data.discount_value,
+          discount_amount: data.discount_amount,
+          final_price: data.final_price
+        });
+        toast.success(data.message);
+      } else {
+        toast.error(data.error || "Invalid promo code");
+      }
+    } catch (error) {
+      console.error("Error validating promo code:", error);
+      toast.error("Failed to validate promo code");
+    } finally {
+      setPromoLoading(false);
     }
   };
 
@@ -93,8 +121,8 @@ const Pricing = () => {
   };
 
   const calculateFinalPrice = (plan: PricingPlan) => {
-    if (appliedPromo) {
-      return Math.round(plan.price * (1 - appliedPromo.discount / 100));
+    if (appliedPromo && selectedPlan?.id === plan.id) {
+      return appliedPromo.final_price;
     }
     return plan.price;
   };
@@ -108,7 +136,17 @@ const Pricing = () => {
 
     setLoading(true);
     setSelectedPlan(plan);
-    const finalPrice = calculateFinalPrice(plan);
+    
+    // Recalculate if promo was applied to a different plan
+    let finalPrice = plan.price;
+    let promoToUse = appliedPromo;
+    
+    if (appliedPromo && selectedPlan?.id !== plan.id) {
+      // Promo was applied to different plan, need to revalidate
+      promoToUse = null;
+    } else if (appliedPromo) {
+      finalPrice = appliedPromo.final_price;
+    }
 
     try {
       // Get user profile
@@ -118,6 +156,23 @@ const Pricing = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
+      // Create order through edge function
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
+        body: {
+          amount: finalPrice,
+          currency: 'INR',
+          receipt: `premium_${user.id}_${Date.now()}`,
+          notes: {
+            plan_id: plan.id,
+            plan_name: plan.name,
+            user_id: user.id,
+            promo_code: promoToUse?.code || null
+          }
+        }
+      });
+
+      if (orderError) throw orderError;
+
       // Ensure Razorpay is loaded
       if (!window.Razorpay) {
         toast.error("Payment gateway not loaded. Please refresh the page.");
@@ -126,42 +181,46 @@ const Pricing = () => {
       }
 
       const options = {
-        key: "rzp_live_R63a8lDucvDTrH", // Using the new Razorpay key
-        amount: finalPrice * 100, // Razorpay expects amount in paise
-        currency: "INR",
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
         name: "TestSagar Premium",
         description: `${plan.name} Premium Subscription`,
         image: "https://testsagar.com/logo.png",
+        order_id: orderData.order_id,
         handler: async function (response: any) {
-          // Payment successful - save to database
+          // Verify payment through edge function
           try {
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + plan.durationDays);
-
-            const { error } = await supabase.from("premium_users").insert({
-              user_id: user.id,
-              email: user.email || "",
-              name: profile?.name || "User",
-              payment_id: response.razorpay_payment_id,
-              expiry_date: expiryDate.toISOString(),
-              plan_months: Math.round(plan.durationDays / 30),
-              original_amount: plan.price,
-              discounted_amount: finalPrice,
-              promo_code_used: appliedPromo?.code || null,
-              status: "active",
+            toast.info("Verifying payment...");
+            
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                user_id: user.id,
+                plan_id: plan.id,
+                plan_name: plan.name,
+                plan_days: plan.durationDays,
+                original_amount: plan.price,
+                final_amount: finalPrice,
+                promo_code: promoToUse?.code || null
+              }
             });
 
-            if (error) {
-              console.error("Database error:", error);
-              toast.error("Payment received but error activating premium. Contact support with payment ID: " + response.razorpay_payment_id);
-              return;
-            }
+            if (verifyError) throw verifyError;
 
-            toast.success("Payment successful! Welcome to Premium!");
-            navigate("/");
+            if (verifyData.success) {
+              toast.success("Payment successful! Welcome to Premium!");
+              navigate("/");
+            } else {
+              toast.error(verifyData.error || "Payment verification failed");
+            }
           } catch (err) {
-            console.error("Error saving premium status:", err);
-            toast.error("Payment received but error activating premium. Contact support.");
+            console.error("Error verifying payment:", err);
+            toast.error("Payment received but verification failed. Contact support with payment ID: " + response.razorpay_payment_id);
+          } finally {
+            setLoading(false);
           }
         },
         prefill: {
@@ -236,7 +295,14 @@ const Pricing = () => {
               className={`relative cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] ${
                 selectedPlan?.id === plan.id ? 'ring-2 ring-primary' : ''
               } ${plan.popular ? 'border-primary' : ''}`}
-              onClick={() => setSelectedPlan(plan)}
+              onClick={() => {
+                setSelectedPlan(plan);
+                // Clear promo if switching plans
+                if (appliedPromo && selectedPlan?.id !== plan.id) {
+                  setAppliedPromo(null);
+                  setPromoCode("");
+                }
+              }}
             >
               {plan.popular && (
                 <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -255,13 +321,25 @@ const Pricing = () => {
                     </span>
                   )}
                   <span className="text-4xl font-bold">₹{calculateFinalPrice(plan)}</span>
+                  {appliedPromo && selectedPlan?.id === plan.id && (
+                    <span className="text-muted-foreground line-through text-lg ml-2">
+                      ₹{plan.price}
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  ₹{appliedPromo ? Math.round(calculateFinalPrice(plan) / (plan.durationDays / 30)) : plan.perMonth}/month
+                  ₹{Math.round(calculateFinalPrice(plan) / (plan.durationDays / 30))}/month
                 </p>
-                {plan.originalPrice && (
+                {plan.originalPrice && !appliedPromo && (
                   <Badge variant="secondary" className="bg-green-500/10 text-green-600">
                     Save {Math.round((1 - plan.price / plan.originalPrice) * 100)}%
+                  </Badge>
+                )}
+                {appliedPromo && selectedPlan?.id === plan.id && (
+                  <Badge variant="secondary" className="bg-green-500/10 text-green-600">
+                    {appliedPromo.discount_type === 'percentage' 
+                      ? `${appliedPromo.discount_value}% off` 
+                      : `₹${appliedPromo.discount_amount} off`}
                   </Badge>
                 )}
                 <div className="pt-4">
@@ -271,6 +349,10 @@ const Pricing = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedPlan(plan);
+                      if (appliedPromo && selectedPlan?.id !== plan.id) {
+                        setAppliedPromo(null);
+                        setPromoCode("");
+                      }
                     }}
                   >
                     {selectedPlan?.id === plan.id ? (
@@ -297,9 +379,9 @@ const Pricing = () => {
                 <Input
                   placeholder="Enter promo code"
                   value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                   className="pl-10"
-                  disabled={!!appliedPromo}
+                  disabled={!!appliedPromo || promoLoading}
                 />
               </div>
               {appliedPromo ? (
@@ -307,13 +389,22 @@ const Pricing = () => {
                   <X className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={applyPromoCode}>Apply</Button>
+                <Button onClick={applyPromoCode} disabled={promoLoading || !selectedPlan}>
+                  {promoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                </Button>
               )}
             </div>
             {appliedPromo && (
               <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
                 <Check className="h-4 w-4" />
-                {appliedPromo.discount}% discount applied!
+                {appliedPromo.discount_type === 'percentage' 
+                  ? `${appliedPromo.discount_value}% discount applied!`
+                  : `₹${appliedPromo.discount_value} discount applied!`}
+              </p>
+            )}
+            {!selectedPlan && !appliedPromo && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Select a plan first to apply promo code
               </p>
             )}
           </CardContent>

@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.validate-quiz-answers]
 verify_jwt = false
+
+[functions.verify-razorpay-payment]
+verify_jwt = false
+
+[functions.validate-promo-code]
+verify_jwt = false
+
+[functions.create-razorpay-order]
+verify_jwt = false
