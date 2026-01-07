@@ -12,8 +12,8 @@ import { MessageCircle } from "lucide-react";
 const TELEGRAM_POPUP_KEY = "telegram_popup_last_shown";
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-// TODO: Replace with actual Telegram channel link
-const TELEGRAM_CHANNEL_LINK = "";
+// Read Telegram channel link from environment (Vite)
+const TELEGRAM_CHANNEL_LINK = import.meta.env.VITE_TELEGRAM_CHANNEL_LINK || "";
 
 const TelegramPopup = () => {
   const [isOpen, setIsOpen] = useState(false);
