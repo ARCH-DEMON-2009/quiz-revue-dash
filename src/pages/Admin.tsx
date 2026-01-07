@@ -13,6 +13,7 @@ import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, S
 import { toast } from "sonner";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
 import { ManagePremiumDialog } from "@/components/ManagePremiumDialog";
+import { PromoCodeManager } from "@/components/PromoCodeManager";
 
 export interface UserData {
   user_id: string;
@@ -624,9 +625,13 @@ const Admin = () => {
             </Tabs>
           </CardContent>
         </Card>
+
+        {/* Promo Code Manager */}
+        <div className="mt-8">
+          <PromoCodeManager />
+        </div>
       </main>
 
-      {/* Manage Premium Dialog */}
       <ManagePremiumDialog
         user={selectedUser}
         open={manageDialogOpen}
