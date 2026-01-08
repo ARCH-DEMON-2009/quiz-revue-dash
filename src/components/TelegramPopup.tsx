@@ -9,9 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 
-const TELEGRAM_POPUP_KEY = "telegram_popup_last_shown";
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
 // Read Telegram channel link from environment (Vite)
 const TELEGRAM_CHANNEL_LINK = import.meta.env.VITE_TELEGRAM_CHANNEL_LINK || "";
 
@@ -19,18 +16,12 @@ const TelegramPopup = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const lastShown = localStorage.getItem(TELEGRAM_POPUP_KEY);
-    const now = Date.now();
+    // Show popup every time user opens the site after a short delay
+    const timer = setTimeout(() => {
+      setIsOpen(true);
+    }, 2000);
 
-    if (!lastShown || now - parseInt(lastShown) > ONE_DAY_MS) {
-      // Show popup after a short delay for better UX
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-        localStorage.setItem(TELEGRAM_POPUP_KEY, now.toString());
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
+    return () => clearTimeout(timer);
   }, []);
 
   const handleJoin = () => {
