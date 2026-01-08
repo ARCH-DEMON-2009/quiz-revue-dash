@@ -133,6 +133,38 @@ serve(async (req) => {
 
     console.log("Payment verified and premium activated for user:", user_id);
 
+    // Send confirmation email (non-blocking)
+    try {
+      const emailPayload = {
+        email: userProfile?.email || '',
+        name: userProfile?.name || 'User',
+        plan_name: plan_name,
+        plan_days: plan_days,
+        amount: final_amount,
+        payment_id: razorpay_payment_id,
+        expiry_date: expiryDate.toISOString()
+      };
+
+      // Call email function using fetch (internal call)
+      const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-premium-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`
+        },
+        body: JSON.stringify(emailPayload)
+      });
+
+      if (!emailResponse.ok) {
+        console.error("Failed to send confirmation email");
+      } else {
+        console.log("Confirmation email sent successfully");
+      }
+    } catch (emailError) {
+      console.error("Error sending confirmation email:", emailError);
+      // Don't fail the payment verification if email fails
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
