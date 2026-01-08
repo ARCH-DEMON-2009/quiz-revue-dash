@@ -156,7 +156,39 @@ const Pricing = () => {
         .eq("user_id", user.id)
         .maybeSingle();
 
-      // Create order through edge function
+      // Handle FREE orders (100% discount) - skip Razorpay
+      if (finalPrice === 0) {
+        toast.info("Activating your free premium...");
+        
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+          body: {
+            razorpay_order_id: `free_${Date.now()}`,
+            razorpay_payment_id: `free_promo_${promoToUse?.code}_${Date.now()}`,
+            razorpay_signature: 'FREE_ORDER',
+            user_id: user.id,
+            plan_id: plan.id,
+            plan_name: plan.name,
+            plan_days: plan.durationDays,
+            original_amount: plan.price,
+            final_amount: 0,
+            promo_code: promoToUse?.code || null,
+            is_free_order: true
+          }
+        });
+
+        if (verifyError) throw verifyError;
+
+        if (verifyData.success) {
+          toast.success("Premium activated for FREE! 🎉");
+          navigate("/");
+        } else {
+          toast.error(verifyData.error || "Failed to activate premium");
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Create order through edge function for paid orders
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
         body: {
           amount: finalPrice,
@@ -172,6 +204,10 @@ const Pricing = () => {
       });
 
       if (orderError) throw orderError;
+      
+      if (orderData.error) {
+        throw new Error(orderData.error);
+      }
 
       // Ensure Razorpay is loaded
       if (!window.Razorpay) {

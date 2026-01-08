@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BarChart, Trophy, User, Sparkles, Shield } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BarChart, Trophy, User, Sparkles, Shield, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface NavigationHeaderProps {
@@ -11,13 +12,29 @@ interface NavigationHeaderProps {
 const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data } = await supabase.rpc('is_admin');
-      setIsAdmin(data === true);
+    const checkStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Check admin status
+      const { data: adminData } = await supabase.rpc('is_admin');
+      setIsAdmin(adminData === true);
+      
+      // Check premium status
+      const { data: premiumData } = await supabase
+        .from('premium_users')
+        .select('expiry_date')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .gte('expiry_date', new Date().toISOString())
+        .maybeSingle();
+      
+      setIsPremium(!!premiumData);
     };
-    checkAdmin();
+    checkStatus();
   }, []);
 
   const handleAIQuiz = () => {
@@ -39,6 +56,12 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
           <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Test Sagar
           </h1>
+          {isPremium && (
+            <Badge className="ml-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0 shadow-md">
+              <Crown className="h-3 w-3 mr-1" />
+              Premium
+            </Badge>
+          )}
         </div>
         
         {showFullNav && (

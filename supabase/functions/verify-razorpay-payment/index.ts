@@ -24,36 +24,42 @@ serve(async (req) => {
       plan_days,
       original_amount,
       final_amount,
-      promo_code
+      promo_code,
+      is_free_order
     } = await req.json();
 
-    console.log("Verifying payment:", { razorpay_payment_id, user_id, plan_name });
+    console.log("Verifying payment:", { razorpay_payment_id, user_id, plan_name, is_free_order });
 
-    // Get Razorpay secret
-    const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
-    if (!razorpayKeySecret) {
-      console.error("RAZORPAY_KEY_SECRET not configured");
-      return new Response(
-        JSON.stringify({ error: 'Payment verification not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Handle FREE orders (100% promo discount) - skip signature verification
+    if (is_free_order && final_amount === 0) {
+      console.log("Processing FREE order with 100% promo discount");
+    } else {
+      // Get Razorpay secret for paid orders
+      const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+      if (!razorpayKeySecret) {
+        console.error("RAZORPAY_KEY_SECRET not configured");
+        return new Response(
+          JSON.stringify({ error: 'Payment verification not configured' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    // Verify signature
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = createHmac("sha256", razorpayKeySecret)
-      .update(body)
-      .digest("hex");
+      // Verify signature for paid orders
+      const body = razorpay_order_id + "|" + razorpay_payment_id;
+      const expectedSignature = createHmac("sha256", razorpayKeySecret)
+        .update(body)
+        .digest("hex");
 
-    const isValidSignature = expectedSignature === razorpay_signature;
-    console.log("Signature verification:", isValidSignature ? "VALID" : "INVALID");
+      const isValidSignature = expectedSignature === razorpay_signature;
+      console.log("Signature verification:", isValidSignature ? "VALID" : "INVALID");
 
-    if (!isValidSignature) {
-      console.error("Invalid payment signature");
-      return new Response(
-        JSON.stringify({ error: 'Invalid payment signature', verified: false }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (!isValidSignature) {
+        console.error("Invalid payment signature");
+        return new Response(
+          JSON.stringify({ error: 'Invalid payment signature', verified: false }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Initialize Supabase with service role for database operations
