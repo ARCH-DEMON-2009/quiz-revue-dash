@@ -141,18 +141,18 @@ const Leaderboard = () => {
                         </AvatarFallback>
                       </Avatar>
                       
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold truncate">{entry.name}</p>
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                          <p className="font-semibold text-sm sm:text-base truncate max-w-[80px] sm:max-w-[150px] md:max-w-none">{entry.name}</p>
                           {isCurrentUser(entry.user_id) && (
-                            <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
-                              <Star className="h-3 w-3 mr-1" />
+                            <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
+                              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                               You
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {entry.total_tests} tests • {entry.overall_accuracy.toFixed(1)}% accuracy
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                          {entry.total_tests} tests • {entry.overall_accuracy.toFixed(1)}%
                         </p>
                       </div>
                       
@@ -186,16 +186,16 @@ const Leaderboard = () => {
                           </AvatarFallback>
                         </Avatar>
                         
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold truncate">{currentUserEntry.name}</p>
-                            <Badge variant="secondary" className="text-xs bg-primary/20 text-primary">
-                              <Star className="h-3 w-3 mr-1" />
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                            <p className="font-semibold text-sm sm:text-base truncate max-w-[80px] sm:max-w-[150px] md:max-w-none">{currentUserEntry.name}</p>
+                            <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
+                              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                               You
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {currentUserEntry.total_tests} tests • {currentUserEntry.overall_accuracy.toFixed(1)}% accuracy
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                            {currentUserEntry.total_tests} tests • {currentUserEntry.overall_accuracy.toFixed(1)}%
                           </p>
                         </div>
                         
