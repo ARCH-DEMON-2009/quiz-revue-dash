@@ -40,11 +40,7 @@ serve(async (req) => {
         amount: amount * 100, // Convert to paise
         currency,
         receipt: receipt || `order_${Date.now()}`,
-        notes: {
-          ...notes,
-          plan_days: notes?.plan_days || 30,
-          original_amount: notes?.original_amount || amount,
-        },
+        notes: notes || {},
       }),
     });
 
