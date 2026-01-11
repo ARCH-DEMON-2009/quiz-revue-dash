@@ -197,6 +197,8 @@ const Pricing = () => {
           notes: {
             plan_id: plan.id,
             plan_name: plan.name,
+            plan_days: plan.durationDays,
+            original_amount: plan.price,
             user_id: user.id,
             promo_code: promoToUse?.code || null
           }
