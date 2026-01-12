@@ -15,6 +15,9 @@ import Analytics from "./pages/Analytics";
 import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
 import Pricing from "./pages/Pricing";
+import ContactUs from "./pages/ContactUs";
+import ShippingPolicy from "./pages/ShippingPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 import NotFound from "./pages/NotFound";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 
@@ -40,6 +43,9 @@ const App = () => (
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/terms" element={<TermsAndConditions />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

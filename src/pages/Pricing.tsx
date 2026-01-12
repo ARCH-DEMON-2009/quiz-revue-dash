@@ -20,12 +20,12 @@ interface PricingPlan {
 }
 
 const plans: PricingPlan[] = [
-  { id: "1week", name: "1 Week", duration: "7 days", durationDays: 7, price: 15, perMonth: 60 },
-  { id: "1month", name: "1 Month", duration: "30 days", durationDays: 30, price: 40, perMonth: 40 },
-  { id: "3months", name: "3 Months", duration: "90 days", durationDays: 90, price: 70, originalPrice: 120, perMonth: 23, popular: true },
-  { id: "6months", name: "6 Months", duration: "180 days", durationDays: 180, price: 100, originalPrice: 240, perMonth: 17 },
-  { id: "1year", name: "1 Year", duration: "365 days", durationDays: 365, price: 140, originalPrice: 480, perMonth: 12 },
-  { id: "2years", name: "2 Years", duration: "730 days", durationDays: 730, price: 210, originalPrice: 960, perMonth: 9 },
+  { id: "1week", name: "1 Week", duration: "7 days", durationDays: 7, price: 20, perMonth: 80 },
+  { id: "1month", name: "1 Month", duration: "30 days", durationDays: 30, price: 60, perMonth: 60 },
+  { id: "3months", name: "3 Months", duration: "90 days", durationDays: 90, price: 90, originalPrice: 180, perMonth: 30, popular: true },
+  { id: "6months", name: "6 Months", duration: "180 days", durationDays: 180, price: 120, originalPrice: 360, perMonth: 20 },
+  { id: "1year", name: "1 Year", duration: "365 days", durationDays: 365, price: 160, originalPrice: 720, perMonth: 13 },
+  { id: "2years", name: "2 Years", duration: "730 days", durationDays: 730, price: 230, originalPrice: 1440, perMonth: 10 },
 ];
 
 declare global {
