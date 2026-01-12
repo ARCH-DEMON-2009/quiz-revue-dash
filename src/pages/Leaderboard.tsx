@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Award, Star } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
+import Footer from "@/components/Footer";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -95,9 +96,9 @@ const Leaderboard = () => {
   const currentUserEntry = leaderboard.find(e => e.user_id === currentUserId && e.global_rank > 50);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background flex flex-col">
       <NavigationHeader />
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-8 flex-1">
         <div className="max-w-4xl mx-auto space-y-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -214,6 +215,8 @@ const Leaderboard = () => {
           </Card>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

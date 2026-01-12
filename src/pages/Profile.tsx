@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Target, Award, HelpCircle, Crown, Calendar, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
+import Footer from "@/components/Footer";
 
 interface Stats {
   totalTests: number;
@@ -158,7 +159,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <NavigationHeader />
       <div className="border-b bg-card">
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-2 flex justify-end gap-2">
@@ -181,7 +182,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
+      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {/* Access Status Card */}
         {accessStatus && (
           <Card className={`mb-4 sm:mb-6 lg:mb-8 ${accessStatus.type === 'expired' ? 'border-destructive' : accessStatus.type === 'premium' ? 'border-primary' : 'border-warning'}`}>
@@ -367,6 +368,8 @@ const Profile = () => {
           </>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 };

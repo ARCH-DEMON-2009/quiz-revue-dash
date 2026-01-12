@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { BarChart, TrendingUp, Award, Clock, ArrowLeft } from "lucide-react";
+import { BarChart, TrendingUp, Award, Clock } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
+import Footer from "@/components/Footer";
 
 interface Analytics {
   total_tests: number;
@@ -141,9 +142,9 @@ const Analytics = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background flex flex-col">
       <NavigationHeader />
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-8 flex-1">
         <div className="max-w-7xl mx-auto space-y-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -240,7 +241,9 @@ const Analytics = () => {
         </Card>
       </div>
     </div>
-  </div>
+
+      <Footer />
+    </div>
   );
 };
 
