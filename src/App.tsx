@@ -18,6 +18,7 @@ import Pricing from "./pages/Pricing";
 import ContactUs from "./pages/ContactUs";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 
@@ -46,6 +47,7 @@ const App = () => (
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="/terms" element={<TermsAndConditions />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/admin" element={<Admin />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

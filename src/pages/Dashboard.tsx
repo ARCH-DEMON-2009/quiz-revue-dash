@@ -10,6 +10,7 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import NavigationHeader from "@/components/NavigationHeader";
 import FloatingBackground from "@/components/FloatingBackground";
 import TelegramPopup from "@/components/TelegramPopup";
+import Footer from "@/components/Footer";
 interface Test {
   id: string;
   name: string;
@@ -65,12 +66,12 @@ const Dashboard = () => {
   if (!user) {
     return null;
   }
-  return <div className="min-h-screen bg-background relative">
+  return <div className="min-h-screen bg-background relative flex flex-col">
       <FloatingBackground />
       <NavigationHeader showFullNav />
       <TelegramPopup />
 
-      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
+      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>
             <div className="mb-4 sm:mb-6 lg:mb-8">
               <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2">Select Your Class</h2>
@@ -145,6 +146,8 @@ const Dashboard = () => {
             </div>
           </>}
       </main>
+
+      <Footer />
     </div>;
 };
 export default Dashboard;
