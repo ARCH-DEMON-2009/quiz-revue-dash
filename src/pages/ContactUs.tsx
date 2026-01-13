@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, MessageCircle, Bot } from "lucide-react";
+import { ArrowLeft, MessageCircle, Bot, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 
@@ -26,7 +26,7 @@ const ContactUs = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -63,6 +63,26 @@ const ContactUs = () => {
                 className="text-primary hover:underline font-medium"
               >
                 @testsagar
+              </a>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-primary" />
+                WhatsApp
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-2">Chat with us on WhatsApp</p>
+              <a 
+                href="https://wa.me/84522122461?text=Hello"
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline font-medium"
+              >
+                +84 522122461
               </a>
             </CardContent>
           </Card>
