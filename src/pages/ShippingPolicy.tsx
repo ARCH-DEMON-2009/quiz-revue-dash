@@ -68,11 +68,16 @@ const ShippingPolicy = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-3">Support</h2>
               <p className="text-muted-foreground">
-                For any delivery-related issues or questions, please contact us at{" "}
-                <a href="mailto:support@testsagar.com" className="text-primary hover:underline">
-                  support@testsagar.com
+                For any delivery-related issues or questions, please contact us via Telegram:{" "}
+                <a 
+                  href="https://t.me/testsagarbot" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  @testsagarbot
                 </a>{" "}
-                or via Telegram at{" "}
+                or admin at{" "}
                 <a 
                   href="https://t.me/testsagar" 
                   target="_blank" 

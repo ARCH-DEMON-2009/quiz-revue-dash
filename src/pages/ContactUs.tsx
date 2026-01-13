@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Mail, Phone, MessageCircle, MapPin } from "lucide-react";
+import { ArrowLeft, MessageCircle, Bot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 
@@ -22,7 +22,7 @@ const ContactUs = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Contact Us</h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Have questions? We're here to help. Reach out to us through any of the channels below.
+            Have questions? We're here to help. Reach out to us through Telegram.
           </p>
         </div>
 
@@ -30,17 +30,19 @@ const ContactUs = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-primary" />
-                Email Support
+                <Bot className="h-5 w-5 text-primary" />
+                TestSagar Bot
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-2">For general inquiries and support</p>
+              <p className="text-muted-foreground mb-2">Get instant support via our Telegram bot</p>
               <a 
-                href="mailto:support@testsagar.com" 
+                href="https://t.me/testsagarbot" 
+                target="_blank" 
+                rel="noopener noreferrer"
                 className="text-primary hover:underline font-medium"
               >
-                support@testsagar.com
+                @testsagarbot
               </a>
             </CardContent>
           </Card>
@@ -49,11 +51,11 @@ const ContactUs = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-primary" />
-                Telegram
+                Admin Support
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-2">Quick responses via Telegram</p>
+              <p className="text-muted-foreground mb-2">Contact our admin directly on Telegram</p>
               <a 
                 href="https://t.me/testsagar" 
                 target="_blank" 
@@ -62,39 +64,6 @@ const ContactUs = () => {
               >
                 @testsagar
               </a>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Phone className="h-5 w-5 text-primary" />
-                Phone Support
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-2">Available Mon-Sat, 10 AM - 6 PM IST</p>
-              <a 
-                href="tel:+919876543210" 
-                className="text-primary hover:underline font-medium"
-              >
-                +91 98765 43210
-              </a>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                Location
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                TestSagar Education Pvt. Ltd.<br />
-                India
-              </p>
             </CardContent>
           </Card>
         </div>
