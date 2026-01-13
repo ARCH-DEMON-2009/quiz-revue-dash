@@ -105,9 +105,23 @@ const TermsAndConditions = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-3">9. Contact Information</h2>
               <p className="text-muted-foreground">
-                For questions about these Terms and Conditions, please contact us at{" "}
-                <a href="mailto:support@testsagar.com" className="text-primary hover:underline">
-                  support@testsagar.com
+                For questions about these Terms and Conditions, please contact us via Telegram:{" "}
+                <a 
+                  href="https://t.me/testsagarbot" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  @testsagarbot
+                </a>{" "}
+                or admin at{" "}
+                <a 
+                  href="https://t.me/testsagar" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  @testsagar
                 </a>
               </p>
             </section>

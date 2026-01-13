@@ -129,9 +129,23 @@ const PrivacyPolicy = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-3">10. Contact Us</h2>
               <p className="text-muted-foreground">
-                If you have any questions about this Privacy Policy, please contact us at{" "}
-                <a href="mailto:support@testsagar.com" className="text-primary hover:underline">
-                  support@testsagar.com
+                If you have any questions about this Privacy Policy, please contact us via Telegram:{" "}
+                <a 
+                  href="https://t.me/testsagarbot" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  @testsagarbot
+                </a>{" "}
+                or admin at{" "}
+                <a 
+                  href="https://t.me/testsagar" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  @testsagar
                 </a>
               </p>
             </section>
