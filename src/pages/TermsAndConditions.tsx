@@ -2,10 +2,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 
 const TermsAndConditions = () => {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email || "");
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("name")
+          .eq("user_id", user.id)
+          .single();
+        if (profile) {
+          setUserName(profile.name);
+        }
+      }
+    };
+    fetchUserData();
+  }, []);
+
+  const getWhatsAppUrl = () => {
+    const message = userName && userEmail 
+      ? `Hello, I'm ${userName} (${userEmail}). I have a question about the Terms and Conditions.`
+      : "Hello, I have a question about the Terms and Conditions.";
+    return `https://wa.me/84522122461?text=${encodeURIComponent(message)}`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex flex-col">
@@ -105,23 +134,14 @@ const TermsAndConditions = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-3">9. Contact Information</h2>
               <p className="text-muted-foreground">
-                For questions about these Terms and Conditions, please contact us via Telegram:{" "}
+                For questions about these Terms and Conditions, please contact us via WhatsApp:{" "}
                 <a 
-                  href="https://t.me/testsagarbot" 
+                  href={getWhatsAppUrl()}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="text-primary hover:underline"
                 >
-                  @testsagarbot
-                </a>{" "}
-                or admin at{" "}
-                <a 
-                  href="https://t.me/testsagar" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  @testsagar
+                  +84 522122461
                 </a>
               </p>
             </section>
