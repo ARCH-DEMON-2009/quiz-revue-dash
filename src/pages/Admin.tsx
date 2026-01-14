@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings } from "lucide-react";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
 import { ManagePremiumDialog } from "@/components/ManagePremiumDialog";
@@ -45,6 +45,8 @@ const Admin = () => {
   const [subjects, setSubjects] = useState<string[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [manageDialogOpen, setManageDialogOpen] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAuth();
@@ -77,6 +79,7 @@ const Admin = () => {
       setIsAuthenticated(true);
       fetchUsers();
       fetchSubjects();
+      fetchMaintenanceMode();
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/");
@@ -103,6 +106,42 @@ const Admin = () => {
       setSubjects(uniqueSubjects);
     } catch (error) {
       console.error("Error fetching subjects:", error);
+    }
+  };
+
+  const fetchMaintenanceMode = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("system_config")
+        .select("config_value")
+        .eq("config_key", "maintenance_mode")
+        .single();
+
+      if (error) throw error;
+      setMaintenanceMode(data?.config_value === "true");
+    } catch (error) {
+      console.error("Error fetching maintenance mode:", error);
+    }
+  };
+
+  const toggleMaintenanceMode = async () => {
+    setMaintenanceLoading(true);
+    try {
+      const newValue = !maintenanceMode;
+      const { error } = await supabase
+        .from("system_config")
+        .update({ config_value: newValue.toString(), updated_at: new Date().toISOString() })
+        .eq("config_key", "maintenance_mode");
+
+      if (error) throw error;
+      
+      setMaintenanceMode(newValue);
+      toast.success(`Maintenance mode ${newValue ? "enabled" : "disabled"}`);
+    } catch (error) {
+      console.error("Error toggling maintenance mode:", error);
+      toast.error("Failed to toggle maintenance mode");
+    } finally {
+      setMaintenanceLoading(false);
     }
   };
 
@@ -367,8 +406,26 @@ const Admin = () => {
     <div className="min-h-screen bg-background">
       <nav className="border-b bg-card sticky top-0 z-10">
         <div className="container mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 flex flex-wrap justify-between items-center gap-2">
-          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Admin Panel</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">Admin Panel</h1>
+            {maintenanceMode && (
+              <Badge variant="destructive" className="animate-pulse">
+                <Wrench className="h-3 w-3 mr-1" />
+                Maintenance Mode
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+            {/* Maintenance Mode Toggle */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border">
+              <Wrench className={`h-3 w-3 sm:h-4 sm:w-4 ${maintenanceMode ? 'text-destructive' : 'text-muted-foreground'}`} />
+              <span className="text-xs sm:text-sm hidden sm:inline">Maintenance</span>
+              <Switch
+                checked={maintenanceMode}
+                onCheckedChange={toggleMaintenanceMode}
+                disabled={maintenanceLoading}
+              />
+            </div>
             <AddPremiumUserDialog onSuccess={fetchUsers} />
             <Button 
               variant="outline" 
