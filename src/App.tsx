@@ -21,6 +21,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
+import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
 
 const queryClient = new QueryClient();
 
@@ -30,28 +31,30 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <BlockedUserGuard />
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/quiz/:testId" element={<Quiz />} />
-          <Route path="/quiz" element={<QuizRedirect />} />
-          <Route path="/quiz.html" element={<QuizRedirect />} />
-          <Route path="/results/:resultId" element={<Results />} />
-          <Route path="/review/:resultId" element={<Review />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/contact" element={<ContactUs />} />
-          <Route path="/shipping-policy" element={<ShippingPolicy />} />
-          <Route path="/terms" element={<TermsAndConditions />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/admin" element={<Admin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <MaintenanceModeGuard>
+          <BlockedUserGuard />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/quiz/:testId" element={<Quiz />} />
+            <Route path="/quiz" element={<QuizRedirect />} />
+            <Route path="/quiz.html" element={<QuizRedirect />} />
+            <Route path="/results/:resultId" element={<Results />} />
+            <Route path="/review/:resultId" element={<Review />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/shipping-policy" element={<ShippingPolicy />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/admin" element={<Admin />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </MaintenanceModeGuard>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
