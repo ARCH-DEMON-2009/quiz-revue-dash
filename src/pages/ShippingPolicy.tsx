@@ -1,11 +1,40 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 
 const ShippingPolicy = () => {
   const navigate = useNavigate();
+  const [userName, setUserName] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email || "");
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('name')
+          .eq('user_id', user.id)
+          .single();
+        if (profile) {
+          setUserName(profile.name);
+        }
+      }
+    };
+    fetchUserInfo();
+  }, []);
+
+  const getWhatsAppLink = () => {
+    const message = userName && userEmail 
+      ? `Hello, I'm ${userName} (${userEmail}). I need help with delivery-related issues.`
+      : "Hello, I need help with delivery-related issues.";
+    return `https://wa.me/84522122461?text=${encodeURIComponent(message)}`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex flex-col">
@@ -67,26 +96,18 @@ const ShippingPolicy = () => {
 
             <section>
               <h2 className="text-2xl font-semibold mb-3">Support</h2>
-              <p className="text-muted-foreground">
-                For any delivery-related issues or questions, please contact us via Telegram:{" "}
-                <a 
-                  href="https://t.me/testsagarbot" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  @testsagarbot
-                </a>{" "}
-                or admin at{" "}
-                <a 
-                  href="https://t.me/testsagar" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  @testsagar
-                </a>
+              <p className="text-muted-foreground mb-4">
+                For any delivery-related issues or questions, please contact us via WhatsApp:
               </p>
+              <a 
+                href={getWhatsAppLink()}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <Phone className="h-4 w-4" />
+                +84 522122461
+              </a>
             </section>
 
             <section className="pt-4 border-t">
