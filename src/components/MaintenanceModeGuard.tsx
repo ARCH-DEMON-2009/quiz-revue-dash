@@ -22,27 +22,61 @@ export const MaintenanceModeGuard = ({ children }: MaintenanceModeGuardProps) =>
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Set up interval to check scheduled maintenance every minute
+    const intervalId = setInterval(() => {
+      checkMaintenanceMode();
+    }, 60000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(intervalId);
+    };
   }, []);
 
   const checkMaintenanceMode = async () => {
     try {
-      // Check maintenance mode status - this query is now allowed for all users
+      // Fetch all maintenance-related config
       const { data: configData, error } = await supabase
         .from("system_config")
-        .select("config_value")
-        .eq("config_key", "maintenance_mode")
-        .single();
+        .select("config_key, config_value")
+        .in("config_key", ["maintenance_mode", "maintenance_scheduled_start", "maintenance_scheduled_end"]);
 
       if (error) {
         console.error("Error fetching maintenance mode:", error);
-        // If we can't check, assume not in maintenance mode to avoid blocking users
         setIsMaintenanceMode(false);
         setIsLoading(false);
         return;
       }
 
-      const maintenanceEnabled = configData?.config_value === "true";
+      let manualMaintenanceOn = false;
+      let scheduledStart: Date | null = null;
+      let scheduledEnd: Date | null = null;
+
+      configData?.forEach((config) => {
+        if (config.config_key === "maintenance_mode") {
+          manualMaintenanceOn = config.config_value === "true";
+        } else if (config.config_key === "maintenance_scheduled_start" && config.config_value) {
+          const date = new Date(config.config_value);
+          if (!isNaN(date.getTime())) {
+            scheduledStart = date;
+          }
+        } else if (config.config_key === "maintenance_scheduled_end" && config.config_value) {
+          const date = new Date(config.config_value);
+          if (!isNaN(date.getTime())) {
+            scheduledEnd = date;
+          }
+        }
+      });
+
+      // Check if we're within scheduled maintenance window
+      let scheduledMaintenanceActive = false;
+      const now = new Date();
+      
+      if (scheduledStart && scheduledEnd) {
+        scheduledMaintenanceActive = now >= scheduledStart && now <= scheduledEnd;
+      }
+
+      const maintenanceEnabled = manualMaintenanceOn || scheduledMaintenanceActive;
       setIsMaintenanceMode(maintenanceEnabled);
 
       // If maintenance mode is on, check if current user is admin

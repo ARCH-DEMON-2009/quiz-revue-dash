@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
 import { ManagePremiumDialog } from "@/components/ManagePremiumDialog";
 import { PromoCodeManager } from "@/components/PromoCodeManager";
@@ -47,6 +51,11 @@ const Admin = () => {
   const [manageDialogOpen, setManageDialogOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceLoading, setMaintenanceLoading] = useState(false);
+  const [scheduledStart, setScheduledStart] = useState<Date | undefined>(undefined);
+  const [scheduledEnd, setScheduledEnd] = useState<Date | undefined>(undefined);
+  const [scheduledStartTime, setScheduledStartTime] = useState("00:00");
+  const [scheduledEndTime, setScheduledEndTime] = useState("00:00");
+  const [scheduleLoading, setScheduleLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAuth();
@@ -113,12 +122,28 @@ const Admin = () => {
     try {
       const { data, error } = await supabase
         .from("system_config")
-        .select("config_value")
-        .eq("config_key", "maintenance_mode")
-        .single();
+        .select("config_key, config_value")
+        .in("config_key", ["maintenance_mode", "maintenance_scheduled_start", "maintenance_scheduled_end"]);
 
       if (error) throw error;
-      setMaintenanceMode(data?.config_value === "true");
+      
+      data?.forEach((config) => {
+        if (config.config_key === "maintenance_mode") {
+          setMaintenanceMode(config.config_value === "true");
+        } else if (config.config_key === "maintenance_scheduled_start" && config.config_value) {
+          const date = new Date(config.config_value);
+          if (!isNaN(date.getTime())) {
+            setScheduledStart(date);
+            setScheduledStartTime(format(date, "HH:mm"));
+          }
+        } else if (config.config_key === "maintenance_scheduled_end" && config.config_value) {
+          const date = new Date(config.config_value);
+          if (!isNaN(date.getTime())) {
+            setScheduledEnd(date);
+            setScheduledEndTime(format(date, "HH:mm"));
+          }
+        }
+      });
     } catch (error) {
       console.error("Error fetching maintenance mode:", error);
     }
@@ -142,6 +167,83 @@ const Admin = () => {
       toast.error("Failed to toggle maintenance mode");
     } finally {
       setMaintenanceLoading(false);
+    }
+  };
+
+  const saveScheduledMaintenance = async () => {
+    setScheduleLoading(true);
+    try {
+      // Combine date and time for start
+      let startISO = "";
+      if (scheduledStart) {
+        const [hours, minutes] = scheduledStartTime.split(":").map(Number);
+        const startDate = new Date(scheduledStart);
+        startDate.setHours(hours, minutes, 0, 0);
+        startISO = startDate.toISOString();
+      }
+
+      // Combine date and time for end
+      let endISO = "";
+      if (scheduledEnd) {
+        const [hours, minutes] = scheduledEndTime.split(":").map(Number);
+        const endDate = new Date(scheduledEnd);
+        endDate.setHours(hours, minutes, 0, 0);
+        endISO = endDate.toISOString();
+      }
+
+      // Validate that end is after start if both are set
+      if (startISO && endISO && new Date(endISO) <= new Date(startISO)) {
+        toast.error("End time must be after start time");
+        setScheduleLoading(false);
+        return;
+      }
+
+      const { error: startError } = await supabase
+        .from("system_config")
+        .update({ config_value: startISO, updated_at: new Date().toISOString() })
+        .eq("config_key", "maintenance_scheduled_start");
+
+      const { error: endError } = await supabase
+        .from("system_config")
+        .update({ config_value: endISO, updated_at: new Date().toISOString() })
+        .eq("config_key", "maintenance_scheduled_end");
+
+      if (startError || endError) throw startError || endError;
+
+      toast.success("Scheduled maintenance saved successfully");
+    } catch (error) {
+      console.error("Error saving scheduled maintenance:", error);
+      toast.error("Failed to save scheduled maintenance");
+    } finally {
+      setScheduleLoading(false);
+    }
+  };
+
+  const clearScheduledMaintenance = async () => {
+    setScheduleLoading(true);
+    try {
+      const { error: startError } = await supabase
+        .from("system_config")
+        .update({ config_value: "", updated_at: new Date().toISOString() })
+        .eq("config_key", "maintenance_scheduled_start");
+
+      const { error: endError } = await supabase
+        .from("system_config")
+        .update({ config_value: "", updated_at: new Date().toISOString() })
+        .eq("config_key", "maintenance_scheduled_end");
+
+      if (startError || endError) throw startError || endError;
+
+      setScheduledStart(undefined);
+      setScheduledEnd(undefined);
+      setScheduledStartTime("00:00");
+      setScheduledEndTime("00:00");
+      toast.success("Scheduled maintenance cleared");
+    } catch (error) {
+      console.error("Error clearing scheduled maintenance:", error);
+      toast.error("Failed to clear scheduled maintenance");
+    } finally {
+      setScheduleLoading(false);
     }
   };
 
@@ -512,6 +614,136 @@ const Admin = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Scheduled Maintenance Card */}
+        <Card className="mb-3 sm:mb-4">
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-primary" />
+              Scheduled Maintenance
+              {(scheduledStart || scheduledEnd) && (
+                <Badge variant="secondary" className="ml-2">
+                  {scheduledStart && scheduledEnd ? "Scheduled" : "Incomplete"}
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Start Date/Time */}
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-medium">Start Date & Time</label>
+                <div className="flex gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "flex-1 justify-start text-left font-normal text-xs sm:text-sm",
+                          !scheduledStart && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {scheduledStart ? format(scheduledStart, "PPP") : "Pick date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={scheduledStart}
+                        onSelect={setScheduledStart}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="time"
+                    value={scheduledStartTime}
+                    onChange={(e) => setScheduledStartTime(e.target.value)}
+                    className="w-24 text-xs sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* End Date/Time */}
+              <div className="space-y-2">
+                <label className="text-xs sm:text-sm font-medium">End Date & Time</label>
+                <div className="flex gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "flex-1 justify-start text-left font-normal text-xs sm:text-sm",
+                          !scheduledEnd && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {scheduledEnd ? format(scheduledEnd, "PPP") : "Pick date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={scheduledEnd}
+                        onSelect={setScheduledEnd}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Input
+                    type="time"
+                    value={scheduledEndTime}
+                    onChange={(e) => setScheduledEndTime(e.target.value)}
+                    className="w-24 text-xs sm:text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Schedule Info */}
+            {scheduledStart && scheduledEnd && (
+              <div className="mt-4 p-3 rounded-lg bg-muted/50 text-xs sm:text-sm">
+                <p className="text-muted-foreground">
+                  Maintenance will automatically activate from{" "}
+                  <span className="font-medium text-foreground">
+                    {format(new Date(`${format(scheduledStart, "yyyy-MM-dd")}T${scheduledStartTime}`), "PPP 'at' p")}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-medium text-foreground">
+                    {format(new Date(`${format(scheduledEnd, "yyyy-MM-dd")}T${scheduledEndTime}`), "PPP 'at' p")}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 mt-4">
+              <Button
+                onClick={saveScheduledMaintenance}
+                disabled={scheduleLoading || (!scheduledStart && !scheduledEnd)}
+                size="sm"
+                className="text-xs sm:text-sm"
+              >
+                {scheduleLoading ? "Saving..." : "Save Schedule"}
+              </Button>
+              {(scheduledStart || scheduledEnd) && (
+                <Button
+                  variant="outline"
+                  onClick={clearScheduledMaintenance}
+                  disabled={scheduleLoading}
+                  size="sm"
+                  className="text-xs sm:text-sm"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Subject Filter */}
         <Card className="mb-3 sm:mb-4">
