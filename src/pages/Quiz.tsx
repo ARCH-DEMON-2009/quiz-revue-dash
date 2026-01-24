@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Clock, FileText, AlertTriangle, Crown } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AccessGuard } from "@/components/AccessGuard";
+import { AccessGuard, useAccessStatus } from "@/components/AccessGuard";
+import { InterstitialAd, InlineAd } from "@/components/ads";
 
 interface Question {
   id: string;
@@ -44,6 +45,8 @@ const Quiz = () => {
   const [loading, setLoading] = useState(true);
   const [testName, setTestName] = useState("");
   const [textAnswer, setTextAnswer] = useState("");
+  const [showInterstitial, setShowInterstitial] = useState(false);
+  const { accessStatus } = useAccessStatus();
 
   useEffect(() => {
     fetchQuizData();
@@ -103,8 +106,16 @@ const Quiz = () => {
       navigate("/");
     } finally {
       setLoading(false);
+      // Show interstitial ad for free users when quiz loads
+      if (accessStatus?.type === 'free') {
+        setShowInterstitial(true);
+      }
     }
   };
+
+  const handleCloseInterstitial = useCallback(() => {
+    setShowInterstitial(false);
+  }, []);
 
   const subjectGroups: SubjectGroup[] = questions.reduce((acc, question, index) => {
     const existingGroup = acc.find(g => g.subject === question.subject);
@@ -296,6 +307,12 @@ const Quiz = () => {
 
   return (
     <AccessGuard>
+    {/* Interstitial Ad for free users */}
+    <InterstitialAd 
+      open={showInterstitial} 
+      onClose={handleCloseInterstitial}
+      countdownSeconds={5}
+    />
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
       <div className="bg-card border-b sticky top-0 z-10 shadow-sm">

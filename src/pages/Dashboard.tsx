@@ -11,6 +11,7 @@ import NavigationHeader from "@/components/NavigationHeader";
 import FloatingBackground from "@/components/FloatingBackground";
 import TelegramPopup from "@/components/TelegramPopup";
 import Footer from "@/components/Footer";
+import { AdBanner, StickyAd, InlineAd } from "@/components/ads";
 interface Test {
   id: string;
   name: string;
@@ -70,6 +71,9 @@ const Dashboard = () => {
       <FloatingBackground />
       <NavigationHeader showFullNav />
       <TelegramPopup />
+      
+      {/* Top Ad Banner */}
+      <AdBanner position="top" />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>
@@ -145,7 +149,16 @@ const Dashboard = () => {
                 </Card>)}
             </div>
           </>}
+          
+          {/* Inline Ad after test list */}
+          <InlineAd className="mt-6" />
       </main>
+
+      {/* Bottom Ad Banner */}
+      <AdBanner position="bottom" />
+      
+      {/* Sticky Ad at bottom */}
+      <StickyAd position="bottom" />
 
       <Footer />
     </div>;

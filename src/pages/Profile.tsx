@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Award, HelpCircle, Crown, Calendar, LogOut } from "lucide-react";
+import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
+import { AdBanner, InlineAd } from "@/components/ads";
+import { Link } from "react-router-dom";
 
 interface Stats {
   totalTests: number;
@@ -22,7 +24,7 @@ interface Stats {
 }
 
 interface AccessStatus {
-  type: 'premium' | 'trial' | 'expired';
+  type: 'premium' | 'free';
   daysLeft: number;
   expiryDate: string | null;
 }
@@ -71,24 +73,12 @@ const Profile = () => {
         return;
       }
 
-      // Check trial status
-      const { data: trial } = await supabase
-        .from("user_trials")
-        .select("start_date")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (trial) {
-        const trialEnd = new Date(trial.start_date);
-        trialEnd.setDate(trialEnd.getDate() + 3); // 3-day trial
-        const daysLeft = Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        
-        setAccessStatus({
-          type: daysLeft > 0 ? 'trial' : 'expired',
-          daysLeft: Math.max(0, daysLeft),
-          expiryDate: trialEnd.toISOString()
-        });
-      }
+      // No premium - user has free access with ads
+      setAccessStatus({
+        type: 'free',
+        daysLeft: 0,
+        expiryDate: null
+      });
     } catch (error) {
       console.error("Error checking access status:", error);
     }
@@ -185,61 +175,48 @@ const Profile = () => {
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {/* Access Status Card */}
         {accessStatus && (
-          <Card className={`mb-4 sm:mb-6 lg:mb-8 ${accessStatus.type === 'expired' ? 'border-destructive' : accessStatus.type === 'premium' ? 'border-primary' : 'border-warning'}`}>
+          <Card className={`mb-4 sm:mb-6 lg:mb-8 ${accessStatus.type === 'premium' ? 'border-primary' : 'border-muted-foreground/30'}`}>
             <CardContent className="p-3 sm:p-4 lg:pt-6">
               <div className="flex flex-col gap-4">
                 <div className="flex items-start gap-3">
                   {accessStatus.type === 'premium' ? (
                     <Crown className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
                   ) : (
-                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-warning shrink-0" />
+                    <Tv className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-base sm:text-lg font-semibold">
-                        {accessStatus.type === 'premium' ? 'Premium Active' : 
-                         accessStatus.type === 'trial' ? 'Free Trial' : 'Trial Expired'}
+                        {accessStatus.type === 'premium' ? 'Premium Active' : 'Free Plan (with Ads)'}
                       </h3>
-                      <Badge variant={accessStatus.type === 'premium' ? 'default' : accessStatus.type === 'trial' ? 'secondary' : 'destructive'} className="text-xs">
-                        {accessStatus.type === 'expired' ? 'Expired' : `${accessStatus.daysLeft} days left`}
+                      <Badge variant={accessStatus.type === 'premium' ? 'default' : 'secondary'} className="text-xs">
+                        {accessStatus.type === 'premium' ? `${accessStatus.daysLeft} days left` : 'Ad-Supported'}
                       </Badge>
                     </div>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                       {accessStatus.type === 'premium' 
                         ? `Expires: ${new Date(accessStatus.expiryDate!).toLocaleDateString()}`
-                        : accessStatus.type === 'trial'
-                        ? 'Enjoy your free trial!'
-                        : 'Buy premium to continue.'}
+                        : 'Upgrade to Premium for an ad-free experience'}
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    To buy premium, contact:
-                  </p>
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 sm:flex-none text-xs sm:text-sm"
-                    >
-                      Help Bot
-                    </Button>
-                    <Button 
-                      onClick={() => window.open("https://t.me/Its_trms", "_blank")}
-                      variant="default"
-                      size="sm"
-                      className="flex-1 sm:flex-none text-xs sm:text-sm"
-                    >
-                      Contact Admin
-                    </Button>
+                {accessStatus.type === 'free' && (
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-end">
+                    <Link to="/pricing">
+                      <Button size="sm" className="w-full sm:w-auto gap-2">
+                        <Crown className="h-4 w-4" />
+                        Upgrade to Premium
+                      </Button>
+                    </Link>
                   </div>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Ad Banner for free users */}
+        <AdBanner position="inline" className="mb-4 sm:mb-6" />
 
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">Your Performance</h1>
@@ -327,6 +304,9 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Inline Ad between sections */}
+            <InlineAd className="my-4 sm:my-6" />
 
             <Card>
               <CardHeader className="p-3 sm:p-4 lg:p-6">
