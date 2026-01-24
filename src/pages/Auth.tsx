@@ -92,21 +92,8 @@ const Auth = () => {
         return;
       }
 
-      // Create 3-day free trial for new user
-      if (data.user) {
-        const { error: trialError } = await supabase.from("user_trials").insert({
-          user_id: data.user.id,
-          email: email,
-          name: name.trim(),
-          start_date: new Date().toISOString(),
-        });
-
-        if (trialError) {
-          console.error("Trial creation error:", trialError);
-        }
-      }
-
-      toast.success("Account created with 3-day free trial! Please check your email to confirm.");
+      // Account created - user gets free access with ads
+      toast.success("Account created successfully! Please check your email to confirm.");
     } catch (error: any) {
       toast.error(error.message || "An error occurred during sign up");
     } finally {

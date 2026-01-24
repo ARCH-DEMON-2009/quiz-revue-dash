@@ -3,11 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Crown, Clock, AlertTriangle, CreditCard } from "lucide-react";
+import { Crown, Clock, AlertTriangle, CreditCard, Tv } from "lucide-react";
 
 interface AccessStatus {
   hasAccess: boolean;
-  type: 'premium' | 'trial' | 'expired' | 'none';
+  type: 'premium' | 'free' | 'none';
   daysLeft: number;
   expiryDate: string | null;
 }
@@ -65,53 +65,17 @@ export const useAccessStatus = () => {
         return;
       }
 
-      // Check trial status
-      const { data: trial } = await supabase
-        .from("user_trials")
-        .select("start_date")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      // Also check by email as fallback
-      let trialData = trial;
-      if (!trialData && user.email) {
-        const { data: trialByEmail } = await supabase
-          .from("user_trials")
-          .select("start_date")
-          .eq("email", user.email)
-          .maybeSingle();
-        trialData = trialByEmail;
-      }
-
-      if (trialData) {
-        const trialEnd = new Date(trialData.start_date);
-        trialEnd.setDate(trialEnd.getDate() + 3); // 3-day trial
-        const daysLeft = Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (daysLeft > 0) {
-          setAccessStatus({
-            hasAccess: true,
-            type: 'trial',
-            daysLeft,
-            expiryDate: trialEnd.toISOString()
-          });
-        } else {
-          setAccessStatus({
-            hasAccess: false,
-            type: 'expired',
-            daysLeft: 0,
-            expiryDate: trialEnd.toISOString()
-          });
-        }
-        setLoading(false);
-        return;
-      }
-
-      // No trial found - should not happen for new users, but handle it
-      setAccessStatus({ hasAccess: false, type: 'none', daysLeft: 0, expiryDate: null });
+      // No premium - user gets free access with ads
+      setAccessStatus({
+        hasAccess: true,
+        type: 'free',
+        daysLeft: 0,
+        expiryDate: null
+      });
     } catch (error) {
       console.error("Error checking access:", error);
-      setAccessStatus({ hasAccess: false, type: 'none', daysLeft: 0, expiryDate: null });
+      // Default to free access on error
+      setAccessStatus({ hasAccess: true, type: 'free', daysLeft: 0, expiryDate: null });
     } finally {
       setLoading(false);
     }
@@ -129,83 +93,46 @@ export const AccessGuard = ({ children }: AccessGuardProps) => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Checking access...</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
-  if (!accessStatus?.hasAccess) {
+  // Only block if user is not authenticated
+  if (accessStatus?.type === 'none') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-lg w-full">
           <CardHeader className="text-center">
-            <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
-              <AlertTriangle className="h-8 w-8 text-destructive" />
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="h-8 w-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl">
-              {accessStatus?.type === 'expired' ? 'Subscription Expired' : 'Access Required'}
-            </CardTitle>
+            <CardTitle className="text-2xl">Login Required</CardTitle>
             <CardDescription>
-              {accessStatus?.type === 'expired' 
-                ? 'Your subscription has ended. Please renew to continue accessing tests.'
-                : 'You need a premium subscription to access this feature.'}
+              Please login or create an account to access this feature.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* View Plans Button */}
-            <Link to="/pricing" className="block">
+            <Link to="/auth" className="block">
               <Button className="w-full" size="lg">
-                <CreditCard className="h-4 w-4 mr-2" />
-                View Plans & Pricing
+                Login / Sign Up
               </Button>
             </Link>
             
-            <div className="bg-muted/50 p-4 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground mb-2">
-                Or contact our admin for assistance:
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                <Button 
-                  onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  Help Bot
-                </Button>
-                <Button 
-                  onClick={() => window.open("https://t.me/Its_trms", "_blank")}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  Contact Admin
-                </Button>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                className="flex-1"
-                onClick={() => navigate("/")}
-              >
-                Back to Home
-              </Button>
-              <Button 
-                variant="outline"
-                className="flex-1"
-                onClick={() => navigate("/profile")}
-              >
-                View Profile
-              </Button>
-            </div>
+            <Button 
+              variant="ghost" 
+              className="w-full"
+              onClick={() => navigate("/")}
+            >
+              Back to Home
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  // All authenticated users have access (free with ads or premium without ads)
   return <>{children}</>;
 };

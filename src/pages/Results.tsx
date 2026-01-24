@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Circle, Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
+import { AdBanner, InlineAd } from "@/components/ads";
+import Footer from "@/components/Footer";
 
 interface TestResult {
   id: string;
@@ -78,10 +80,13 @@ const Results = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <NavigationHeader />
+      
+      {/* Top Ad Banner */}
+      <AdBanner position="top" />
 
-      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl">
+      <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl flex-1">
         <Card className="mb-4 sm:mb-6">
           <CardHeader className="p-3 sm:p-4 lg:p-6">
             <CardTitle className="text-lg sm:text-xl lg:text-2xl">{result.test_name}</CardTitle>
@@ -193,6 +198,9 @@ const Results = () => {
           </Card>
         </div>
 
+        {/* Inline Ad before buttons */}
+        <InlineAd className="mb-4 sm:mb-6" />
+
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <Button onClick={() => navigate(`/review/${resultId}`)} className="flex-1 text-sm sm:text-base">
             <FileText className="h-4 w-4 mr-2" />
@@ -203,6 +211,11 @@ const Results = () => {
           </Button>
         </div>
       </main>
+      
+      {/* Bottom Ad Banner */}
+      <AdBanner position="bottom" />
+      
+      <Footer />
     </div>
   );
 };
