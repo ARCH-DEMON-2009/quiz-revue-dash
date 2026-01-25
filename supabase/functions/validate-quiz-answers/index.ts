@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     // Fetch questions with correct answers and options server-side
     const { data: questions, error: questionsError } = await supabase
       .from('questions')
-      .select('id, correct, subject, marks, negative_marks, options, question_type')
+      .select('id, correct, subject, marks, negative_marks, options, type')
       .eq('test_id', testId);
 
     if (questionsError) {
