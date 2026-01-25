@@ -83,24 +83,51 @@ export const AddPremiumUserDialog = ({ onSuccess }: AddPremiumUserDialogProps) =
       const plan = plans.find(p => p.id === selectedPlan);
       if (!plan) throw new Error("Invalid plan");
 
+      // Check if user already has premium status
+      const { data: existingPremium } = await supabase
+        .from("premium_users")
+        .select("id, expiry_date, status")
+        .eq("user_id", selectedUser.user_id)
+        .maybeSingle();
+
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + plan.days);
 
-      const { error } = await supabase.from("premium_users").insert({
-        user_id: selectedUser.user_id,
-        email: selectedUser.email,
-        name: selectedUser.name,
-        payment_id: paymentId,
-        expiry_date: expiryDate.toISOString(),
-        plan_months: Math.round(plan.days / 30),
-        plan_duration_type: plan.days >= 30 ? "month" : "week",
-        plan_duration_value: plan.days >= 365 ? Math.round(plan.days / 365) : plan.days >= 30 ? Math.round(plan.days / 30) : 1,
-        status: "active",
-      });
+      if (existingPremium) {
+        // Update existing premium record
+        const { error } = await supabase
+          .from("premium_users")
+          .update({
+            payment_id: paymentId,
+            expiry_date: expiryDate.toISOString(),
+            plan_months: Math.round(plan.days / 30),
+            plan_duration_type: plan.days >= 30 ? "month" : "week",
+            plan_duration_value: plan.days >= 365 ? Math.round(plan.days / 365) : plan.days >= 30 ? Math.round(plan.days / 30) : 1,
+            status: "active",
+            start_date: new Date().toISOString(),
+          })
+          .eq("id", existingPremium.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success(`${selectedUser.name}'s premium updated!`);
+      } else {
+        // Insert new premium record
+        const { error } = await supabase.from("premium_users").insert({
+          user_id: selectedUser.user_id,
+          email: selectedUser.email,
+          name: selectedUser.name,
+          payment_id: paymentId,
+          expiry_date: expiryDate.toISOString(),
+          plan_months: Math.round(plan.days / 30),
+          plan_duration_type: plan.days >= 30 ? "month" : "week",
+          plan_duration_value: plan.days >= 365 ? Math.round(plan.days / 365) : plan.days >= 30 ? Math.round(plan.days / 30) : 1,
+          status: "active",
+        });
 
-      toast.success(`${selectedUser.name} added to premium!`);
+        if (error) throw error;
+        toast.success(`${selectedUser.name} added to premium!`);
+      }
+
       setOpen(false);
       resetForm();
       onSuccess();
