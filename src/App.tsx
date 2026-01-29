@@ -22,6 +22,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
+import { AdsterraPopunder, AdsterraSocialBar } from "./components/ads";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,9 @@ const App = () => (
       <BrowserRouter>
         <MaintenanceModeGuard>
           <BlockedUserGuard />
+          {/* Global Adsterra Ads - Only show to non-premium users */}
+          <AdsterraPopunder />
+          <AdsterraSocialBar />
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
