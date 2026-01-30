@@ -11,7 +11,7 @@ import NavigationHeader from "@/components/NavigationHeader";
 import FloatingBackground from "@/components/FloatingBackground";
 import TelegramPopup from "@/components/TelegramPopup";
 import Footer from "@/components/Footer";
-import { AdsterraBanner, AdsterraNativeBanner, AdsterraDirectLink } from "@/components/ads";
+
 interface Test {
   id: string;
   name: string;
@@ -71,15 +71,6 @@ const Dashboard = () => {
       <FloatingBackground />
       <NavigationHeader showFullNav />
       <TelegramPopup />
-      
-      {/* Top Ad Banner - 728x90 for desktop */}
-      <div className="hidden md:block">
-        <AdsterraBanner size="728x90" />
-      </div>
-      {/* Mobile banner - 320x50 */}
-      <div className="md:hidden">
-        <AdsterraBanner size="320x50" />
-      </div>
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>
@@ -156,28 +147,7 @@ const Dashboard = () => {
             </div>
           </>}
           
-          {/* Native Banner Ad after test list */}
-          <AdsterraNativeBanner className="mt-6" />
-          
-          {/* 300x250 Rectangle Ad */}
-          <AdsterraBanner size="300x250" className="mt-4" />
-          
-          {/* Direct Link Button */}
-          <div className="flex justify-center mt-4">
-            <AdsterraDirectLink variant="button">
-              🎁 Special Offer - Click Here!
-            </AdsterraDirectLink>
-          </div>
       </main>
-
-      {/* Bottom Ad Banner - 728x90 for desktop */}
-      <div className="hidden md:block">
-        <AdsterraBanner size="728x90" />
-      </div>
-      {/* Mobile banner - 320x50 */}
-      <div className="md:hidden">
-        <AdsterraBanner size="320x50" />
-      </div>
 
       <Footer />
     </div>;

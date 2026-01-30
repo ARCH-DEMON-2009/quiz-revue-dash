@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Crown, Clock, AlertTriangle, CreditCard, Tv } from "lucide-react";
+import { Crown, AlertTriangle } from "lucide-react";
 
 interface AccessStatus {
   hasAccess: boolean;
@@ -65,17 +65,17 @@ export const useAccessStatus = () => {
         return;
       }
 
-      // No premium - user gets free access with ads
+      // No premium - user does not have access
       setAccessStatus({
-        hasAccess: true,
+        hasAccess: false,
         type: 'free',
         daysLeft: 0,
         expiryDate: null
       });
     } catch (error) {
       console.error("Error checking access:", error);
-      // Default to free access on error
-      setAccessStatus({ hasAccess: true, type: 'free', daysLeft: 0, expiryDate: null });
+      // Default to no access on error
+      setAccessStatus({ hasAccess: false, type: 'free', daysLeft: 0, expiryDate: null });
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export const AccessGuard = ({ children }: AccessGuardProps) => {
     );
   }
 
-  // Only block if user is not authenticated
+  // Block if user is not authenticated
   if (accessStatus?.type === 'none') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -133,6 +133,41 @@ export const AccessGuard = ({ children }: AccessGuardProps) => {
     );
   }
 
-  // All authenticated users have access (free with ads or premium without ads)
+  // Block if user doesn't have premium access
+  if (!accessStatus?.hasAccess) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-4">
+              <Crown className="h-8 w-8 text-amber-500" />
+            </div>
+            <CardTitle className="text-2xl">Premium Access Required</CardTitle>
+            <CardDescription>
+              You need an active premium subscription to access this feature.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Link to="/pricing" className="block">
+              <Button className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600" size="lg">
+                <Crown className="mr-2 h-5 w-5" />
+                Get Premium Access
+              </Button>
+            </Link>
+            
+            <Button 
+              variant="ghost" 
+              className="w-full"
+              onClick={() => navigate("/")}
+            >
+              Back to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Only premium users have access
   return <>{children}</>;
 };
