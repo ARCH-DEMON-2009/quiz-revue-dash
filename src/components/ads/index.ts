@@ -5,6 +5,9 @@ export { AdsterraNativeBanner } from "./AdsterraNativeBanner";
 export { AdsterraBanner } from "./AdsterraBanner";
 export { AdsterraDirectLink } from "./AdsterraDirectLink";
 
+// Monetag Ad Components
+export { MonetagAds } from "./MonetagAds";
+
 // Legacy exports (deprecated - use Adsterra components)
 export { AdBanner } from "./AdBanner";
 export { InlineAd } from "./InlineAd";
