@@ -23,7 +23,6 @@ import NotFound from "./pages/NotFound";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
 
-
 const queryClient = new QueryClient();
 
 const App = () => (

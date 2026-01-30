@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Circle, Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
-
+import { AdBanner, InlineAd } from "@/components/ads";
 import Footer from "@/components/Footer";
 
 interface TestResult {
@@ -82,6 +82,9 @@ const Results = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <NavigationHeader />
+      
+      {/* Top Ad Banner */}
+      <AdBanner position="top" />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl flex-1">
         <Card className="mb-4 sm:mb-6">
@@ -195,6 +198,9 @@ const Results = () => {
           </Card>
         </div>
 
+        {/* Inline Ad before buttons */}
+        <InlineAd className="mb-4 sm:mb-6" />
+
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <Button onClick={() => navigate(`/review/${resultId}`)} className="flex-1 text-sm sm:text-base">
             <FileText className="h-4 w-4 mr-2" />
@@ -205,6 +211,9 @@ const Results = () => {
           </Button>
         </div>
       </main>
+      
+      {/* Bottom Ad Banner */}
+      <AdBanner position="bottom" />
       
       <Footer />
     </div>
