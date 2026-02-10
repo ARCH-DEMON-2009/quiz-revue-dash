@@ -107,9 +107,6 @@ const Quiz = () => {
     }
   };
 
-  const handleCloseInterstitial = useCallback(() => {
-    setShowInterstitial(false);
-  }, []);
 
   const subjectGroups: SubjectGroup[] = questions.reduce((acc, question, index) => {
     const existingGroup = acc.find(g => g.subject === question.subject);
