@@ -11,7 +11,7 @@ import NavigationHeader from "@/components/NavigationHeader";
 import FloatingBackground from "@/components/FloatingBackground";
 import TelegramPopup from "@/components/TelegramPopup";
 import Footer from "@/components/Footer";
-import { AdBanner, StickyAd, InlineAd } from "@/components/ads";
+import { LinkShortenerGate } from "@/components/LinkShortenerGate";
 interface Test {
   id: string;
   name: string;

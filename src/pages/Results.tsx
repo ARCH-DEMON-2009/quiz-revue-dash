@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, XCircle, Circle, Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
-import { AdBanner, InlineAd } from "@/components/ads";
+
 import Footer from "@/components/Footer";
 
 interface TestResult {

@@ -9,7 +9,7 @@ import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut } from "lucide
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
-import { AdBanner, InlineAd } from "@/components/ads";
+
 import { Link } from "react-router-dom";
 
 interface Stats {
