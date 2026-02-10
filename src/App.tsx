@@ -20,6 +20,7 @@ import ShippingPolicy from "./pages/ShippingPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
+import Verify from "./pages/Verify";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
 
