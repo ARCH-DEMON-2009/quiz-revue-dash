@@ -298,12 +298,6 @@ const Quiz = () => {
 
   return (
     <AccessGuard>
-    {/* Interstitial Ad for free users */}
-    <InterstitialAd 
-      open={showInterstitial} 
-      onClose={handleCloseInterstitial}
-      countdownSeconds={5}
-    />
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Bar */}
       <div className="bg-card border-b sticky top-0 z-10 shadow-sm">

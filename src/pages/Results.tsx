@@ -208,9 +208,6 @@ const Results = () => {
         </div>
       </main>
       
-      {/* Bottom Ad Banner */}
-      <AdBanner position="bottom" />
-      
       <Footer />
     </div>
   );

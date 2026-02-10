@@ -302,9 +302,6 @@ const Profile = () => {
               </CardContent>
             </Card>
 
-            {/* Inline Ad between sections */}
-            <InlineAd className="my-4 sm:my-6" />
-
             <Card>
               <CardHeader className="p-3 sm:p-4 lg:p-6">
                 <CardTitle className="text-base sm:text-lg lg:text-xl">Recent Tests</CardTitle>
