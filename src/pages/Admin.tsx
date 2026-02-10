@@ -783,6 +783,37 @@ const Admin = () => {
           </CardContent>
         </Card>
 
+        {/* Shortener Link Config */}
+        <Card className="mb-3 sm:mb-4">
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-primary" />
+              Verification Shortener Link
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <p className="text-xs text-muted-foreground mb-3">
+              This is the shortened URL that free users click to verify their access. Change it here to update site-wide.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={shortenerLink}
+                onChange={(e) => setShortenerLink(e.target.value)}
+                placeholder="https://your-shortener-link.com"
+                className="flex-1 text-xs sm:text-sm"
+              />
+              <Button
+                onClick={saveShortenerLink}
+                disabled={shortenerLoading}
+                size="sm"
+                className="text-xs sm:text-sm"
+              >
+                {shortenerLoading ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Subject Filter */}
         <Card className="mb-3 sm:mb-4">
           <CardContent className="p-3 sm:p-4 lg:pt-6">
