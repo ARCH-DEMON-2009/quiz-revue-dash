@@ -250,6 +250,41 @@ const Admin = () => {
     }
   };
 
+  const fetchShortenerLink = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("system_config")
+        .select("config_value")
+        .eq("config_key", "shortener_link")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data?.config_value) {
+        setShortenerLink(data.config_value);
+      }
+    } catch (error) {
+      console.error("Error fetching shortener link:", error);
+    }
+  };
+
+  const saveShortenerLink = async () => {
+    setShortenerLoading(true);
+    try {
+      const { error } = await supabase
+        .from("system_config")
+        .update({ config_value: shortenerLink, updated_at: new Date().toISOString() })
+        .eq("config_key", "shortener_link");
+
+      if (error) throw error;
+      toast.success("Shortener link updated successfully");
+    } catch (error) {
+      console.error("Error saving shortener link:", error);
+      toast.error("Failed to update shortener link");
+    } finally {
+      setShortenerLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
