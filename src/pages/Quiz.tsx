@@ -104,10 +104,6 @@ const Quiz = () => {
       navigate("/");
     } finally {
       setLoading(false);
-      // Show interstitial ad for free users when quiz loads
-      if (accessStatus?.type === 'free') {
-        setShowInterstitial(true);
-      }
     }
   };
 
