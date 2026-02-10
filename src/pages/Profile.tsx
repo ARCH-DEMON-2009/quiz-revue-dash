@@ -9,7 +9,7 @@ import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut } from "lucide
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
-import { AdBanner, InlineAd } from "@/components/ads";
+
 import { Link } from "react-router-dom";
 
 interface Stats {
@@ -215,9 +215,6 @@ const Profile = () => {
           </Card>
         )}
 
-        {/* Ad Banner for free users */}
-        <AdBanner position="inline" className="mb-4 sm:mb-6" />
-
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">Your Performance</h1>
           <p className="text-sm sm:text-base text-muted-foreground">Track your progress and achievements</p>
@@ -304,9 +301,6 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Inline Ad between sections */}
-            <InlineAd className="my-4 sm:my-6" />
 
             <Card>
               <CardHeader className="p-3 sm:p-4 lg:p-6">

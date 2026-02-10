@@ -20,6 +20,7 @@ import ShippingPolicy from "./pages/ShippingPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
+import Verify from "./pages/Verify";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/verify" element={<Verify />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

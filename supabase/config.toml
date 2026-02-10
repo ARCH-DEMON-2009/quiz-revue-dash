@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-premium-email]
 verify_jwt = false
+
+[functions.generate-verification]
+verify_jwt = false

@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X } from "lucide-react";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
@@ -56,6 +56,8 @@ const Admin = () => {
   const [scheduledStartTime, setScheduledStartTime] = useState("00:00");
   const [scheduledEndTime, setScheduledEndTime] = useState("00:00");
   const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [shortenerLink, setShortenerLink] = useState("");
+  const [shortenerLoading, setShortenerLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAuth();
@@ -89,6 +91,7 @@ const Admin = () => {
       fetchUsers();
       fetchSubjects();
       fetchMaintenanceMode();
+      fetchShortenerLink();
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/");
@@ -244,6 +247,41 @@ const Admin = () => {
       toast.error("Failed to clear scheduled maintenance");
     } finally {
       setScheduleLoading(false);
+    }
+  };
+
+  const fetchShortenerLink = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("system_config")
+        .select("config_value")
+        .eq("config_key", "shortener_link")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data?.config_value) {
+        setShortenerLink(data.config_value);
+      }
+    } catch (error) {
+      console.error("Error fetching shortener link:", error);
+    }
+  };
+
+  const saveShortenerLink = async () => {
+    setShortenerLoading(true);
+    try {
+      const { error } = await supabase
+        .from("system_config")
+        .update({ config_value: shortenerLink, updated_at: new Date().toISOString() })
+        .eq("config_key", "shortener_link");
+
+      if (error) throw error;
+      toast.success("Shortener link updated successfully");
+    } catch (error) {
+      console.error("Error saving shortener link:", error);
+      toast.error("Failed to update shortener link");
+    } finally {
+      setShortenerLoading(false);
     }
   };
 
@@ -741,6 +779,37 @@ const Admin = () => {
                   Clear
                 </Button>
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Shortener Link Config */}
+        <Card className="mb-3 sm:mb-4">
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-primary" />
+              Verification Shortener Link
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <p className="text-xs text-muted-foreground mb-3">
+              This is the shortened URL that free users click to verify their access. Change it here to update site-wide.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={shortenerLink}
+                onChange={(e) => setShortenerLink(e.target.value)}
+                placeholder="https://your-shortener-link.com"
+                className="flex-1 text-xs sm:text-sm"
+              />
+              <Button
+                onClick={saveShortenerLink}
+                disabled={shortenerLoading}
+                size="sm"
+                className="text-xs sm:text-sm"
+              >
+                {shortenerLoading ? "Saving..." : "Save"}
+              </Button>
             </div>
           </CardContent>
         </Card>
