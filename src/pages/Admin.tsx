@@ -56,6 +56,8 @@ const Admin = () => {
   const [scheduledStartTime, setScheduledStartTime] = useState("00:00");
   const [scheduledEndTime, setScheduledEndTime] = useState("00:00");
   const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [shortenerLink, setShortenerLink] = useState("");
+  const [shortenerLoading, setShortenerLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAuth();
