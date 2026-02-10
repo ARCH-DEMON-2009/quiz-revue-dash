@@ -91,6 +91,7 @@ const Admin = () => {
       fetchUsers();
       fetchSubjects();
       fetchMaintenanceMode();
+      fetchShortenerLink();
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/");
