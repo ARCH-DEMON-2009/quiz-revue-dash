@@ -83,8 +83,6 @@ const Results = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <NavigationHeader />
       
-      {/* Top Ad Banner */}
-      <AdBanner position="top" />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-6xl flex-1">
         <Card className="mb-4 sm:mb-6">
