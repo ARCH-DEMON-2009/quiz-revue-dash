@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_verifications: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          initiated_at: string
+          status: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          initiated_at?: string
+          status?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          initiated_at?: string
+          status?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       premium_users: {
         Row: {
           created_at: string | null
