@@ -9,7 +9,7 @@ import { Clock, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { AccessGuard, useAccessStatus } from "@/components/AccessGuard";
+import { AccessGuard } from "@/components/AccessGuard";
 
 
 interface Question {
