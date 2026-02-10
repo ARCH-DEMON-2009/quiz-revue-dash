@@ -45,8 +45,6 @@ const Quiz = () => {
   const [loading, setLoading] = useState(true);
   const [testName, setTestName] = useState("");
   const [textAnswer, setTextAnswer] = useState("");
-  const [showInterstitial, setShowInterstitial] = useState(false);
-  const { accessStatus } = useAccessStatus();
 
   useEffect(() => {
     fetchQuizData();
