@@ -196,8 +196,6 @@ const Results = () => {
           </Card>
         </div>
 
-        {/* Inline Ad before buttons */}
-        <InlineAd className="mb-4 sm:mb-6" />
 
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
           <Button onClick={() => navigate(`/review/${resultId}`)} className="flex-1 text-sm sm:text-base">
