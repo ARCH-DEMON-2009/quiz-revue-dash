@@ -67,13 +67,11 @@ const Dashboard = () => {
   if (!user) {
     return null;
   }
-  return <div className="min-h-screen bg-background relative flex flex-col">
+  return <LinkShortenerGate>
+    <div className="min-h-screen bg-background relative flex flex-col">
       <FloatingBackground />
       <NavigationHeader showFullNav />
       <TelegramPopup />
-      
-      {/* Top Ad Banner */}
-      <AdBanner position="top" />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>
@@ -149,18 +147,10 @@ const Dashboard = () => {
                 </Card>)}
             </div>
           </>}
-          
-          {/* Inline Ad after test list */}
-          <InlineAd className="mt-6" />
       </main>
 
-      {/* Bottom Ad Banner */}
-      <AdBanner position="bottom" />
-      
-      {/* Sticky Ad at bottom */}
-      <StickyAd position="bottom" />
-
       <Footer />
-    </div>;
+    </div>
+  </LinkShortenerGate>;
 };
 export default Dashboard;
