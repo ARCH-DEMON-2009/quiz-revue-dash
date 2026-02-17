@@ -49,7 +49,7 @@ const Verify = () => {
       const initiatedAt = new Date(pending.initiated_at);
       const elapsed = (Date.now() - initiatedAt.getTime()) / 1000;
       
-      if (elapsed < 15) {
+      if (elapsed < 60) {
         setStatus('error');
         setErrorMessage('Verification completed too quickly. Please complete the full verification process.');
         return;
