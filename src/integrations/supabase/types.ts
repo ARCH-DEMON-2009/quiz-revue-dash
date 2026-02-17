@@ -44,6 +44,30 @@ export type Database = {
         }
         Relationships: []
       }
+      bypass_blocks: {
+        Row: {
+          blocked_until: string
+          created_at: string
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          blocked_until: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          blocked_until?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       premium_users: {
         Row: {
           created_at: string | null

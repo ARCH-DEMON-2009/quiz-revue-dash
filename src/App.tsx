@@ -22,6 +22,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import Verify from "./pages/Verify";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
+import { BypassBlockGuard } from "./components/BypassBlockGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <MaintenanceModeGuard>
+          <BypassBlockGuard />
           <BlockedUserGuard />
           <Routes>
             <Route path="/" element={<Dashboard />} />
