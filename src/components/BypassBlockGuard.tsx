@@ -36,6 +36,18 @@ export const BypassBlockGuard = () => {
   }, []);
 
   const checkBlock = async () => {
+    // Check if user is admin first - admins bypass the block
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: isAdmin } = await supabase.rpc('is_admin');
+        if (isAdmin) {
+          setBlocked(false);
+          return;
+        }
+      }
+    } catch {}
+
     // Check localStorage first (device-level)
     const deviceBlock = isDeviceBlocked();
     if (deviceBlock.blocked && deviceBlock.until) {
