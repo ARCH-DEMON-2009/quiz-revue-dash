@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
 import { ManagePremiumDialog } from "@/components/ManagePremiumDialog";
 import { PromoCodeManager } from "@/components/PromoCodeManager";
+import { BypassBlocksSection } from "@/components/BypassBlocksSection";
 
 export interface UserData {
   user_id: string;
@@ -988,6 +989,9 @@ const Admin = () => {
         <div className="mt-8">
           <PromoCodeManager />
         </div>
+
+        {/* Bypass Block Attempts */}
+        <BypassBlocksSection />
       </main>
 
       <ManagePremiumDialog
