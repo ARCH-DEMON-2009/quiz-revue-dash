@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { blockDevice, isDeviceBlocked } from "@/components/BypassBlockGuard";
 
 const Verify = () => {
   const navigate = useNavigate();
@@ -12,6 +13,13 @@ const Verify = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
+    // Check if device is already blocked
+    const deviceBlock = isDeviceBlocked();
+    if (deviceBlock.blocked) {
+      setStatus('error');
+      setErrorMessage('You are blocked for bypass attempt. Please wait for the block to expire.');
+      return;
+    }
     handleVerification();
   }, []);
 
@@ -50,8 +58,21 @@ const Verify = () => {
       const elapsed = (Date.now() - initiatedAt.getTime()) / 1000;
       
       if (elapsed < 60) {
+        // BYPASS DETECTED - block user for 24 hours
+        const blockedUntil = blockDevice();
+        
+        // Also record in database
+        await supabase.from("bypass_blocks").insert({
+          user_id: user.id,
+          blocked_until: blockedUntil.toISOString(),
+          reason: `Bypass attempt: completed in ${Math.round(elapsed)}s (min 60s required)`,
+        });
+
         setStatus('error');
-        setErrorMessage('Verification completed too quickly. Please complete the full verification process.');
+        setErrorMessage('Bypass detected! You have been blocked for 24 hours.');
+        
+        // Force reload to show block screen
+        setTimeout(() => window.location.reload(), 1500);
         return;
       }
 
