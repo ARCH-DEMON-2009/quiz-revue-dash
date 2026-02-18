@@ -878,6 +878,7 @@ const Admin = () => {
                             <TableHead>Email</TableHead>
                             <TableHead>WhatsApp</TableHead>
                             <TableHead>Type</TableHead>
+                            <TableHead>Expires</TableHead>
                             <TableHead>Tests</TableHead>
                             <TableHead>Avg Score</TableHead>
                             <TableHead>Joined</TableHead>
@@ -888,7 +889,7 @@ const Admin = () => {
                         <TableBody>
                           {paginatedUsers.length === 0 ? (
                             <TableRow>
-                              <TableCell colSpan={9} className="text-center text-muted-foreground">
+                              <TableCell colSpan={10} className="text-center text-muted-foreground">
                                 No users found
                               </TableCell>
                             </TableRow>
@@ -912,6 +913,20 @@ const Admin = () => {
                                   >
                                     {user.account_type === "expired" ? "Expired" : user.account_type === "new" ? "New User" : user.account_type}
                                   </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {user.account_type === "premium" && user.premium_expiry ? (
+                                    <div className="flex flex-col gap-0.5">
+                                      <span className="text-xs font-medium">
+                                        {format(new Date(user.premium_expiry), "dd MMM yyyy")}
+                                      </span>
+                                      <span className={`text-xs ${new Date(user.premium_expiry) < new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) ? "text-destructive" : "text-muted-foreground"}`}>
+                                        {Math.ceil((new Date(user.premium_expiry).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days left
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">—</span>
+                                  )}
                                 </TableCell>
                                 <TableCell>{user.total_tests}</TableCell>
                                 <TableCell>{user.average_score.toFixed(1)}%</TableCell>
