@@ -1006,6 +1006,9 @@ const Admin = () => {
           <PromoCodeManager />
         </div>
 
+        {/* SMS Broadcast */}
+        <SmsBroadcastSection />
+
         {/* Bypass Block Attempts */}
         <BypassBlocksSection />
       </main>
