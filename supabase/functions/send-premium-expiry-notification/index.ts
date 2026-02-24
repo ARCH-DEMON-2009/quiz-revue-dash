@@ -133,11 +133,36 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Also trigger SMS notifications for expiring users
+    let smsResult = null;
+    try {
+      const smsResponse = await fetch(
+        `${supabaseUrl}/functions/v1/send-sms`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            mode: 'expiry',
+            message: 'Your TestSagar premium subscription expires in 3 days! Renew now at testsagar.com/pricing to keep your access.',
+          }),
+        }
+      );
+      smsResult = await smsResponse.json();
+      console.log('SMS notification result:', smsResult);
+    } catch (smsError: any) {
+      console.error('SMS notification failed:', smsError);
+      smsResult = { success: false, error: smsError.message };
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         count: expiringUsers?.length || 0,
         results,
+        smsResult,
         message: `Processed ${expiringUsers?.length || 0} premium users expiring in 3 days`,
       }),
       {
