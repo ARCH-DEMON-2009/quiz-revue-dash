@@ -59,7 +59,7 @@ const Verify = () => {
       
       if (elapsed < 60) {
         // BYPASS DETECTED - block user for 24 hours
-        const blockedUntil = blockDevice();
+        const blockedUntil = await blockDevice();
         
         // Also record in database
         await supabase.from("bypass_blocks").insert({

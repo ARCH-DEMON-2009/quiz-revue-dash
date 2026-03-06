@@ -20,6 +20,7 @@ import { ManagePremiumDialog } from "@/components/ManagePremiumDialog";
 import { PromoCodeManager } from "@/components/PromoCodeManager";
 import { BypassBlocksSection } from "@/components/BypassBlocksSection";
 import { SmsBroadcastSection } from "@/components/SmsBroadcastSection";
+import { AdminAnalyticsSection } from "@/components/AdminAnalyticsSection";
 
 export interface UserData {
   user_id: string;
@@ -598,6 +599,9 @@ const Admin = () => {
       </nav>
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+        {/* Analytics: Verified users & Visit stats */}
+        <AdminAnalyticsSection />
+
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
           <Card>
             <CardHeader className="p-3 sm:pb-3">
