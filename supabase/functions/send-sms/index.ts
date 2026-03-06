@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     }
 
     // Clean the phone number
-    let num = (targetNumber || '').replace(/[\s\-\+]/g, '');
+    let num = (targetNumber || '').replace(/[\s\-+]/g, '');
     if (num.startsWith('91') && num.length === 12) num = num.substring(2);
     if (num.startsWith('0')) num = num.substring(1);
 
