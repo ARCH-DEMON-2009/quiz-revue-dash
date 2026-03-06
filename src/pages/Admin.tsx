@@ -20,6 +20,7 @@ import { ManagePremiumDialog } from "@/components/ManagePremiumDialog";
 import { PromoCodeManager } from "@/components/PromoCodeManager";
 import { BypassBlocksSection } from "@/components/BypassBlocksSection";
 import { SmsBroadcastSection } from "@/components/SmsBroadcastSection";
+import { AdminAnalyticsSection } from "@/components/AdminAnalyticsSection";
 
 export interface UserData {
   user_id: string;
