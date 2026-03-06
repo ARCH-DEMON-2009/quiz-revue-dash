@@ -133,6 +133,21 @@ export const BypassBlocksSection = () => {
                     <TableCell className="font-medium">{block.user_name}</TableCell>
                     <TableCell className="text-xs">{block.user_email}</TableCell>
                     <TableCell className="text-xs max-w-[200px] truncate">{block.reason}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={
+                          block.sms_status === 'sent' ? 'default' : 
+                          block.sms_status === 'failed' ? 'destructive' : 
+                          block.sms_status === 'no_number' ? 'secondary' : 'outline'
+                        }
+                        className="text-xs flex items-center gap-1 w-fit"
+                      >
+                        <MessageSquare className="h-3 w-3" />
+                        {block.sms_status === 'sent' ? 'SMS Sent' : 
+                         block.sms_status === 'failed' ? 'SMS Failed' : 
+                         block.sms_status === 'no_number' ? 'No Number' : 'Pending'}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-xs">
                       {format(new Date(block.created_at), "MMM d, yyyy HH:mm")}
                     </TableCell>
