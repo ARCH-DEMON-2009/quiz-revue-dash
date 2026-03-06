@@ -13,6 +13,7 @@ interface BypassBlock {
   user_id: string;
   blocked_until: string;
   reason: string;
+  sms_status: string;
   created_at: string;
   user_name?: string;
   user_email?: string;
