@@ -1,0 +1,1 @@
+ALTER TABLE public.bypass_blocks ADD COLUMN IF NOT EXISTS sms_status text DEFAULT 'pending';
