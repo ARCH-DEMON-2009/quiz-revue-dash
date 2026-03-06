@@ -59,14 +59,15 @@ const Verify = () => {
       
       if (elapsed < 60) {
         // BYPASS DETECTED - block user for 24 hours
-        const blockedUntil = await blockDevice();
+        const result = await blockDevice();
         
-        // Also record in database
+        // Also record in database with SMS status
         await supabase.from("bypass_blocks").insert({
           user_id: user.id,
-          blocked_until: blockedUntil.toISOString(),
+          blocked_until: result.until.toISOString(),
           reason: `Bypass attempt: completed in ${Math.round(elapsed)}s (min 60s required)`,
-        });
+          sms_status: result.smsStatus,
+        } as any);
 
         setStatus('error');
         setErrorMessage('Bypass detected! You have been blocked for 24 hours.');
