@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ShieldAlert } from "lucide-react";
@@ -48,43 +49,56 @@ export const blockDevice = async (): Promise<{ until: Date; smsStatus: string }>
 };
 
 export const BypassBlockGuard = () => {
-  const [blocked, setBlocked] = useState(false);
-  const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
+  const location = useLocation();
+  const initialDeviceBlock = useMemo(() => isDeviceBlocked(), []);
+
+  const [blocked, setBlocked] = useState(initialDeviceBlock.blocked);
+  const [blockedUntil, setBlockedUntil] = useState<Date | null>(initialDeviceBlock.until);
   const [remaining, setRemaining] = useState("");
+  const [checking, setChecking] = useState(true);
 
-  useEffect(() => {
-    checkBlock();
-    const interval = setInterval(checkBlock, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const checkBlock = async () => {
-    // Check if user is admin first - admins bypass the block
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: isAdmin } = await supabase.rpc('is_admin');
-        if (isAdmin) {
-          setBlocked(false);
-          return;
-        }
-      }
-    } catch {}
-
-    // Check localStorage first (device-level)
-    const deviceBlock = isDeviceBlocked();
-    if (deviceBlock.blocked && deviceBlock.until) {
-      setBlocked(true);
-      setBlockedUntil(deviceBlock.until);
-      updateRemaining(deviceBlock.until);
+  const updateRemaining = (until: Date) => {
+    const diff = until.getTime() - Date.now();
+    if (diff <= 0) {
+      setBlocked(false);
+      setBlockedUntil(null);
+      setRemaining("");
+      localStorage.removeItem(BYPASS_BLOCK_KEY);
       return;
     }
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    setRemaining(`${hours}h ${minutes}m ${seconds}s`);
+  };
 
-    // Check database (account-level)
+  const checkBlock = async () => {
     try {
+      // Local device-level block check first (instant hard lock)
+      const deviceBlock = isDeviceBlocked();
+      if (deviceBlock.blocked && deviceBlock.until) {
+        setBlocked(true);
+        setBlockedUntil(deviceBlock.until);
+        updateRemaining(deviceBlock.until);
+        return;
+      }
+
+      // Check logged-in user DB block
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setBlocked(false);
+        setBlockedUntil(null);
+        setRemaining("");
+        return;
+      }
+
+      // Admin bypass
+      const { data: isAdmin } = await supabase.rpc('is_admin');
+      if (isAdmin) {
+        setBlocked(false);
+        setBlockedUntil(null);
+        setRemaining("");
+        localStorage.removeItem(BYPASS_BLOCK_KEY);
         return;
       }
 
@@ -97,37 +111,46 @@ export const BypassBlockGuard = () => {
         .limit(1)
         .maybeSingle();
 
-      if (block) {
+      if (block?.blocked_until) {
         const until = new Date(block.blocked_until);
         setBlocked(true);
         setBlockedUntil(until);
         updateRemaining(until);
-        // Also set localStorage so they can't bypass by logging out
         localStorage.setItem(BYPASS_BLOCK_KEY, until.toISOString());
       } else {
         setBlocked(false);
         setBlockedUntil(null);
+        setRemaining("");
       }
-    } catch {
-      // Don't block on error
+    } catch (err) {
+      console.error("Bypass block check failed:", err);
+      // Keep current blocked state if check fails to avoid accidental unlock
+    } finally {
+      setChecking(false);
     }
   };
 
-  const updateRemaining = (until: Date) => {
-    const diff = until.getTime() - Date.now();
-    if (diff <= 0) {
-      setBlocked(false);
-      setBlockedUntil(null);
-      localStorage.removeItem(BYPASS_BLOCK_KEY);
-      return;
-    }
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    setRemaining(`${hours}h ${minutes}m ${seconds}s`);
-  };
+  useEffect(() => {
+    checkBlock();
+  }, [location.pathname]);
 
-  if (!blocked) return null;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (blockedUntil) updateRemaining(blockedUntil);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [blockedUntil]);
+
+  if (!blocked && !checking) return null;
+
+  if (checking && !blocked) {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-background flex items-center justify-center p-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[9999] bg-background flex items-center justify-center p-4">
@@ -140,8 +163,7 @@ export const BypassBlockGuard = () => {
             Bypass Detected — Blocked for 24 Hours
           </CardTitle>
           <CardDescription className="text-base mt-2">
-            Our system detected an attempt to bypass the verification process. 
-            Your access has been temporarily suspended for 24 hours.
+            Your access is suspended during the block period.
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center space-y-4">
@@ -150,8 +172,7 @@ export const BypassBlockGuard = () => {
             <p className="text-3xl font-bold font-mono text-destructive">{remaining}</p>
           </div>
           <p className="text-sm text-muted-foreground">
-            You cannot access the site or log out until the block expires.
-            If you believe this is a mistake, contact admin:{" "}
+            If this was a mistake, contact support: {" "}
             <a 
               href="https://t.me/TestSagarHelpRobot" 
               target="_blank" 
@@ -159,6 +180,15 @@ export const BypassBlockGuard = () => {
               className="text-primary underline"
             >
               @TestSagarHelpRobot
+            </a>
+            {" "}or WhatsApp: {" "}
+            <a 
+              href="https://wa.me/84522122461" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary underline"
+            >
+              +84 522122461
             </a>
           </p>
         </CardContent>
