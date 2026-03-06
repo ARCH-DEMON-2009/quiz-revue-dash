@@ -18,9 +18,22 @@ export const isDeviceBlocked = (): { blocked: boolean; until: Date | null } => {
   return { blocked: false, until: null };
 };
 
-export const blockDevice = () => {
+export const blockDevice = async () => {
   const until = new Date(Date.now() + 24 * 60 * 60 * 1000);
   localStorage.setItem(BYPASS_BLOCK_KEY, until.toISOString());
+  
+  // Send warning SMS to the user
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.functions.invoke('send-sms', {
+        body: { mode: 'bypass_warning', user_id: user.id }
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send bypass warning SMS:', err);
+  }
+  
   return until;
 };
 
