@@ -120,6 +120,7 @@ export const BypassBlocksSection = () => {
                   <TableHead>User</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Reason</TableHead>
+                  <TableHead>SMS Status</TableHead>
                   <TableHead>Blocked At</TableHead>
                   <TableHead>Blocked Until</TableHead>
                   <TableHead>Status</TableHead>
