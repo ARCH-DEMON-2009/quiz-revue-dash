@@ -33,11 +33,11 @@ export const blockDevice = async (): Promise<{ until: Date; smsStatus: string }>
         body: { mode: 'bypass_warning', user_id: user.id }
       });
       if (error) {
-        smsStatus = 'failed';
+        smsStatus = (error as any)?.context?.reason || 'failed';
       } else if (data?.sent > 0) {
         smsStatus = 'sent';
       } else {
-        smsStatus = data?.message?.includes('No phone') ? 'no_number' : 'failed';
+        smsStatus = data?.message?.includes('No phone') ? 'no_number' : (data?.reason || 'failed');
       }
     }
   } catch (err) {

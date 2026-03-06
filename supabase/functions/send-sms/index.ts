@@ -106,8 +106,14 @@ Deno.serve(async (req) => {
     }
 
     console.error('Fast2SMS error:', data);
+    const reason = typeof data?.message === 'string' && data.message.toLowerCase().includes('account disabled')
+      ? 'account_disabled'
+      : Array.isArray(data?.errors_keys) && data.errors_keys.includes('spam_sms')
+        ? 'spam_rejected'
+        : 'failed';
+
     return new Response(
-      JSON.stringify({ success: false, error: JSON.stringify(data), message: 'Failed to send SMS' }),
+      JSON.stringify({ success: false, reason, error: JSON.stringify(data), message: 'Failed to send SMS' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   } catch (error: any) {
