@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ShieldAlert, Trash2, RefreshCw } from "lucide-react";
+import { ShieldAlert, Trash2, RefreshCw, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 interface BypassBlock {
