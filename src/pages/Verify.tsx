@@ -68,7 +68,6 @@ const Verify = () => {
           reason: `Bypass attempt: completed in ${Math.round(elapsed)}s (min 60s required)`,
           sms_status: result.smsStatus,
         } as any);
-        });
 
         setStatus('error');
         setErrorMessage('Bypass detected! You have been blocked for 24 hours.');
