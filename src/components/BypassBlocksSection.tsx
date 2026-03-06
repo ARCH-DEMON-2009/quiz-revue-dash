@@ -137,13 +137,14 @@ export const BypassBlocksSection = () => {
                       <Badge 
                         variant={
                           block.sms_status === 'sent' ? 'default' : 
-                          block.sms_status === 'failed' ? 'destructive' : 
+                          block.sms_status === 'failed' || block.sms_status === 'account_disabled' ? 'destructive' : 
                           block.sms_status === 'no_number' ? 'secondary' : 'outline'
                         }
                         className="text-xs flex items-center gap-1 w-fit"
                       >
                         <MessageSquare className="h-3 w-3" />
                         {block.sms_status === 'sent' ? 'SMS Sent' : 
+                         block.sms_status === 'account_disabled' ? 'SMS Account Disabled' :
                          block.sms_status === 'failed' ? 'SMS Failed' : 
                          block.sms_status === 'no_number' ? 'No Number' : 'Pending'}
                       </Badge>

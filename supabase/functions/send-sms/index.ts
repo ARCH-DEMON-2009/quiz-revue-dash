@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     }
 
     // Clean the phone number
-    let num = (targetNumber || '').replace(/[\s\-\+]/g, '');
+    let num = (targetNumber || '').replace(/[\s\-+]/g, '');
     if (num.startsWith('91') && num.length === 12) num = num.substring(2);
     if (num.startsWith('0')) num = num.substring(1);
 
@@ -66,26 +66,36 @@ Deno.serve(async (req) => {
     }
 
     // Warning message with help links
-    const smsMessage = 'WARNING: Bypass attempt detected on TestSagar. Your access is blocked for 24hrs. If this was a mistake, contact us: Help Bot: t.me/TestSagarHelpRobot | WhatsApp: wa.me/84522122461';
+    const primaryMessage = 'Warning: verification bypass attempt detected on TestSagar. Access blocked for 24 hours. Need help? Telegram: t.me/TestSagarHelpRobot WhatsApp: wa.me/84522122461';
+    const fallbackMessage = 'TestSagar alert: bypass attempt detected. Access blocked 24 hours. If this was a mistake contact Telegram TestSagarHelpRobot or WhatsApp 84522122461.';
+
+    const sendFast2Sms = async (message: string) => {
+      const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
+        method: 'POST',
+        headers: {
+          'authorization': FAST2SMS_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          route: 'q',
+          message,
+          language: 'english',
+          flash: 0,
+          numbers: num,
+        }),
+      });
+
+      return response.json();
+    };
 
     console.log(`Sending bypass warning SMS to ${num}`);
+    let data = await sendFast2Sms(primaryMessage);
 
-    const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {
-      method: 'POST',
-      headers: {
-        'authorization': FAST2SMS_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        route: 'q',
-        message: smsMessage,
-        language: 'english',
-        flash: 0,
-        numbers: num,
-      }),
-    });
-
-    const data = await response.json();
+    // Fast2SMS can reject link-heavy content with spam_sms; retry once with neutral fallback text
+    if (data?.return !== true && Array.isArray(data?.errors_keys) && data.errors_keys.includes('spam_sms')) {
+      console.warn('Primary SMS rejected with spam_sms, retrying with fallback text');
+      data = await sendFast2Sms(fallbackMessage);
+    }
 
     if (data.return === true) {
       console.log(`Bypass warning SMS sent successfully to ${num}`);
@@ -93,13 +103,19 @@ Deno.serve(async (req) => {
         JSON.stringify({ success: true, sent: 1, message: 'Warning SMS sent' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    } else {
-      console.error('Fast2SMS error:', data);
-      return new Response(
-        JSON.stringify({ success: false, error: JSON.stringify(data), message: 'Failed to send SMS' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
     }
+
+    console.error('Fast2SMS error:', data);
+    const reason = typeof data?.message === 'string' && data.message.toLowerCase().includes('account disabled')
+      ? 'account_disabled'
+      : Array.isArray(data?.errors_keys) && data.errors_keys.includes('spam_sms')
+        ? 'spam_rejected'
+        : 'failed';
+
+    return new Response(
+      JSON.stringify({ success: false, reason, error: JSON.stringify(data), message: 'Failed to send SMS' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
   } catch (error: any) {
     console.error('Error in send-sms:', error);
     return new Response(
