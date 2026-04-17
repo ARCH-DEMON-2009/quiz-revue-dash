@@ -291,9 +291,16 @@ const Pricing = () => {
       });
       
       rzp.open();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Payment error:", error);
-      toast.error("Failed to initiate payment. Please try again.");
+      const message =
+        error?.context?.error ||
+        error?.message ||
+        "Failed to initiate payment. Please try again.";
+      toast.error(message, {
+        description: "If this keeps happening, please contact support.",
+        duration: 6000,
+      });
       setLoading(false);
     }
   };
