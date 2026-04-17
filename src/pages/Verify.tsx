@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { blockDevice, isDeviceBlocked } from "@/components/BypassBlockGuard";
+import { blockDevice, isDeviceBlockedFor } from "@/components/BypassBlockGuard";
 
 const Verify = () => {
   const navigate = useNavigate();
@@ -13,15 +13,20 @@ const Verify = () => {
   const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    // Check if device is already blocked
-    const deviceBlock = isDeviceBlocked();
-    if (deviceBlock.blocked) {
-      setStatus('error');
-      setErrorMessage('You are blocked for bypass attempt. Please wait for the block to expire.');
-      return;
-    }
-    handleVerification();
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const deviceBlock = isDeviceBlockedFor(user.id);
+        if (deviceBlock.blocked) {
+          setStatus('error');
+          setErrorMessage('You are blocked for bypass attempt. Please wait for the block to expire.');
+          return;
+        }
+      }
+      handleVerification();
+    })();
   }, []);
+
 
   const handleVerification = async () => {
     try {
