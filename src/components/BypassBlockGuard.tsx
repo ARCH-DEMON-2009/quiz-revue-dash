@@ -1,34 +1,35 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ShieldAlert } from "lucide-react";
 
-const BYPASS_BLOCK_KEY = "bypass_block_until";
+const BYPASS_BLOCK_KEY_PREFIX = "bypass_block_until_";
+const LEGACY_KEY = "bypass_block_until";
 
-export const isDeviceBlocked = (): { blocked: boolean; until: Date | null } => {
-  const stored = localStorage.getItem(BYPASS_BLOCK_KEY);
+const keyFor = (userId: string) => `${BYPASS_BLOCK_KEY_PREFIX}${userId}`;
+
+export const isDeviceBlockedFor = (userId: string): { blocked: boolean; until: Date | null } => {
+  const stored = localStorage.getItem(keyFor(userId));
   if (!stored) return { blocked: false, until: null };
-  
+
   const until = new Date(stored);
   if (until > new Date()) {
     return { blocked: true, until };
   }
-  
-  localStorage.removeItem(BYPASS_BLOCK_KEY);
+
+  localStorage.removeItem(keyFor(userId));
   return { blocked: false, until: null };
 };
 
 export const blockDevice = async (): Promise<{ until: Date; smsStatus: string }> => {
   const until = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  localStorage.setItem(BYPASS_BLOCK_KEY, until.toISOString());
-  
   let smsStatus = 'no_number';
-  
-  // Send warning SMS to the user
+
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      localStorage.setItem(keyFor(user.id), until.toISOString());
       const { data, error } = await supabase.functions.invoke('send-sms', {
         body: { mode: 'bypass_warning', user_id: user.id }
       });
@@ -44,16 +45,15 @@ export const blockDevice = async (): Promise<{ until: Date; smsStatus: string }>
     console.error('Failed to send bypass warning SMS:', err);
     smsStatus = 'failed';
   }
-  
+
   return { until, smsStatus };
 };
 
 export const BypassBlockGuard = () => {
   const location = useLocation();
-  const initialDeviceBlock = useMemo(() => isDeviceBlocked(), []);
 
-  const [blocked, setBlocked] = useState(initialDeviceBlock.blocked);
-  const [blockedUntil, setBlockedUntil] = useState<Date | null>(initialDeviceBlock.until);
+  const [blocked, setBlocked] = useState(false);
+  const [blockedUntil, setBlockedUntil] = useState<Date | null>(null);
   const [remaining, setRemaining] = useState("");
   const [checking, setChecking] = useState(true);
 
@@ -63,7 +63,6 @@ export const BypassBlockGuard = () => {
       setBlocked(false);
       setBlockedUntil(null);
       setRemaining("");
-      localStorage.removeItem(BYPASS_BLOCK_KEY);
       return;
     }
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -74,16 +73,9 @@ export const BypassBlockGuard = () => {
 
   const checkBlock = async () => {
     try {
-      // Local device-level block check first (instant hard lock)
-      const deviceBlock = isDeviceBlocked();
-      if (deviceBlock.blocked && deviceBlock.until) {
-        setBlocked(true);
-        setBlockedUntil(deviceBlock.until);
-        updateRemaining(deviceBlock.until);
-        return;
-      }
+      // Always remove the legacy global key to prevent false cross-user blocks
+      localStorage.removeItem(LEGACY_KEY);
 
-      // Check logged-in user DB block
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setBlocked(false);
@@ -98,11 +90,12 @@ export const BypassBlockGuard = () => {
         setBlocked(false);
         setBlockedUntil(null);
         setRemaining("");
-        localStorage.removeItem(BYPASS_BLOCK_KEY);
+        localStorage.removeItem(keyFor(user.id));
         return;
       }
 
-      const { data: block } = await supabase
+      // DB is the source of truth
+      const { data: block, error } = await supabase
         .from("bypass_blocks")
         .select("blocked_until")
         .eq("user_id", user.id)
@@ -111,26 +104,43 @@ export const BypassBlockGuard = () => {
         .limit(1)
         .maybeSingle();
 
+      if (error) {
+        // If DB lookup fails, fall back to per-user local cache only
+        const local = isDeviceBlockedFor(user.id);
+        if (local.blocked && local.until) {
+          setBlocked(true);
+          setBlockedUntil(local.until);
+          updateRemaining(local.until);
+        } else {
+          setBlocked(false);
+          setBlockedUntil(null);
+          setRemaining("");
+        }
+        return;
+      }
+
       if (block?.blocked_until) {
         const until = new Date(block.blocked_until);
         setBlocked(true);
         setBlockedUntil(until);
         updateRemaining(until);
-        localStorage.setItem(BYPASS_BLOCK_KEY, until.toISOString());
+        localStorage.setItem(keyFor(user.id), until.toISOString());
       } else {
+        // No active block in DB — clear any stale local cache for this user
         setBlocked(false);
         setBlockedUntil(null);
         setRemaining("");
+        localStorage.removeItem(keyFor(user.id));
       }
     } catch (err) {
       console.error("Bypass block check failed:", err);
-      // Keep current blocked state if check fails to avoid accidental unlock
     } finally {
       setChecking(false);
     }
   };
 
   useEffect(() => {
+    setChecking(true);
     checkBlock();
   }, [location.pathname]);
 
@@ -145,11 +155,7 @@ export const BypassBlockGuard = () => {
   if (!blocked && !checking) return null;
 
   if (checking && !blocked) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-background flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
-      </div>
-    );
+    return null;
   }
 
   return (
