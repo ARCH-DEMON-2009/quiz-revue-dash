@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.send-sms]
 verify_jwt = false
+
+[functions.razorpay-webhook]
+verify_jwt = false
