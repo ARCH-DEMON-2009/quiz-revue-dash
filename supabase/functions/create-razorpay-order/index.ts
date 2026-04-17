@@ -49,7 +49,11 @@ serve(async (req) => {
 
     // Create order via Razorpay API
     const authHeader = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
-    
+
+    // Razorpay receipt must be <= 40 chars
+    const rawReceipt = receipt || `order_${Date.now()}`;
+    const safeReceipt = rawReceipt.length > 40 ? rawReceipt.slice(-40) : rawReceipt;
+
     const orderResponse = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
@@ -59,7 +63,7 @@ serve(async (req) => {
       body: JSON.stringify({
         amount: amount * 100,
         currency,
-        receipt: receipt || `order_${Date.now()}`,
+        receipt: safeReceipt,
         notes: notes || {},
       }),
     });
