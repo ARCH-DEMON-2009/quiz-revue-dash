@@ -4,13 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Crown, ExternalLink, Shield, Clock, CheckCircle2 } from "lucide-react";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 
 interface LinkShortenerGateProps {
   children: React.ReactNode;
 }
 
 export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
-  const [accessStatus, setAccessStatus] = useState<'loading' | 'premium' | 'verified' | 'free'>('loading');
+  const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
+  const [accessStatus, setAccessStatus] = useState<'loading' | 'verified' | 'free'>('loading');
   const [shortenerLink, setShortenerLink] = useState<string>('');
   const [initiating, setInitiating] = useState(false);
   const [initiated, setInitiated] = useState(false);
@@ -18,8 +20,13 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
   const [countdown, setCountdown] = useState(600); // 10 min
 
   useEffect(() => {
-    checkAccess();
-  }, []);
+    if (premiumLoading) return;
+    if (isPremium) {
+      setAccessStatus('loading'); // will short-circuit below
+      return;
+    }
+    checkVerification();
+  }, [isPremium, premiumLoading]);
 
   // Countdown timer for pending verification
   useEffect(() => {
@@ -36,7 +43,7 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
     return () => clearInterval(interval);
   }, [initiated, initiatedAt]);
 
-  const checkAccess = async () => {
+  const checkVerification = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -44,31 +51,6 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
         return;
       }
 
-      // Check premium
-      const { data: premium } = await supabase
-        .from("premium_users")
-        .select("expiry_date, status")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle();
-
-      let premiumData = premium;
-      if (!premiumData && user.email) {
-        const { data: byEmail } = await supabase
-          .from("premium_users")
-          .select("expiry_date, status")
-          .eq("email", user.email)
-          .eq("status", "active")
-          .maybeSingle();
-        premiumData = byEmail;
-      }
-
-      if (premiumData && new Date(premiumData.expiry_date) > new Date()) {
-        setAccessStatus('premium');
-        return;
-      }
-
-      // Check verification (12hr access)
       const { data: verification } = await supabase
         .from("access_verifications")
         .select("*")
@@ -84,17 +66,13 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
         return;
       }
 
-      // Load shortener link
       const { data: config } = await supabase
         .from("system_config")
         .select("config_value")
         .eq("config_key", "shortener_link")
         .maybeSingle();
 
-      if (config?.config_value) {
-        setShortenerLink(config.config_value);
-      }
-
+      if (config?.config_value) setShortenerLink(config.config_value);
       setAccessStatus('free');
     } catch (error) {
       console.error("Error checking access:", error);
