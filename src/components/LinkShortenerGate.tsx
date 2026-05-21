@@ -97,7 +97,7 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
     }
   };
 
-  if (accessStatus === 'loading') {
+  if (premiumLoading || accessStatus === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -108,7 +108,7 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
     );
   }
 
-  if (accessStatus === 'premium' || accessStatus === 'verified') {
+  if (isPremium || accessStatus === 'verified') {
     return <>{children}</>;
   }
 
