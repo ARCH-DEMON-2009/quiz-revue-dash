@@ -3,7 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Crown, Clock, AlertTriangle, CreditCard, Tv } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 
 interface AccessStatus {
   hasAccess: boolean;
@@ -17,71 +18,32 @@ interface AccessGuardProps {
 }
 
 export const useAccessStatus = () => {
-  const [accessStatus, setAccessStatus] = useState<AccessStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { isPremium, daysLeft, expiresAt, isLoading: premiumLoading } = usePremiumStatus();
+  const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    checkAccess();
+    let mounted = true;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (mounted) setAuthed(!!user);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
+      if (mounted) setAuthed(!!session?.user);
+    });
+    return () => { mounted = false; sub.subscription.unsubscribe(); };
   }, []);
 
-  const checkAccess = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setAccessStatus({ hasAccess: false, type: 'none', daysLeft: 0, expiryDate: null });
-        setLoading(false);
-        return;
-      }
+  const loading = premiumLoading || authed === null;
 
-      // Check premium status first
-      const { data: premium } = await supabase
-        .from("premium_users")
-        .select("expiry_date, status")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle();
+  let accessStatus: AccessStatus;
+  if (authed === false) {
+    accessStatus = { hasAccess: false, type: 'none', daysLeft: 0, expiryDate: null };
+  } else if (isPremium) {
+    accessStatus = { hasAccess: true, type: 'premium', daysLeft, expiryDate: expiresAt };
+  } else {
+    accessStatus = { hasAccess: true, type: 'free', daysLeft: 0, expiryDate: null };
+  }
 
-      // Also check by email as fallback
-      let premiumData = premium;
-      if (!premiumData && user.email) {
-        const { data: premiumByEmail } = await supabase
-          .from("premium_users")
-          .select("expiry_date, status")
-          .eq("email", user.email)
-          .eq("status", "active")
-          .maybeSingle();
-        premiumData = premiumByEmail;
-      }
-
-      if (premiumData && new Date(premiumData.expiry_date) > new Date()) {
-        const daysLeft = Math.ceil((new Date(premiumData.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        setAccessStatus({
-          hasAccess: true,
-          type: 'premium',
-          daysLeft,
-          expiryDate: premiumData.expiry_date
-        });
-        setLoading(false);
-        return;
-      }
-
-      // No premium - user gets free access with ads
-      setAccessStatus({
-        hasAccess: true,
-        type: 'free',
-        daysLeft: 0,
-        expiryDate: null
-      });
-    } catch (error) {
-      console.error("Error checking access:", error);
-      // Default to free access on error
-      setAccessStatus({ hasAccess: true, type: 'free', daysLeft: 0, expiryDate: null });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { accessStatus, loading, refetch: checkAccess };
+  return { accessStatus, loading };
 };
 
 export const AccessGuard = ({ children }: AccessGuardProps) => {
@@ -99,7 +61,6 @@ export const AccessGuard = ({ children }: AccessGuardProps) => {
     );
   }
 
-  // Only block if user is not authenticated
   if (accessStatus?.type === 'none') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -115,16 +76,9 @@ export const AccessGuard = ({ children }: AccessGuardProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <Link to="/auth" className="block">
-              <Button className="w-full" size="lg">
-                Login / Sign Up
-              </Button>
+              <Button className="w-full" size="lg">Login / Sign Up</Button>
             </Link>
-            
-            <Button 
-              variant="ghost" 
-              className="w-full"
-              onClick={() => navigate("/")}
-            >
+            <Button variant="ghost" className="w-full" onClick={() => navigate("/")}>
               Back to Home
             </Button>
           </CardContent>
@@ -133,6 +87,5 @@ export const AccessGuard = ({ children }: AccessGuardProps) => {
     );
   }
 
-  // All authenticated users have access (free with ads or premium without ads)
   return <>{children}</>;
 };
