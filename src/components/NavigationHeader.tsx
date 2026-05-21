@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Trophy, User, Sparkles, Shield, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
@@ -12,29 +13,16 @@ interface NavigationHeaderProps {
 const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
+  const { isPremium } = usePremiumStatus();
 
   useEffect(() => {
-    const checkStatus = async () => {
+    const checkAdmin = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      
-      // Check admin status
       const { data: adminData } = await supabase.rpc('is_admin');
       setIsAdmin(adminData === true);
-      
-      // Check premium status
-      const { data: premiumData } = await supabase
-        .from('premium_users')
-        .select('expiry_date')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .gte('expiry_date', new Date().toISOString())
-        .maybeSingle();
-      
-      setIsPremium(!!premiumData);
     };
-    checkStatus();
+    checkAdmin();
   }, []);
 
   const handleAIQuiz = () => {
