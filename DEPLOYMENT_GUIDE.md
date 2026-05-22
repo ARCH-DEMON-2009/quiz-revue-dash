@@ -2,11 +2,9 @@
 
 ## Quick Deploy (No Build Required!)
 
-### Step 1: Export from Lovable
-1. Open your project in Lovable
-2. Click the **"Share"** button (top right corner)
-3. Click **"Export"** to download the built ZIP file
-4. The ZIP contains the production-ready build with all files
+### Step 1: Export production build
+1. Build or export your project from your design/build tool or CI pipeline
+2. Ensure you have the production-ready ZIP or build artifacts available for upload
 
 ### Step 2: Upload to cPanel
 1. Login to your cPanel dashboard
