@@ -46,10 +46,49 @@ const Quiz = () => {
   const [loading, setLoading] = useState(true);
   const [testName, setTestName] = useState("");
   const [textAnswer, setTextAnswer] = useState("");
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const userIdRef = useRef<string | null>(null);
+  const lastSavedRef = useRef<string>("");
 
   useEffect(() => {
     fetchQuizData();
   }, [testId]);
+
+  // Anti question-extraction: disable right-click, copy, selection, common devtools shortcuts
+  useEffect(() => {
+    const prevent = (e: Event) => e.preventDefault();
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (e.key === "F12") e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && ["c", "x", "s", "p", "u"].includes(k)) e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && ["i", "j", "c"].includes(k)) e.preventDefault();
+    };
+    document.addEventListener("contextmenu", prevent);
+    document.addEventListener("copy", prevent);
+    document.addEventListener("cut", prevent);
+    document.addEventListener("selectstart", prevent);
+    document.addEventListener("dragstart", prevent);
+    document.addEventListener("keydown", onKey);
+    const prevUserSelect = document.body.style.userSelect;
+    document.body.style.userSelect = "none";
+    return () => {
+      document.removeEventListener("contextmenu", prevent);
+      document.removeEventListener("copy", prevent);
+      document.removeEventListener("cut", prevent);
+      document.removeEventListener("selectstart", prevent);
+      document.removeEventListener("dragstart", prevent);
+      document.removeEventListener("keydown", onKey);
+      document.body.style.userSelect = prevUserSelect;
+    };
+  }, []);
+
+  // Track fullscreen state
+  useEffect(() => {
+    const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, []);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -72,6 +111,34 @@ const Quiz = () => {
       setTextAnswer(currentAnswer?.selected || "");
     }
   }, [currentIndex, questions]);
+
+  // Auto-save attempt every 10s
+  useEffect(() => {
+    if (!attemptId) return;
+    const interval = setInterval(() => persistAttempt(), 10000);
+    return () => clearInterval(interval);
+  }, [attemptId, answers, currentIndex]);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch { /* noop */ }
+  };
+
+  const persistAttempt = async () => {
+    if (!attemptId || !userIdRef.current) return;
+    const answersObj: Record<string, Answer> = {};
+    answers.forEach((v, k) => { answersObj[k] = v; });
+    const serialized = JSON.stringify({ answersObj, currentIndex });
+    if (serialized === lastSavedRef.current) return;
+    lastSavedRef.current = serialized;
+    await supabase.from("exam_attempts").update({
+      answers: answersObj as any,
+      current_index: currentIndex,
+    }).eq("id", attemptId);
+  };
+
 
   const fetchQuizData = async () => {
     try {
