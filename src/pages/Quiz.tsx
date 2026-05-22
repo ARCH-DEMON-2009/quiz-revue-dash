@@ -428,6 +428,9 @@ const Quiz = () => {
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className={timeLeft < 300 ? "text-destructive" : ""}>{formatTime(timeLeft)}</span>
               </div>
+              <Button onClick={toggleFullscreen} size="sm" variant="outline" className="hidden sm:inline-flex" title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
               <Button onClick={handleSubmit} size="sm" className="bg-warning hover:bg-warning/90 text-warning-foreground text-xs sm:text-sm px-2 sm:px-4">
                 <span className="hidden sm:inline">Submit Test</span>
                 <span className="sm:hidden">Submit</span>
