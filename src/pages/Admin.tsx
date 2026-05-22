@@ -626,6 +626,16 @@ const Admin = () => {
                 disabled={maintenanceLoading}
               />
             </div>
+            {/* Verification Toggle */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50 border">
+              <ShieldCheck className={`h-3 w-3 sm:h-4 sm:w-4 ${verificationEnabled ? 'text-primary' : 'text-muted-foreground'}`} />
+              <span className="text-xs sm:text-sm hidden sm:inline">Verify</span>
+              <Switch
+                checked={verificationEnabled}
+                onCheckedChange={toggleVerificationEnabled}
+                disabled={verificationLoading}
+              />
+            </div>
             <AddPremiumUserDialog onSuccess={fetchUsers} />
             <Button 
               variant="outline" 
