@@ -148,6 +148,7 @@ const Quiz = () => {
         navigate("/auth");
         return;
       }
+      userIdRef.current = user.id;
 
       const [questionsRes, testRes] = await Promise.all([
         supabase.from("questions").select("id, question_text, image, options, subject, marks, negative_marks, type").eq("test_id", testId),
@@ -156,16 +157,54 @@ const Quiz = () => {
 
       if (questionsRes.error) throw questionsRes.error;
       if (testRes.error) throw testRes.error;
-      
+
       if (!testRes.data) {
         toast.error("Test not found");
         navigate("/");
         return;
       }
 
+      const durationMin = testRes.data.duration_minutes || 180;
       setQuestions(questionsRes.data || []);
       setTestName(testRes.data.name);
-      setTimeLeft((testRes.data.duration_minutes || 180) * 60);
+
+      // Resume in-progress attempt if one exists, else create new
+      const { data: existing } = await supabase
+        .from("exam_attempts")
+        .select("id, answers, current_index, expires_at")
+        .eq("user_id", user.id)
+        .eq("test_id", testId!)
+        .eq("status", "in_progress")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existing && new Date(existing.expires_at).getTime() > Date.now()) {
+        const restored = new Map<string, Answer>();
+        Object.entries((existing.answers as any) || {}).forEach(([k, v]) => restored.set(k, v as Answer));
+        setAnswers(restored);
+        setCurrentIndex(existing.current_index || 0);
+        setAttemptId(existing.id);
+        const remaining = Math.max(0, Math.floor((new Date(existing.expires_at).getTime() - Date.now()) / 1000));
+        setTimeLeft(remaining);
+        if (restored.size > 0) toast.info("Resumed your in-progress attempt");
+      } else {
+        const expiresAt = new Date(Date.now() + durationMin * 60 * 1000).toISOString();
+        const { data: created, error: cErr } = await supabase
+          .from("exam_attempts")
+          .insert({
+            user_id: user.id,
+            test_id: testId!,
+            expires_at: expiresAt,
+            answers: {},
+            current_index: 0,
+          })
+          .select("id")
+          .single();
+        if (cErr) console.warn("Could not create attempt:", cErr);
+        if (created) setAttemptId(created.id);
+        setTimeLeft(durationMin * 60);
+      }
     } catch (error) {
       toast.error("Failed to load quiz");
       console.error(error);
@@ -174,6 +213,7 @@ const Quiz = () => {
       setLoading(false);
     }
   };
+
 
 
   const subjectGroups: SubjectGroup[] = questions.reduce((acc, question, index) => {
