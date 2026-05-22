@@ -97,6 +97,7 @@ const Admin = () => {
       fetchSubjects();
       fetchMaintenanceMode();
       fetchShortenerLink();
+      fetchVerificationEnabled();
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/");
