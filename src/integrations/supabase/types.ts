@@ -71,6 +71,51 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_attempts: {
+        Row: {
+          answers: Json
+          created_at: string
+          current_index: number
+          expires_at: string
+          id: string
+          result_id: string | null
+          started_at: string
+          status: string
+          submitted_at: string | null
+          test_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          current_index?: number
+          expires_at: string
+          id?: string
+          result_id?: string | null
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          test_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          current_index?: number
+          expires_at?: string
+          id?: string
+          result_id?: string | null
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          test_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       premium_users: {
         Row: {
           created_at: string | null
@@ -436,8 +481,11 @@ export type Database = {
           created_at: string | null
           description: string | null
           duration_minutes: number | null
+          exam_type: string | null
           id: string
+          marking_scheme: Json | null
           name: string
+          sections: Json | null
           status: string | null
           stream: string
           total_questions: number | null
@@ -448,8 +496,11 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_minutes?: number | null
+          exam_type?: string | null
           id?: string
+          marking_scheme?: Json | null
           name: string
+          sections?: Json | null
           status?: string | null
           stream: string
           total_questions?: number | null
@@ -460,8 +511,11 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_minutes?: number | null
+          exam_type?: string | null
           id?: string
+          marking_scheme?: Json | null
           name?: string
+          sections?: Json | null
           status?: string | null
           stream?: string
           total_questions?: number | null

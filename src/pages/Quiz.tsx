@@ -1,15 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Clock, FileText } from "lucide-react";
+import { Clock, FileText, Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AccessGuard } from "@/components/AccessGuard";
+
 
 
 interface Question {
@@ -45,10 +46,49 @@ const Quiz = () => {
   const [loading, setLoading] = useState(true);
   const [testName, setTestName] = useState("");
   const [textAnswer, setTextAnswer] = useState("");
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const userIdRef = useRef<string | null>(null);
+  const lastSavedRef = useRef<string>("");
 
   useEffect(() => {
     fetchQuizData();
   }, [testId]);
+
+  // Anti question-extraction: disable right-click, copy, selection, common devtools shortcuts
+  useEffect(() => {
+    const prevent = (e: Event) => e.preventDefault();
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (e.key === "F12") e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && ["c", "x", "s", "p", "u"].includes(k)) e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && ["i", "j", "c"].includes(k)) e.preventDefault();
+    };
+    document.addEventListener("contextmenu", prevent);
+    document.addEventListener("copy", prevent);
+    document.addEventListener("cut", prevent);
+    document.addEventListener("selectstart", prevent);
+    document.addEventListener("dragstart", prevent);
+    document.addEventListener("keydown", onKey);
+    const prevUserSelect = document.body.style.userSelect;
+    document.body.style.userSelect = "none";
+    return () => {
+      document.removeEventListener("contextmenu", prevent);
+      document.removeEventListener("copy", prevent);
+      document.removeEventListener("cut", prevent);
+      document.removeEventListener("selectstart", prevent);
+      document.removeEventListener("dragstart", prevent);
+      document.removeEventListener("keydown", onKey);
+      document.body.style.userSelect = prevUserSelect;
+    };
+  }, []);
+
+  // Track fullscreen state
+  useEffect(() => {
+    const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, []);
 
   useEffect(() => {
     if (timeLeft <= 0) return;
@@ -72,6 +112,34 @@ const Quiz = () => {
     }
   }, [currentIndex, questions]);
 
+  // Auto-save attempt every 10s
+  useEffect(() => {
+    if (!attemptId) return;
+    const interval = setInterval(() => persistAttempt(), 10000);
+    return () => clearInterval(interval);
+  }, [attemptId, answers, currentIndex]);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch { /* noop */ }
+  };
+
+  const persistAttempt = async () => {
+    if (!attemptId || !userIdRef.current) return;
+    const answersObj: Record<string, Answer> = {};
+    answers.forEach((v, k) => { answersObj[k] = v; });
+    const serialized = JSON.stringify({ answersObj, currentIndex });
+    if (serialized === lastSavedRef.current) return;
+    lastSavedRef.current = serialized;
+    await supabase.from("exam_attempts").update({
+      answers: answersObj as any,
+      current_index: currentIndex,
+    }).eq("id", attemptId);
+  };
+
+
   const fetchQuizData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -80,6 +148,7 @@ const Quiz = () => {
         navigate("/auth");
         return;
       }
+      userIdRef.current = user.id;
 
       const [questionsRes, testRes] = await Promise.all([
         supabase.from("questions").select("id, question_text, image, options, subject, marks, negative_marks, type").eq("test_id", testId),
@@ -88,16 +157,54 @@ const Quiz = () => {
 
       if (questionsRes.error) throw questionsRes.error;
       if (testRes.error) throw testRes.error;
-      
+
       if (!testRes.data) {
         toast.error("Test not found");
         navigate("/");
         return;
       }
 
+      const durationMin = testRes.data.duration_minutes || 180;
       setQuestions(questionsRes.data || []);
       setTestName(testRes.data.name);
-      setTimeLeft((testRes.data.duration_minutes || 180) * 60);
+
+      // Resume in-progress attempt if one exists, else create new
+      const { data: existing } = await supabase
+        .from("exam_attempts")
+        .select("id, answers, current_index, expires_at")
+        .eq("user_id", user.id)
+        .eq("test_id", testId!)
+        .eq("status", "in_progress")
+        .order("started_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (existing && new Date(existing.expires_at).getTime() > Date.now()) {
+        const restored = new Map<string, Answer>();
+        Object.entries((existing.answers as any) || {}).forEach(([k, v]) => restored.set(k, v as Answer));
+        setAnswers(restored);
+        setCurrentIndex(existing.current_index || 0);
+        setAttemptId(existing.id);
+        const remaining = Math.max(0, Math.floor((new Date(existing.expires_at).getTime() - Date.now()) / 1000));
+        setTimeLeft(remaining);
+        if (restored.size > 0) toast.info("Resumed your in-progress attempt");
+      } else {
+        const expiresAt = new Date(Date.now() + durationMin * 60 * 1000).toISOString();
+        const { data: created, error: cErr } = await supabase
+          .from("exam_attempts")
+          .insert({
+            user_id: user.id,
+            test_id: testId!,
+            expires_at: expiresAt,
+            answers: {},
+            current_index: 0,
+          })
+          .select("id")
+          .single();
+        if (cErr) console.warn("Could not create attempt:", cErr);
+        if (created) setAttemptId(created.id);
+        setTimeLeft(durationMin * 60);
+      }
     } catch (error) {
       toast.error("Failed to load quiz");
       console.error(error);
@@ -106,6 +213,7 @@ const Quiz = () => {
       setLoading(false);
     }
   };
+
 
 
   const subjectGroups: SubjectGroup[] = questions.reduce((acc, question, index) => {
@@ -206,8 +314,16 @@ const Quiz = () => {
       if (!data.success) {
         throw new Error(data.error || 'Failed to validate answers');
       }
-      
+      if (attemptId) {
+        await supabase.from("exam_attempts").update({
+          status: "submitted",
+          submitted_at: new Date().toISOString(),
+          result_id: data.resultId,
+        }).eq("id", attemptId);
+      }
+
       toast.success("Test submitted successfully!");
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       navigate(`/results/${data.resultId}`);
     } catch (error) {
       toast.error("Failed to submit test");
@@ -312,6 +428,9 @@ const Quiz = () => {
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className={timeLeft < 300 ? "text-destructive" : ""}>{formatTime(timeLeft)}</span>
               </div>
+              <Button onClick={toggleFullscreen} size="sm" variant="outline" className="hidden sm:inline-flex" title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
               <Button onClick={handleSubmit} size="sm" className="bg-warning hover:bg-warning/90 text-warning-foreground text-xs sm:text-sm px-2 sm:px-4">
                 <span className="hidden sm:inline">Submit Test</span>
                 <span className="sm:hidden">Submit</span>
