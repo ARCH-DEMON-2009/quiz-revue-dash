@@ -436,8 +436,11 @@ export type Database = {
           created_at: string | null
           description: string | null
           duration_minutes: number | null
+          exam_type: string | null
           id: string
+          marking_scheme: Json | null
           name: string
+          sections: Json | null
           status: string | null
           stream: string
           total_questions: number | null
@@ -448,8 +451,11 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_minutes?: number | null
+          exam_type?: string | null
           id?: string
+          marking_scheme?: Json | null
           name: string
+          sections?: Json | null
           status?: string | null
           stream: string
           total_questions?: number | null
@@ -460,8 +466,11 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_minutes?: number | null
+          exam_type?: string | null
           id?: string
+          marking_scheme?: Json | null
           name?: string
+          sections?: Json | null
           status?: string | null
           stream?: string
           total_questions?: number | null
