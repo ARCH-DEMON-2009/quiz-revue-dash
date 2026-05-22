@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X, Link2 } from "lucide-react";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X, Link2, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
