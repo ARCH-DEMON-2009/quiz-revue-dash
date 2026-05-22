@@ -45,6 +45,18 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
 
   const checkVerification = async () => {
     try {
+      // If admin has disabled verification globally, grant access immediately
+      const { data: verifyConfig } = await supabase
+        .from("system_config")
+        .select("config_value")
+        .eq("config_key", "verification_enabled")
+        .maybeSingle();
+
+      if (verifyConfig && verifyConfig.config_value === "false") {
+        setAccessStatus('verified');
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setAccessStatus('free');
@@ -79,6 +91,7 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
       setAccessStatus('free');
     }
   };
+
 
   const handleStartVerification = async () => {
     setInitiating(true);
