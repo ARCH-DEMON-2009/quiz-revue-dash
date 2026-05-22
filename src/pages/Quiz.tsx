@@ -314,8 +314,16 @@ const Quiz = () => {
       if (!data.success) {
         throw new Error(data.error || 'Failed to validate answers');
       }
-      
+      if (attemptId) {
+        await supabase.from("exam_attempts").update({
+          status: "submitted",
+          submitted_at: new Date().toISOString(),
+          result_id: data.resultId,
+        }).eq("id", attemptId);
+      }
+
       toast.success("Test submitted successfully!");
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
       navigate(`/results/${data.resultId}`);
     } catch (error) {
       toast.error("Failed to submit test");
