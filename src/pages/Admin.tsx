@@ -179,6 +179,60 @@ const Admin = () => {
     }
   };
 
+  const fetchVerificationEnabled = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("system_config")
+        .select("config_value")
+        .eq("config_key", "verification_enabled")
+        .maybeSingle();
+      if (error) throw error;
+      // Default to enabled if row missing
+      setVerificationEnabled(data ? data.config_value !== "false" : true);
+    } catch (error) {
+      console.error("Error fetching verification toggle:", error);
+    }
+  };
+
+  const toggleVerificationEnabled = async () => {
+    setVerificationLoading(true);
+    try {
+      const newValue = !verificationEnabled;
+      // Try update first, insert if missing
+      const { data: existing } = await supabase
+        .from("system_config")
+        .select("id")
+        .eq("config_key", "verification_enabled")
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("system_config")
+          .update({ config_value: newValue.toString(), updated_at: new Date().toISOString() })
+          .eq("config_key", "verification_enabled");
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("system_config")
+          .insert({
+            config_key: "verification_enabled",
+            config_value: newValue.toString(),
+            description: "When false, users skip link-shortener verification",
+          });
+        if (error) throw error;
+      }
+      setVerificationEnabled(newValue);
+      toast.success(`Verification ${newValue ? "enabled" : "disabled"} for all users`);
+    } catch (error) {
+      console.error("Error toggling verification:", error);
+      toast.error("Failed to toggle verification");
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+
+
   const saveScheduledMaintenance = async () => {
     setScheduleLoading(true);
     try {
