@@ -61,6 +61,8 @@ const Admin = () => {
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [shortenerLink, setShortenerLink] = useState("");
   const [shortenerLoading, setShortenerLoading] = useState(false);
+  const [verificationEnabled, setVerificationEnabled] = useState(true);
+  const [verificationLoading, setVerificationLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAuth();
