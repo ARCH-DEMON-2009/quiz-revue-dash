@@ -342,6 +342,57 @@ export type Database = {
           },
         ]
       }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          correct_count: number
+          created_at: string
+          exam_id: string
+          exam_name: string | null
+          id: number
+          score: number
+          skipped_count: number
+          submitted_at: string
+          time_taken_seconds: number
+          total_marks: number
+          user_id: string
+          user_name: string | null
+          wrong_count: number
+        }
+        Insert: {
+          answers?: Json
+          correct_count?: number
+          created_at?: string
+          exam_id: string
+          exam_name?: string | null
+          id?: number
+          score?: number
+          skipped_count?: number
+          submitted_at?: string
+          time_taken_seconds?: number
+          total_marks?: number
+          user_id?: string
+          user_name?: string | null
+          wrong_count?: number
+        }
+        Update: {
+          answers?: Json
+          correct_count?: number
+          created_at?: string
+          exam_id?: string
+          exam_name?: string | null
+          id?: number
+          score?: number
+          skipped_count?: number
+          submitted_at?: string
+          time_taken_seconds?: number
+          total_marks?: number
+          user_id?: string
+          user_name?: string | null
+          wrong_count?: number
+        }
+        Relationships: []
+      }
       results: {
         Row: {
           answers: Json
