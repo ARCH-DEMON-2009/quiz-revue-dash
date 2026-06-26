@@ -57,6 +57,8 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/verify" element={<Verify />} />
+            <Route path="/tnc-tests" element={<TncTests />} />
+            <Route path="/tnc-tests/:examId" element={<TncQuiz />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
