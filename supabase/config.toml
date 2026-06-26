@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.check-premium]
 verify_jwt = false
+
+[functions.tnc]
+verify_jwt = false

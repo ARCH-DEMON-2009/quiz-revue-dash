@@ -21,6 +21,8 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 import Verify from "./pages/Verify";
+import TncTests from "./pages/TncTests";
+import TncQuiz from "./pages/TncQuiz";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { BypassBlockGuard } from "./components/BypassBlockGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
@@ -55,6 +57,8 @@ const App = () => (
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/verify" element={<Verify />} />
+            <Route path="/tnc-tests" element={<TncTests />} />
+            <Route path="/tnc-tests/:examId" element={<TncQuiz />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

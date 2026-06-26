@@ -1,0 +1,83 @@
+import { supabase } from "@/integrations/supabase/client";
+
+export interface TncExam {
+  examId: string;
+  examNo: number;
+  name: string;
+  maxMarks: number;
+  negativeMarks: number;
+  durationMinutes: string;
+  questionCount: number;
+  allowForPremium: boolean;
+  createdAt: string | null;
+}
+
+export interface TncQuestion {
+  rowId: string;
+  questionNo: number | null;
+  questionText: string;
+  imageUrl: string | null;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correctAnswer: string;
+  explanation: string | null;
+}
+
+export interface TncExamWithQuestions extends TncExam {
+  questions: TncQuestion[];
+}
+
+export interface TncListResponse {
+  quizzes: TncExam[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+async function call<T>(body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke("tnc", { body });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data as T;
+}
+
+export function fetchTncTests(page: number, limit = 20) {
+  return call<TncListResponse>({ action: "tests", page, limit });
+}
+
+export function fetchTncTest(examId: string) {
+  return call<TncExamWithQuestions>({ action: "test", examId });
+}
+
+export interface SaveAttemptPayload {
+  examId: string;
+  examName: string;
+  userId?: string;
+  userName?: string;
+  answers: Record<string, string>;
+  score: number;
+  totalMarks: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  timeTakenSeconds: number;
+}
+
+export function saveTncAttempt(payload: SaveAttemptPayload) {
+  return call<{ saved: boolean }>({ action: "attempt", ...payload });
+}
+
+export function getCategory(name = ""): string {
+  const n = name.toUpperCase();
+  if (n.includes("NORCET")) return "NORCET";
+  if (n.includes("AIIMS")) return "AIIMS";
+  if (n.includes("SGPGI")) return "SGPGI";
+  if (n.includes("BTSC")) return "BTSC";
+  if (n.includes("CHO")) return "CHO";
+  if (n.includes("CHN")) return "CHN";
+  if (n.includes("OT ") || n.includes("THEATRE")) return "OT";
+  if (n.includes("MORNING") || n.includes("DOSE")) return "Daily Dose";
+  return "Other";
+}
