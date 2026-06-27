@@ -379,7 +379,7 @@ const TncQuiz = () => {
 
           <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
             <Card className="p-6">
-              <p className="text-lg font-medium text-foreground">{q.questionText}</p>
+              <Html className="block text-lg font-medium text-foreground" html={q.questionText} />
               {q.imageUrl && <QImage url={q.imageUrl} />}
               <div className="mt-5 space-y-3">
                 {OPTS.map((opt) => {
