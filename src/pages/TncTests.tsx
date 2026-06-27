@@ -160,6 +160,14 @@ const TncTests = () => {
               <Skeleton key={i} className="h-48 rounded-xl" />
             ))}
           </div>
+        ) : error ? (
+          <Card className="flex flex-col items-center gap-3 p-12 text-center">
+            <AlertCircle className="h-10 w-10 text-destructive" />
+            <p className="text-muted-foreground">Couldn't load the test series. Check your connection and try again.</p>
+            <Button className="gap-2" onClick={loadTests}>
+              <RefreshCw className="h-4 w-4" /> Retry
+            </Button>
+          </Card>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground">No tests found.</div>
         ) : (
