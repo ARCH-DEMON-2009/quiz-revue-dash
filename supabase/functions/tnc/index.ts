@@ -147,6 +147,60 @@ async function saveAttempt(body: any) {
   return data;
 }
 
+async function getLeaderboard(examId: string) {
+  const admin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+  const { data, error } = await admin
+    .from("quiz_attempts")
+    .select("user_id, user_name, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at, exam_name")
+    .eq("exam_id", String(examId))
+    .order("score", { ascending: false })
+    .limit(1000);
+  if (error) throw new Error(error.message);
+
+  // Keep each user's best attempt (highest score, then fastest time).
+  const best = new Map<string, any>();
+  for (const row of data ?? []) {
+    const key = String(row.user_id ?? "guest");
+    const prev = best.get(key);
+    if (
+      !prev ||
+      Number(row.score) > Number(prev.score) ||
+      (Number(row.score) === Number(prev.score) &&
+        Number(row.time_taken_seconds ?? 0) < Number(prev.time_taken_seconds ?? 0))
+    ) {
+      best.set(key, row);
+    }
+  }
+
+  const ranked = [...best.values()]
+    .sort((a, b) =>
+      Number(b.score) - Number(a.score) ||
+      Number(a.time_taken_seconds ?? 0) - Number(b.time_taken_seconds ?? 0),
+    )
+    .slice(0, 100)
+    .map((row, i) => ({
+      rank: i + 1,
+      userId: String(row.user_id ?? "guest"),
+      userName: row.user_name ?? "Student",
+      score: Number(row.score ?? 0),
+      totalMarks: Number(row.total_marks ?? 0),
+      correctCount: Number(row.correct_count ?? 0),
+      wrongCount: Number(row.wrong_count ?? 0),
+      skippedCount: Number(row.skipped_count ?? 0),
+      timeTakenSeconds: Number(row.time_taken_seconds ?? 0),
+      submittedAt: row.submitted_at ?? null,
+    }));
+
+  return {
+    examId: String(examId),
+    examName: data?.[0]?.exam_name ?? null,
+    rows: ranked,
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -173,6 +227,13 @@ Deno.serve(async (req) => {
       const saved = await saveAttempt(body);
       return json({ saved: true, data: saved }, 201);
     }
+
+    if (action === "leaderboard") {
+      const examId = body.examId ?? url.searchParams.get("examId");
+      if (!examId) return json({ error: "examId required" }, 400);
+      return json(await getLeaderboard(String(examId)));
+    }
+
 
     return json({ error: "Unknown action" }, 400);
   } catch (e) {

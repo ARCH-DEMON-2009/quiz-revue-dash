@@ -69,6 +69,29 @@ export function saveTncAttempt(payload: SaveAttemptPayload) {
   return call<{ saved: boolean }>({ action: "attempt", ...payload });
 }
 
+export interface TncLeaderboardRow {
+  rank: number;
+  userId: string;
+  userName: string;
+  score: number;
+  totalMarks: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  timeTakenSeconds: number;
+  submittedAt: string | null;
+}
+
+export interface TncLeaderboardResponse {
+  examId: string;
+  examName: string | null;
+  rows: TncLeaderboardRow[];
+}
+
+export function fetchTncLeaderboard(examId: string) {
+  return call<TncLeaderboardResponse>({ action: "leaderboard", examId });
+}
+
 export function getCategory(name = ""): string {
   const n = name.toUpperCase();
   if (n.includes("NORCET")) return "NORCET";

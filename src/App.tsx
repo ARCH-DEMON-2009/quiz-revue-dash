@@ -23,6 +23,7 @@ import NotFound from "./pages/NotFound";
 import Verify from "./pages/Verify";
 import TncTests from "./pages/TncTests";
 import TncQuiz from "./pages/TncQuiz";
+import TncLeaderboard from "./pages/TncLeaderboard";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { BypassBlockGuard } from "./components/BypassBlockGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/verify" element={<Verify />} />
             <Route path="/tnc-tests" element={<TncTests />} />
             <Route path="/tnc-tests/:examId" element={<TncQuiz />} />
+            <Route path="/tnc-tests/:examId/leaderboard" element={<TncLeaderboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

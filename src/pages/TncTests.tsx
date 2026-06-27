@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -17,12 +18,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Crown,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchTncTests, getCategory, type TncExam } from "@/lib/tncApi";
 
 const CATEGORIES = ["All", "NORCET", "AIIMS", "SGPGI", "BTSC", "CHO", "CHN", "Daily Dose", "Other"];
 const LIMIT = 20;
+const SITE = "https://quiz-revue-dash.lovable.app";
 
 const TncTests = () => {
   const navigate = useNavigate();
@@ -32,25 +36,25 @@ const TncTests = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    let active = true;
+  const loadTests = () => {
     setLoading(true);
+    setError(false);
     fetchTncTests(page, LIMIT)
       .then((res) => {
-        if (!active) return;
         setQuizzes(res.quizzes);
         setTotal(res.total);
       })
       .catch((e) => {
         console.error(e);
+        setError(true);
         toast.error("Failed to load tests. Please try again.");
       })
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [page]);
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(loadTests, [page]);
 
   const filtered = useMemo(() => {
     return quizzes.filter((q) => {
@@ -80,6 +84,28 @@ const TncTests = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>TNC Test Series — 6,800+ Free Nursing Mock Tests (NORCET, AIIMS)</title>
+        <meta
+          name="description"
+          content="Practice 6,800+ free TNC nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO. Timed exams, instant scoring, detailed solutions and leaderboards."
+        />
+        <link rel="canonical" href={`${SITE}/tnc-tests`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="TNC Test Series — Free Nursing Mock Tests" />
+        <meta property="og:description" content="6,800+ free nursing mock tests with timer, scoring and solutions." />
+        <meta property="og:url" content={`${SITE}/tnc-tests`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: "TNC Test Series",
+            description: "Free nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO.",
+            url: `${SITE}/tnc-tests`,
+          })}
+        </script>
+      </Helmet>
       <NavigationHeader />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
@@ -134,6 +160,14 @@ const TncTests = () => {
               <Skeleton key={i} className="h-48 rounded-xl" />
             ))}
           </div>
+        ) : error ? (
+          <Card className="flex flex-col items-center gap-3 p-12 text-center">
+            <AlertCircle className="h-10 w-10 text-destructive" />
+            <p className="text-muted-foreground">Couldn't load the test series. Check your connection and try again.</p>
+            <Button className="gap-2" onClick={loadTests}>
+              <RefreshCw className="h-4 w-4" /> Retry
+            </Button>
+          </Card>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground">No tests found.</div>
         ) : (

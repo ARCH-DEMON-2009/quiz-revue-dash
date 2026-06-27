@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +26,9 @@ import {
   MinusCircle,
   ArrowLeft,
   ArrowRight,
+  Download,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,10 +38,21 @@ import {
   type TncExamWithQuestions,
   type TncQuestion,
 } from "@/lib/tncApi";
+import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
+import { downloadTncResultPdf } from "@/lib/tncPdf";
 
 type Phase = "instructions" | "quiz" | "results";
 
 const OPTS = ["A", "B", "C", "D"] as const;
+const SITE = "https://quiz-revue-dash.lovable.app";
+
+const storageKey = (id: string) => `tnc-attempt-${id}`;
+
+/** Render sanitized CRM HTML so legacy <font>/<span> markup doesn't leak as text. */
+const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => (
+  <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />
+);
+
 
 function calcScore(
   questions: TncQuestion[],
@@ -74,14 +89,25 @@ function grade(pct: number) {
 
 const QImage = ({ url }: { url: string }) => {
   const [err, setErr] = useState(false);
-  if (err) return null;
+  const [loaded, setLoaded] = useState(false);
+  if (err) {
+    return (
+      <div className="my-3 flex h-24 items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground">
+        <AlertCircle className="h-4 w-4" /> Image could not be loaded
+      </div>
+    );
+  }
   return (
-    <img
-      src={url}
-      alt="Question illustration"
-      onError={() => setErr(true)}
-      className="my-3 max-h-72 rounded-lg border object-contain"
-    />
+    <div className="my-3">
+      {!loaded && <Skeleton className="h-48 w-full max-w-sm rounded-lg" />}
+      <img
+        src={url}
+        alt="Question illustration"
+        onError={() => setErr(true)}
+        onLoad={() => setLoaded(true)}
+        className={`max-h-72 rounded-lg border object-contain ${loaded ? "" : "hidden"}`}
+      />
+    </div>
   );
 };
 
@@ -91,33 +117,70 @@ const TncQuiz = () => {
 
   const [exam, setExam] = useState<TncExamWithQuestions | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [phase, setPhase] = useState<Phase>("instructions");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeLeft, setTimeLeft] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [resumed, setResumed] = useState(false);
 
   const totalSecRef = useRef(0);
+  const restoredRef = useRef(false);
 
-  useEffect(() => {
+  const loadExam = () => {
     if (!examId) return;
-    let active = true;
     setLoading(true);
+    setLoadError(false);
     fetchTncTest(examId)
-      .then((res) => {
-        if (!active) return;
-        setExam(res);
-      })
+      .then((res) => setExam(res))
       .catch((e) => {
         console.error(e);
+        setLoadError(true);
         toast.error("Failed to load this test.");
       })
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [examId]);
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(loadExam, [examId]);
+
+  // ---- Resume an in-progress attempt from localStorage ----
+  useEffect(() => {
+    if (!exam || !examId || restoredRef.current) return;
+    restoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(storageKey(examId));
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        answers: Record<string, string>;
+        current: number;
+        timeLeft: number;
+        phase: Phase;
+      };
+      if (saved.phase === "quiz" && saved.timeLeft > 0) {
+        totalSecRef.current = parseInt(exam.durationMinutes) * 60 || 90 * 60;
+        setAnswers(saved.answers ?? {});
+        setCurrent(saved.current ?? 0);
+        setTimeLeft(saved.timeLeft);
+        setPhase("quiz");
+        setResumed(true);
+        toast.success("Resumed your in-progress attempt.");
+      }
+    } catch {
+      /* ignore corrupt state */
+    }
+  }, [exam, examId]);
+
+  // ---- Autosave progress while taking the quiz ----
+  useEffect(() => {
+    if (phase !== "quiz" || !examId) return;
+    localStorage.setItem(
+      storageKey(examId),
+      JSON.stringify({ answers, current, timeLeft, phase, savedAt: Date.now() }),
+    );
+  }, [answers, current, timeLeft, phase, examId]);
+
 
   // Timer
   useEffect(() => {
@@ -153,6 +216,7 @@ const TncQuiz = () => {
     if (!exam || phase === "results") return;
     setConfirmOpen(false);
     setPhase("results");
+    if (examId) localStorage.removeItem(storageKey(examId));
     const { score, correct, wrong, skipped } = calcScore(
       questions,
       answers,
@@ -203,11 +267,19 @@ const TncQuiz = () => {
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
-        <div className="container mx-auto max-w-3xl px-4 py-20 text-center">
-          <p className="text-muted-foreground">Test not found.</p>
-          <Button className="mt-4" onClick={() => navigate("/tnc-tests")}>
-            Back to Test Series
-          </Button>
+        <div className="container mx-auto flex max-w-3xl flex-col items-center gap-3 px-4 py-20 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive" />
+          <p className="text-muted-foreground">
+            {loadError ? "We couldn't load this test from the CRM." : "Test not found."}
+          </p>
+          <div className="flex gap-3">
+            {loadError && (
+              <Button variant="outline" className="gap-2" onClick={loadExam}>
+                <RefreshCw className="h-4 w-4" /> Retry
+              </Button>
+            )}
+            <Button onClick={() => navigate("/tnc-tests")}>Back to Test Series</Button>
+          </div>
         </div>
       </div>
     );
@@ -215,15 +287,39 @@ const TncQuiz = () => {
 
   // ---------- Phase 1: Instructions ----------
   if (phase === "instructions") {
+    const desc = `Take the ${stripHtml(exam.name)} TNC nursing mock test — ${questions.length} questions, ${parseInt(exam.durationMinutes)} minutes, instant scoring and detailed solutions.`;
+    const canonical = `${SITE}/tnc-tests/${examId}`;
     return (
       <div className="min-h-screen bg-background">
+        <Helmet>
+          <title>{`${stripHtml(exam.name)} — TNC Nursing Mock Test`}</title>
+          <meta name="description" content={desc} />
+          <link rel="canonical" href={canonical} />
+          <meta property="og:type" content="article" />
+          <meta property="og:title" content={`${stripHtml(exam.name)} — TNC Nursing Mock Test`} />
+          <meta property="og:description" content={desc} />
+          <meta property="og:url" content={canonical} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Quiz",
+              name: stripHtml(exam.name),
+              educationalLevel: "Nursing",
+              url: canonical,
+              numberOfQuestions: questions.length,
+            })}
+          </script>
+        </Helmet>
         <NavigationHeader />
         <main className="container mx-auto max-w-3xl px-4 py-10">
           <Button variant="ghost" className="mb-4 gap-2" onClick={() => navigate("/tnc-tests")}>
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
           <Card className="p-8">
-            <h1 className="text-2xl font-bold text-foreground">{exam.name}</h1>
+            <h1 className="text-2xl font-bold text-foreground">
+              <Html html={exam.name} />
+            </h1>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
               <Stat icon={<FileText />} label="Questions" value={`${questions.length}`} />
               <Stat icon={<Clock />} label="Duration" value={`${parseInt(exam.durationMinutes)} min`} />
@@ -236,6 +332,7 @@ const TncQuiz = () => {
                 <li>The timer starts as soon as you begin and auto-submits at zero.</li>
                 <li>Each wrong answer carries a negative mark of -{exam.negativeMarks}.</li>
                 <li>You can navigate between questions freely before submitting.</li>
+                <li>Your progress auto-saves — you can refresh and resume any time.</li>
                 <li>Unanswered questions are not penalised.</li>
               </ul>
             </div>
@@ -246,6 +343,13 @@ const TncQuiz = () => {
               onClick={startQuiz}
             >
               {questions.length === 0 ? "No questions available" : "Start Quiz"}
+            </Button>
+            <Button
+              variant="outline"
+              className="mt-3 w-full gap-2"
+              onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}
+            >
+              <Trophy className="h-4 w-4" /> View Leaderboard
             </Button>
           </Card>
         </main>
@@ -275,7 +379,7 @@ const TncQuiz = () => {
 
           <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
             <Card className="p-6">
-              <p className="text-lg font-medium text-foreground">{q.questionText}</p>
+              <Html className="block text-lg font-medium text-foreground" html={q.questionText} />
               {q.imageUrl && <QImage url={q.imageUrl} />}
               <div className="mt-5 space-y-3">
                 {OPTS.map((opt) => {
@@ -300,7 +404,7 @@ const TncQuiz = () => {
                       >
                         {opt}
                       </span>
-                      <span className="pt-0.5 text-foreground">{text}</span>
+                      <Html className="pt-0.5 text-foreground" html={text} />
                     </button>
                   );
                 })}
@@ -384,12 +488,34 @@ const TncQuiz = () => {
   const pct = exam.maxMarks ? (r.score / exam.maxMarks) * 100 : 0;
   const g = grade(pct);
 
+  const handleDownloadPdf = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    downloadTncResultPdf({
+      examName: exam.name,
+      score: r.score,
+      maxMarks: exam.maxMarks,
+      correct: r.correct,
+      wrong: r.wrong,
+      skipped: r.skipped,
+      questions,
+      answers,
+      userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{`Result — ${stripHtml(exam.name)} | TNC Nursing Test`}</title>
+        <meta name="robots" content="noindex" />
+        <link rel="canonical" href={`${SITE}/tnc-tests/${examId}`} />
+      </Helmet>
       <NavigationHeader />
       <main className="container mx-auto max-w-3xl px-4 py-10">
         <Card className="p-8 text-center">
-          <p className="text-sm text-muted-foreground">{exam.name}</p>
+          <p className="text-sm text-muted-foreground">
+            <Html html={exam.name} />
+          </p>
           <p className={`mt-2 text-4xl font-bold ${g.color}`}>{r.score.toFixed(2)}</p>
           <p className="text-muted-foreground">out of {exam.maxMarks} marks</p>
           <p className={`mt-1 text-lg font-semibold ${g.color}`}>{g.label}</p>
@@ -402,6 +528,12 @@ const TncQuiz = () => {
           {saving && <p className="mt-3 text-xs text-muted-foreground">Saving your result…</p>}
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Button className="gap-2" onClick={handleDownloadPdf}>
+              <Download className="h-4 w-4" /> Download PDF
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}>
+              <Trophy className="h-4 w-4" /> Leaderboard
+            </Button>
             <Button variant="outline" onClick={() => navigate("/tnc-tests")}>
               Back to Test Series
             </Button>
@@ -431,7 +563,7 @@ const TncQuiz = () => {
                     <Badge variant="destructive">Wrong</Badge>
                   )}
                 </div>
-                <p className="font-medium text-foreground">{q.questionText}</p>
+                <Html className="block font-medium text-foreground" html={q.questionText} />
                 {q.imageUrl && <QImage url={q.imageUrl} />}
                 <div className="mt-3 space-y-2 text-sm">
                   {OPTS.map((opt) => {
@@ -450,18 +582,18 @@ const TncQuiz = () => {
                         }`}
                       >
                         <span className="font-semibold">{opt}.</span>
-                        <span>{text}</span>
-                        {isAns && <span className="ml-auto text-xs font-medium">Correct</span>}
-                        {isUser && !isAns && <span className="ml-auto text-xs font-medium">Your answer</span>}
+                        <Html html={text} />
+                        {isAns && <span className="ml-auto whitespace-nowrap text-xs font-medium">Correct</span>}
+                        {isUser && !isAns && <span className="ml-auto whitespace-nowrap text-xs font-medium">Your answer</span>}
                       </div>
                     );
                   })}
                 </div>
-                {q.explanation && (
-                  <div
-                    className="mt-3 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground"
-                    dangerouslySetInnerHTML={{ __html: q.explanation }}
-                  />
+                {q.explanation && stripHtml(q.explanation) && (
+                  <div className="mt-3 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Explanation: </span>
+                    <Html html={q.explanation} />
+                  </div>
                 )}
               </Card>
             );

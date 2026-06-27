@@ -22,11 +22,19 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
   useEffect(() => {
     if (premiumLoading) return;
     if (isPremium) {
-      setAccessStatus('loading'); // will short-circuit below
+      setAccessStatus('verified');
       return;
     }
     checkVerification();
   }, [isPremium, premiumLoading]);
+
+  // Safety net: never leave the user stuck on "Checking access..." indefinitely.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setAccessStatus((s) => (s === 'loading' ? 'free' : s));
+    }, 8000);
+    return () => clearTimeout(t);
+  }, []);
 
   // Countdown timer for pending verification
   useEffect(() => {
@@ -110,6 +118,10 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
     }
   };
 
+  if (isPremium || accessStatus === 'verified') {
+    return <>{children}</>;
+  }
+
   if (premiumLoading || accessStatus === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -119,10 +131,6 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
         </div>
       </div>
     );
-  }
-
-  if (isPremium || accessStatus === 'verified') {
-    return <>{children}</>;
   }
 
   const formatCountdown = (s: number) => {
