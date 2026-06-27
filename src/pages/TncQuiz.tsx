@@ -563,7 +563,7 @@ const TncQuiz = () => {
                     <Badge variant="destructive">Wrong</Badge>
                   )}
                 </div>
-                <p className="font-medium text-foreground">{q.questionText}</p>
+                <Html className="block font-medium text-foreground" html={q.questionText} />
                 {q.imageUrl && <QImage url={q.imageUrl} />}
                 <div className="mt-3 space-y-2 text-sm">
                   {OPTS.map((opt) => {
@@ -582,18 +582,18 @@ const TncQuiz = () => {
                         }`}
                       >
                         <span className="font-semibold">{opt}.</span>
-                        <span>{text}</span>
-                        {isAns && <span className="ml-auto text-xs font-medium">Correct</span>}
-                        {isUser && !isAns && <span className="ml-auto text-xs font-medium">Your answer</span>}
+                        <Html html={text} />
+                        {isAns && <span className="ml-auto whitespace-nowrap text-xs font-medium">Correct</span>}
+                        {isUser && !isAns && <span className="ml-auto whitespace-nowrap text-xs font-medium">Your answer</span>}
                       </div>
                     );
                   })}
                 </div>
-                {q.explanation && (
-                  <div
-                    className="mt-3 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground"
-                    dangerouslySetInnerHTML={{ __html: q.explanation }}
-                  />
+                {q.explanation && stripHtml(q.explanation) && (
+                  <div className="mt-3 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
+                    <span className="font-medium text-foreground">Explanation: </span>
+                    <Html html={q.explanation} />
+                  </div>
                 )}
               </Card>
             );
