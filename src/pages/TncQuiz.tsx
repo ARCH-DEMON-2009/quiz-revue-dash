@@ -117,33 +117,70 @@ const TncQuiz = () => {
 
   const [exam, setExam] = useState<TncExamWithQuestions | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [phase, setPhase] = useState<Phase>("instructions");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeLeft, setTimeLeft] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [resumed, setResumed] = useState(false);
 
   const totalSecRef = useRef(0);
+  const restoredRef = useRef(false);
 
-  useEffect(() => {
+  const loadExam = () => {
     if (!examId) return;
-    let active = true;
     setLoading(true);
+    setLoadError(false);
     fetchTncTest(examId)
-      .then((res) => {
-        if (!active) return;
-        setExam(res);
-      })
+      .then((res) => setExam(res))
       .catch((e) => {
         console.error(e);
+        setLoadError(true);
         toast.error("Failed to load this test.");
       })
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [examId]);
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(loadExam, [examId]);
+
+  // ---- Resume an in-progress attempt from localStorage ----
+  useEffect(() => {
+    if (!exam || !examId || restoredRef.current) return;
+    restoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(storageKey(examId));
+      if (!raw) return;
+      const saved = JSON.parse(raw) as {
+        answers: Record<string, string>;
+        current: number;
+        timeLeft: number;
+        phase: Phase;
+      };
+      if (saved.phase === "quiz" && saved.timeLeft > 0) {
+        totalSecRef.current = parseInt(exam.durationMinutes) * 60 || 90 * 60;
+        setAnswers(saved.answers ?? {});
+        setCurrent(saved.current ?? 0);
+        setTimeLeft(saved.timeLeft);
+        setPhase("quiz");
+        setResumed(true);
+        toast.success("Resumed your in-progress attempt.");
+      }
+    } catch {
+      /* ignore corrupt state */
+    }
+  }, [exam, examId]);
+
+  // ---- Autosave progress while taking the quiz ----
+  useEffect(() => {
+    if (phase !== "quiz" || !examId) return;
+    localStorage.setItem(
+      storageKey(examId),
+      JSON.stringify({ answers, current, timeLeft, phase, savedAt: Date.now() }),
+    );
+  }, [answers, current, timeLeft, phase, examId]);
+
 
   // Timer
   useEffect(() => {
