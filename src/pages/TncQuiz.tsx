@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +26,9 @@ import {
   MinusCircle,
   ArrowLeft,
   ArrowRight,
+  Download,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,10 +38,21 @@ import {
   type TncExamWithQuestions,
   type TncQuestion,
 } from "@/lib/tncApi";
+import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
+import { downloadTncResultPdf } from "@/lib/tncPdf";
 
 type Phase = "instructions" | "quiz" | "results";
 
 const OPTS = ["A", "B", "C", "D"] as const;
+const SITE = "https://quiz-revue-dash.lovable.app";
+
+const storageKey = (id: string) => `tnc-attempt-${id}`;
+
+/** Render sanitized CRM HTML so legacy <font>/<span> markup doesn't leak as text. */
+const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => (
+  <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />
+);
+
 
 function calcScore(
   questions: TncQuestion[],
