@@ -84,6 +84,28 @@ const TncTests = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>TNC Test Series — 6,800+ Free Nursing Mock Tests (NORCET, AIIMS)</title>
+        <meta
+          name="description"
+          content="Practice 6,800+ free TNC nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO. Timed exams, instant scoring, detailed solutions and leaderboards."
+        />
+        <link rel="canonical" href={`${SITE}/tnc-tests`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="TNC Test Series — Free Nursing Mock Tests" />
+        <meta property="og:description" content="6,800+ free nursing mock tests with timer, scoring and solutions." />
+        <meta property="og:url" content={`${SITE}/tnc-tests`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: "TNC Test Series",
+            description: "Free nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO.",
+            url: `${SITE}/tnc-tests`,
+          })}
+        </script>
+      </Helmet>
       <NavigationHeader />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
