@@ -317,7 +317,9 @@ const TncQuiz = () => {
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
           <Card className="p-8">
-            <h1 className="text-2xl font-bold text-foreground">{exam.name}</h1>
+            <h1 className="text-2xl font-bold text-foreground">
+              <Html html={exam.name} />
+            </h1>
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
               <Stat icon={<FileText />} label="Questions" value={`${questions.length}`} />
               <Stat icon={<Clock />} label="Duration" value={`${parseInt(exam.durationMinutes)} min`} />
@@ -330,6 +332,7 @@ const TncQuiz = () => {
                 <li>The timer starts as soon as you begin and auto-submits at zero.</li>
                 <li>Each wrong answer carries a negative mark of -{exam.negativeMarks}.</li>
                 <li>You can navigate between questions freely before submitting.</li>
+                <li>Your progress auto-saves — you can refresh and resume any time.</li>
                 <li>Unanswered questions are not penalised.</li>
               </ul>
             </div>
@@ -340,6 +343,13 @@ const TncQuiz = () => {
               onClick={startQuiz}
             >
               {questions.length === 0 ? "No questions available" : "Start Quiz"}
+            </Button>
+            <Button
+              variant="outline"
+              className="mt-3 w-full gap-2"
+              onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}
+            >
+              <Trophy className="h-4 w-4" /> View Leaderboard
             </Button>
           </Card>
         </main>
