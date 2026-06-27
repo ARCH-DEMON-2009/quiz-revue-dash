@@ -118,6 +118,10 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
     }
   };
 
+  if (isPremium || accessStatus === 'verified') {
+    return <>{children}</>;
+  }
+
   if (premiumLoading || accessStatus === 'loading') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -127,10 +131,6 @@ export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
         </div>
       </div>
     );
-  }
-
-  if (isPremium || accessStatus === 'verified') {
-    return <>{children}</>;
   }
 
   const formatCountdown = (s: number) => {
