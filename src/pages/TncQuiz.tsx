@@ -89,14 +89,25 @@ function grade(pct: number) {
 
 const QImage = ({ url }: { url: string }) => {
   const [err, setErr] = useState(false);
-  if (err) return null;
+  const [loaded, setLoaded] = useState(false);
+  if (err) {
+    return (
+      <div className="my-3 flex h-24 items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground">
+        <AlertCircle className="h-4 w-4" /> Image could not be loaded
+      </div>
+    );
+  }
   return (
-    <img
-      src={url}
-      alt="Question illustration"
-      onError={() => setErr(true)}
-      className="my-3 max-h-72 rounded-lg border object-contain"
-    />
+    <div className="my-3">
+      {!loaded && <Skeleton className="h-48 w-full max-w-sm rounded-lg" />}
+      <img
+        src={url}
+        alt="Question illustration"
+        onError={() => setErr(true)}
+        onLoad={() => setLoaded(true)}
+        className={`max-h-72 rounded-lg border object-contain ${loaded ? "" : "hidden"}`}
+      />
+    </div>
   );
 };
 
