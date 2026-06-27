@@ -404,7 +404,7 @@ const TncQuiz = () => {
                       >
                         {opt}
                       </span>
-                      <span className="pt-0.5 text-foreground">{text}</span>
+                      <Html className="pt-0.5 text-foreground" html={text} />
                     </button>
                   );
                 })}
