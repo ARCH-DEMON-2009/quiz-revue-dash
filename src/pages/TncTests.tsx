@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -17,12 +18,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Crown,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { fetchTncTests, getCategory, type TncExam } from "@/lib/tncApi";
 
 const CATEGORIES = ["All", "NORCET", "AIIMS", "SGPGI", "BTSC", "CHO", "CHN", "Daily Dose", "Other"];
 const LIMIT = 20;
+const SITE = "https://quiz-revue-dash.lovable.app";
 
 const TncTests = () => {
   const navigate = useNavigate();
