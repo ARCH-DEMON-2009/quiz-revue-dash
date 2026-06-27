@@ -488,12 +488,34 @@ const TncQuiz = () => {
   const pct = exam.maxMarks ? (r.score / exam.maxMarks) * 100 : 0;
   const g = grade(pct);
 
+  const handleDownloadPdf = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    downloadTncResultPdf({
+      examName: exam.name,
+      score: r.score,
+      maxMarks: exam.maxMarks,
+      correct: r.correct,
+      wrong: r.wrong,
+      skipped: r.skipped,
+      questions,
+      answers,
+      userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{`Result — ${stripHtml(exam.name)} | TNC Nursing Test`}</title>
+        <meta name="robots" content="noindex" />
+        <link rel="canonical" href={`${SITE}/tnc-tests/${examId}`} />
+      </Helmet>
       <NavigationHeader />
       <main className="container mx-auto max-w-3xl px-4 py-10">
         <Card className="p-8 text-center">
-          <p className="text-sm text-muted-foreground">{exam.name}</p>
+          <p className="text-sm text-muted-foreground">
+            <Html html={exam.name} />
+          </p>
           <p className={`mt-2 text-4xl font-bold ${g.color}`}>{r.score.toFixed(2)}</p>
           <p className="text-muted-foreground">out of {exam.maxMarks} marks</p>
           <p className={`mt-1 text-lg font-semibold ${g.color}`}>{g.label}</p>
@@ -506,6 +528,12 @@ const TncQuiz = () => {
           {saving && <p className="mt-3 text-xs text-muted-foreground">Saving your result…</p>}
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Button className="gap-2" onClick={handleDownloadPdf}>
+              <Download className="h-4 w-4" /> Download PDF
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}>
+              <Trophy className="h-4 w-4" /> Leaderboard
+            </Button>
             <Button variant="outline" onClick={() => navigate("/tnc-tests")}>
               Back to Test Series
             </Button>
