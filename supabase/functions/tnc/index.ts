@@ -228,6 +228,13 @@ Deno.serve(async (req) => {
       return json({ saved: true, data: saved }, 201);
     }
 
+    if (action === "leaderboard") {
+      const examId = body.examId ?? url.searchParams.get("examId");
+      if (!examId) return json({ error: "examId required" }, 400);
+      return json(await getLeaderboard(String(examId)));
+    }
+
+
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("tnc error:", e);
