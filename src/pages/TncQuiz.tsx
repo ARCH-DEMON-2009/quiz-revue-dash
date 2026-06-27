@@ -216,6 +216,7 @@ const TncQuiz = () => {
     if (!exam || phase === "results") return;
     setConfirmOpen(false);
     setPhase("results");
+    if (examId) localStorage.removeItem(storageKey(examId));
     const { score, correct, wrong, skipped } = calcScore(
       questions,
       answers,
