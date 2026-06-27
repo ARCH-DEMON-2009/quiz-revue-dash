@@ -36,25 +36,25 @@ const TncTests = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    let active = true;
+  const loadTests = () => {
     setLoading(true);
+    setError(false);
     fetchTncTests(page, LIMIT)
       .then((res) => {
-        if (!active) return;
         setQuizzes(res.quizzes);
         setTotal(res.total);
       })
       .catch((e) => {
         console.error(e);
+        setError(true);
         toast.error("Failed to load tests. Please try again.");
       })
-      .finally(() => active && setLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [page]);
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(loadTests, [page]);
 
   const filtered = useMemo(() => {
     return quizzes.filter((q) => {
