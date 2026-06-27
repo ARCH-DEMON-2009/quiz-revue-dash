@@ -267,11 +267,19 @@ const TncQuiz = () => {
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
-        <div className="container mx-auto max-w-3xl px-4 py-20 text-center">
-          <p className="text-muted-foreground">Test not found.</p>
-          <Button className="mt-4" onClick={() => navigate("/tnc-tests")}>
-            Back to Test Series
-          </Button>
+        <div className="container mx-auto flex max-w-3xl flex-col items-center gap-3 px-4 py-20 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive" />
+          <p className="text-muted-foreground">
+            {loadError ? "We couldn't load this test from the CRM." : "Test not found."}
+          </p>
+          <div className="flex gap-3">
+            {loadError && (
+              <Button variant="outline" className="gap-2" onClick={loadExam}>
+                <RefreshCw className="h-4 w-4" /> Retry
+              </Button>
+            )}
+            <Button onClick={() => navigate("/tnc-tests")}>Back to Test Series</Button>
+          </div>
         </div>
       </div>
     );
