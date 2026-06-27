@@ -287,8 +287,30 @@ const TncQuiz = () => {
 
   // ---------- Phase 1: Instructions ----------
   if (phase === "instructions") {
+    const desc = `Take the ${stripHtml(exam.name)} TNC nursing mock test — ${questions.length} questions, ${parseInt(exam.durationMinutes)} minutes, instant scoring and detailed solutions.`;
+    const canonical = `${SITE}/tnc-tests/${examId}`;
     return (
       <div className="min-h-screen bg-background">
+        <Helmet>
+          <title>{`${stripHtml(exam.name)} — TNC Nursing Mock Test`}</title>
+          <meta name="description" content={desc} />
+          <link rel="canonical" href={canonical} />
+          <meta property="og:type" content="article" />
+          <meta property="og:title" content={`${stripHtml(exam.name)} — TNC Nursing Mock Test`} />
+          <meta property="og:description" content={desc} />
+          <meta property="og:url" content={canonical} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Quiz",
+              name: stripHtml(exam.name),
+              educationalLevel: "Nursing",
+              url: canonical,
+              numberOfQuestions: questions.length,
+            })}
+          </script>
+        </Helmet>
         <NavigationHeader />
         <main className="container mx-auto max-w-3xl px-4 py-10">
           <Button variant="ghost" className="mb-4 gap-2" onClick={() => navigate("/tnc-tests")}>
