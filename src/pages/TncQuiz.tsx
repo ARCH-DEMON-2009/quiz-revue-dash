@@ -145,10 +145,12 @@ const TncQuiz = () => {
   const [phase, setPhase] = useState<Phase>("instructions");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resumed, setResumed] = useState(false);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
