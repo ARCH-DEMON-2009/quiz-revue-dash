@@ -627,6 +627,9 @@ const TncQuiz = () => {
             <Button className="gap-2" onClick={handleDownloadPdf}>
               <Download className="h-4 w-4" /> Download PDF
             </Button>
+            <Button variant="outline" className="gap-2" onClick={shareResult} disabled={saving || !attemptId}>
+              <Share2 className="h-4 w-4" /> Share Result
+            </Button>
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}>
               <Trophy className="h-4 w-4" /> Leaderboard
             </Button>
@@ -634,6 +637,7 @@ const TncQuiz = () => {
               Back to Test Series
             </Button>
           </div>
+
         </Card>
 
         <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Answer Review</h2>
