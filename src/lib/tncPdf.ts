@@ -12,9 +12,45 @@ interface PdfArgs {
   questions: TncQuestion[];
   answers: Record<string, string>;
   userName?: string;
+  /** Brand/site shown in the watermark + footer so the PDF can't be rebranded. */
+  site?: string;
+  brand?: string;
 }
 
 const OPTS = ["A", "B", "C", "D"] as const;
+const DEFAULT_SITE = "https://quiz-revue-dash.lovable.app";
+const DEFAULT_BRAND = "Test Sagar";
+
+/** Stamp a repeating diagonal watermark + footer onto every page. */
+function stampWatermark(doc: jsPDF, brand: string, site: string) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const pageCount = doc.getNumberOfPages();
+  const text = `${brand} • ${site.replace(/^https?:\/\//, "")}`;
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    // Diagonal tiled watermark
+    const gs = (doc as any).GState ? new (doc as any).GState({ opacity: 0.08 }) : null;
+    if (gs && (doc as any).setGState) (doc as any).setGState(gs);
+    doc.setTextColor(120, 120, 120);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    for (let y = 40; y < pageH; y += 130) {
+      for (let x = -20; x < pageW; x += 230) {
+        doc.text(text, x, y, { angle: 35 });
+      }
+    }
+    // Reset opacity for footer
+    const gsFull = (doc as any).GState ? new (doc as any).GState({ opacity: 1 }) : null;
+    if (gsFull && (doc as any).setGState) (doc as any).setGState(gsFull);
+    // Footer
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`© ${brand} — ${site}`, 40, pageH - 18);
+    doc.text(`Page ${p} of ${pageCount}`, pageW - 40, pageH - 18, { align: "right" });
+  }
+}
 
 export function downloadTncResultPdf(args: PdfArgs) {
   const { examName, score, maxMarks, correct, wrong, skipped, questions, answers, userName } = args;
