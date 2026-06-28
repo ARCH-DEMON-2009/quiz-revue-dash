@@ -87,13 +87,32 @@ function grade(pct: number) {
   return { label: "Keep Practicing", color: "text-red-600" };
 }
 
+/** Module-level cache of image URLs that have already loaded successfully. */
+const imgCache = new Set<string>();
+
 const QImage = ({ url }: { url: string }) => {
   const [err, setErr] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(() => imgCache.has(url));
+  const [attempt, setAttempt] = useState(0);
+
+  // Cache-bust only on manual retry so the browser cache is used normally.
+  const src = attempt === 0 ? url : `${url}${url.includes("?") ? "&" : "?"}r=${attempt}`;
+
+  const retry = () => {
+    setErr(false);
+    setLoaded(false);
+    setAttempt((a) => a + 1);
+  };
+
   if (err) {
     return (
-      <div className="my-3 flex h-24 items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground">
-        <AlertCircle className="h-4 w-4" /> Image could not be loaded
+      <div className="my-3 flex h-24 flex-col items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground">
+        <span className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4" /> Image could not be loaded
+        </span>
+        <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={retry}>
+          <RefreshCw className="h-3 w-3" /> Retry
+        </Button>
       </div>
     );
   }
@@ -101,15 +120,20 @@ const QImage = ({ url }: { url: string }) => {
     <div className="my-3">
       {!loaded && <Skeleton className="h-48 w-full max-w-sm rounded-lg" />}
       <img
-        src={url}
+        src={src}
         alt="Question illustration"
+        loading="lazy"
         onError={() => setErr(true)}
-        onLoad={() => setLoaded(true)}
+        onLoad={() => {
+          imgCache.add(url);
+          setLoaded(true);
+        }}
         className={`max-h-72 rounded-lg border object-contain ${loaded ? "" : "hidden"}`}
       />
     </div>
   );
 };
+
 
 const TncQuiz = () => {
   const { examId } = useParams<{ examId: string }>();
