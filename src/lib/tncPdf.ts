@@ -83,12 +83,15 @@ export function downloadTncResultPdf(args: PdfArgs) {
     }
   };
 
+  // Brand banner
+  writeLines(brand, 12, "bold", [37, 99, 235]);
   // Header
   writeLines(stripHtml(examName) || "TNC Test Result", 18, "bold");
   y += 4;
   if (userName) writeLines(`Candidate: ${userName}`, 11, "normal", [90, 90, 90]);
   writeLines(`Date: ${new Date().toLocaleString()}`, 11, "normal", [90, 90, 90]);
   y += 6;
+
 
   // Score summary box
   ensure(70);
