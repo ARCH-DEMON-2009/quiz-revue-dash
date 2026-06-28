@@ -147,6 +147,34 @@ async function saveAttempt(body: any) {
   return data;
 }
 
+async function getAttempt(attemptId: string) {
+  const admin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+  const { data, error } = await admin
+    .from("quiz_attempts")
+    .select("id, exam_id, exam_name, user_name, answers, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
+    .eq("id", attemptId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  return {
+    attemptId: data.id,
+    examId: String(data.exam_id ?? ""),
+    examName: data.exam_name ?? null,
+    userName: data.user_name ?? "Student",
+    answers: data.answers ?? {},
+    score: Number(data.score ?? 0),
+    totalMarks: Number(data.total_marks ?? 0),
+    correctCount: Number(data.correct_count ?? 0),
+    wrongCount: Number(data.wrong_count ?? 0),
+    skippedCount: Number(data.skipped_count ?? 0),
+    timeTakenSeconds: Number(data.time_taken_seconds ?? 0),
+    submittedAt: data.submitted_at ?? null,
+  };
+}
+
 async function getLeaderboard(examId: string) {
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
