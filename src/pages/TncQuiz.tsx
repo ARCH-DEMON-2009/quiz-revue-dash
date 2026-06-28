@@ -254,7 +254,7 @@ const TncQuiz = () => {
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      await saveTncAttempt({
+      const res = await saveTncAttempt({
         examId: exam.examId,
         examName: exam.name,
         userId: user?.id ?? "guest",
@@ -267,10 +267,45 @@ const TncQuiz = () => {
         skippedCount: skipped,
         timeTakenSeconds: totalSecRef.current - timeLeft,
       });
+      if (res?.attemptId) setAttemptId(res.attemptId);
     } catch (e) {
       console.error("save attempt failed", e);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleBookmark = (rowId: string) =>
+    setBookmarks((b) => (b.includes(rowId) ? b.filter((id) => id !== rowId) : [...b, rowId]));
+
+  const selectOption = (rowId: string, opt: string) =>
+    setAnswers((p) => {
+      // Re-clicking the chosen option clears it so the question can be skipped.
+      if (p[rowId] === opt) {
+        const { [rowId]: _omit, ...rest } = p;
+        return rest;
+      }
+      return { ...p, [rowId]: opt };
+    });
+
+  const shareResult = async () => {
+    if (!attemptId) {
+      toast.error("Result link not ready yet. Please try again in a moment.");
+      return;
+    }
+    const link = `${SITE}/tnc-tests/${examId}/result/${attemptId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: stripHtml(exam!.name), url: link });
+      } else {
+        await navigator.clipboard.writeText(link);
+        toast.success("Result link copied to clipboard!");
+      }
+    } catch {
+      await navigator.clipboard.writeText(link).then(
+        () => toast.success("Result link copied to clipboard!"),
+        () => toast.error("Could not copy link."),
+      );
     }
   };
 
