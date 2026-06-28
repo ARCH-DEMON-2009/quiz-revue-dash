@@ -431,12 +431,23 @@ const TncQuiz = () => {
             <span className="text-sm font-medium text-muted-foreground">
               Q{current + 1} of {questions.length}
             </span>
-            <div
-              className={`rounded-lg px-3 py-1.5 font-mono text-lg font-bold ${
-                isLow ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"
-              }`}
-            >
-              ⏱ {fmt(timeLeft)}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={bookmarks.includes(q.rowId) ? "default" : "outline"}
+                size="sm"
+                className="gap-1"
+                onClick={() => toggleBookmark(q.rowId)}
+              >
+                <Bookmark className={`h-4 w-4 ${bookmarks.includes(q.rowId) ? "fill-current" : ""}`} />
+                {bookmarks.includes(q.rowId) ? "Bookmarked" : "Bookmark"}
+              </Button>
+              <div
+                className={`rounded-lg px-3 py-1.5 font-mono text-lg font-bold ${
+                  isLow ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"
+                }`}
+              >
+                ⏱ {fmt(timeLeft)}
+              </div>
             </div>
           </div>
 
@@ -451,7 +462,7 @@ const TncQuiz = () => {
                   return (
                     <button
                       key={opt}
-                      onClick={() => setAnswers((p) => ({ ...p, [q.rowId]: opt }))}
+                      onClick={() => selectOption(q.rowId, opt)}
                       className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
                         selected
                           ? "border-primary bg-primary/5"
@@ -472,6 +483,16 @@ const TncQuiz = () => {
                   );
                 })}
               </div>
+
+              {answers[q.rowId] && (
+                <button
+                  onClick={() => selectOption(q.rowId, answers[q.rowId])}
+                  className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Eraser className="h-3.5 w-3.5" /> Clear selection (skip this question)
+                </button>
+              )}
+
 
               <div className="mt-6 flex items-center justify-between">
                 <Button
