@@ -253,7 +253,16 @@ Deno.serve(async (req) => {
 
     if (action === "attempt") {
       const saved = await saveAttempt(body);
-      return json({ saved: true, data: saved }, 201);
+      const attemptId = Array.isArray(saved) && saved[0] ? saved[0].id : null;
+      return json({ saved: true, attemptId, data: saved }, 201);
+    }
+
+    if (action === "getAttempt") {
+      const attemptId = body.attemptId ?? url.searchParams.get("attemptId");
+      if (!attemptId) return json({ error: "attemptId required" }, 400);
+      const result = await getAttempt(String(attemptId));
+      if (!result) return json({ error: "Not found" }, 404);
+      return json(result);
     }
 
     if (action === "leaderboard") {
