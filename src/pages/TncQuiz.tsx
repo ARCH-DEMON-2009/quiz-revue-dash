@@ -180,6 +180,7 @@ const TncQuiz = () => {
       if (!raw) return;
       const saved = JSON.parse(raw) as {
         answers: Record<string, string>;
+        bookmarks?: string[];
         current: number;
         timeLeft: number;
         phase: Phase;
@@ -187,6 +188,7 @@ const TncQuiz = () => {
       if (saved.phase === "quiz" && saved.timeLeft > 0) {
         totalSecRef.current = parseInt(exam.durationMinutes) * 60 || 90 * 60;
         setAnswers(saved.answers ?? {});
+        setBookmarks(saved.bookmarks ?? []);
         setCurrent(saved.current ?? 0);
         setTimeLeft(saved.timeLeft);
         setPhase("quiz");
@@ -203,9 +205,9 @@ const TncQuiz = () => {
     if (phase !== "quiz" || !examId) return;
     localStorage.setItem(
       storageKey(examId),
-      JSON.stringify({ answers, current, timeLeft, phase, savedAt: Date.now() }),
+      JSON.stringify({ answers, bookmarks, current, timeLeft, phase, savedAt: Date.now() }),
     );
-  }, [answers, current, timeLeft, phase, examId]);
+  }, [answers, bookmarks, current, timeLeft, phase, examId]);
 
 
   // Timer
