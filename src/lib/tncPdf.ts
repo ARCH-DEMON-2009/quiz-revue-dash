@@ -130,6 +130,7 @@ export function downloadTncResultPdf(args: PdfArgs) {
     if (expl) writeLines(`   Explanation: ${expl}`, 9, "normal", [100, 100, 100]);
   });
 
+  stampWatermark(doc, brand, site);
   const safe = (stripHtml(examName) || "tnc-result").replace(/[^a-z0-9]+/gi, "-").slice(0, 40);
   doc.save(`${safe}-result.pdf`);
 }
