@@ -24,6 +24,7 @@ import Verify from "./pages/Verify";
 import TncTests from "./pages/TncTests";
 import TncQuiz from "./pages/TncQuiz";
 import TncLeaderboard from "./pages/TncLeaderboard";
+import TncSharedResult from "./pages/TncSharedResult";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { BypassBlockGuard } from "./components/BypassBlockGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
