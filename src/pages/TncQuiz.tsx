@@ -526,11 +526,12 @@ const TncQuiz = () => {
                 {questions.map((qq, i) => {
                   const isAnswered = !!answers[qq.rowId];
                   const isCurrent = i === current;
+                  const isBookmarked = bookmarks.includes(qq.rowId);
                   return (
                     <button
                       key={qq.rowId}
                       onClick={() => setCurrent(i)}
-                      className={`flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                      className={`relative flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         isCurrent
                           ? "border-2 border-primary bg-background text-primary"
                           : isAnswered
@@ -539,14 +540,22 @@ const TncQuiz = () => {
                       }`}
                     >
                       {i + 1}
+                      {isBookmarked && (
+                        <Bookmark className="absolute -right-1 -top-1 h-3 w-3 fill-amber-400 text-amber-500" />
+                      )}
                     </button>
                   );
                 })}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-teal-500" /> Answered</span>
+                <span className="flex items-center gap-1"><Bookmark className="h-3 w-3 fill-amber-400 text-amber-500" /> Bookmarked</span>
               </div>
               <Button className="mt-4 w-full" onClick={attemptSubmit}>
                 Submit Test
               </Button>
             </Card>
+
           </div>
         </main>
 
