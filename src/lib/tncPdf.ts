@@ -66,9 +66,10 @@ export function downloadTncResultPdf(args: PdfArgs) {
   const ensure = (h: number) => {
     if (y + h > pageH - margin) {
       doc.addPage();
-      y = margin;
+      y = margin + 18;
     }
   };
+
 
   const writeLines = (text: string, size: number, style: "normal" | "bold" = "normal", color: [number, number, number] = [20, 20, 20]) => {
     doc.setFont("helvetica", style);
