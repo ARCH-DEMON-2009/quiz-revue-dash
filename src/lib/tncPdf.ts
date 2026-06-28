@@ -12,25 +12,64 @@ interface PdfArgs {
   questions: TncQuestion[];
   answers: Record<string, string>;
   userName?: string;
+  /** Brand/site shown in the watermark + footer so the PDF can't be rebranded. */
+  site?: string;
+  brand?: string;
 }
 
 const OPTS = ["A", "B", "C", "D"] as const;
+const DEFAULT_SITE = "https://quiz-revue-dash.lovable.app";
+const DEFAULT_BRAND = "Test Sagar";
+
+/** Stamp a repeating diagonal watermark + footer onto every page. */
+function stampWatermark(doc: jsPDF, brand: string, site: string) {
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const pageCount = doc.getNumberOfPages();
+  const text = `${brand} • ${site.replace(/^https?:\/\//, "")}`;
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    // Diagonal tiled watermark
+    const gs = (doc as any).GState ? new (doc as any).GState({ opacity: 0.08 }) : null;
+    if (gs && (doc as any).setGState) (doc as any).setGState(gs);
+    doc.setTextColor(120, 120, 120);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    for (let y = 40; y < pageH; y += 130) {
+      for (let x = -20; x < pageW; x += 230) {
+        doc.text(text, x, y, { angle: 35 });
+      }
+    }
+    // Reset opacity for footer
+    const gsFull = (doc as any).GState ? new (doc as any).GState({ opacity: 1 }) : null;
+    if (gsFull && (doc as any).setGState) (doc as any).setGState(gsFull);
+    // Footer
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`© ${brand} — ${site}`, 40, pageH - 18);
+    doc.text(`Page ${p} of ${pageCount}`, pageW - 40, pageH - 18, { align: "right" });
+  }
+}
 
 export function downloadTncResultPdf(args: PdfArgs) {
   const { examName, score, maxMarks, correct, wrong, skipped, questions, answers, userName } = args;
+  const site = args.site ?? DEFAULT_SITE;
+  const brand = args.brand ?? DEFAULT_BRAND;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 40;
   const maxW = pageW - margin * 2;
-  let y = margin;
+  let y = margin + 18;
 
   const ensure = (h: number) => {
     if (y + h > pageH - margin) {
       doc.addPage();
-      y = margin;
+      y = margin + 18;
     }
   };
+
 
   const writeLines = (text: string, size: number, style: "normal" | "bold" = "normal", color: [number, number, number] = [20, 20, 20]) => {
     doc.setFont("helvetica", style);
@@ -44,12 +83,15 @@ export function downloadTncResultPdf(args: PdfArgs) {
     }
   };
 
+  // Brand banner
+  writeLines(brand, 12, "bold", [37, 99, 235]);
   // Header
   writeLines(stripHtml(examName) || "TNC Test Result", 18, "bold");
   y += 4;
   if (userName) writeLines(`Candidate: ${userName}`, 11, "normal", [90, 90, 90]);
   writeLines(`Date: ${new Date().toLocaleString()}`, 11, "normal", [90, 90, 90]);
   y += 6;
+
 
   // Score summary box
   ensure(70);
@@ -88,6 +130,7 @@ export function downloadTncResultPdf(args: PdfArgs) {
     if (expl) writeLines(`   Explanation: ${expl}`, 9, "normal", [100, 100, 100]);
   });
 
+  stampWatermark(doc, brand, site);
   const safe = (stripHtml(examName) || "tnc-result").replace(/[^a-z0-9]+/gi, "-").slice(0, 40);
   doc.save(`${safe}-result.pdf`);
 }

@@ -29,6 +29,9 @@ import {
   Download,
   AlertCircle,
   RefreshCw,
+  Bookmark,
+  Eraser,
+  Share2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,13 +90,32 @@ function grade(pct: number) {
   return { label: "Keep Practicing", color: "text-red-600" };
 }
 
+/** Module-level cache of image URLs that have already loaded successfully. */
+const imgCache = new Set<string>();
+
 const QImage = ({ url }: { url: string }) => {
   const [err, setErr] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(() => imgCache.has(url));
+  const [attempt, setAttempt] = useState(0);
+
+  // Cache-bust only on manual retry so the browser cache is used normally.
+  const src = attempt === 0 ? url : `${url}${url.includes("?") ? "&" : "?"}r=${attempt}`;
+
+  const retry = () => {
+    setErr(false);
+    setLoaded(false);
+    setAttempt((a) => a + 1);
+  };
+
   if (err) {
     return (
-      <div className="my-3 flex h-24 items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground">
-        <AlertCircle className="h-4 w-4" /> Image could not be loaded
+      <div className="my-3 flex h-24 flex-col items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground">
+        <span className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4" /> Image could not be loaded
+        </span>
+        <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={retry}>
+          <RefreshCw className="h-3 w-3" /> Retry
+        </Button>
       </div>
     );
   }
@@ -101,15 +123,20 @@ const QImage = ({ url }: { url: string }) => {
     <div className="my-3">
       {!loaded && <Skeleton className="h-48 w-full max-w-sm rounded-lg" />}
       <img
-        src={url}
+        src={src}
         alt="Question illustration"
+        loading="lazy"
         onError={() => setErr(true)}
-        onLoad={() => setLoaded(true)}
+        onLoad={() => {
+          imgCache.add(url);
+          setLoaded(true);
+        }}
         className={`max-h-72 rounded-lg border object-contain ${loaded ? "" : "hidden"}`}
       />
     </div>
   );
 };
+
 
 const TncQuiz = () => {
   const { examId } = useParams<{ examId: string }>();
@@ -121,10 +148,12 @@ const TncQuiz = () => {
   const [phase, setPhase] = useState<Phase>("instructions");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [resumed, setResumed] = useState(false);
+  const [attemptId, setAttemptId] = useState<string | null>(null);
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
@@ -154,6 +183,7 @@ const TncQuiz = () => {
       if (!raw) return;
       const saved = JSON.parse(raw) as {
         answers: Record<string, string>;
+        bookmarks?: string[];
         current: number;
         timeLeft: number;
         phase: Phase;
@@ -161,6 +191,7 @@ const TncQuiz = () => {
       if (saved.phase === "quiz" && saved.timeLeft > 0) {
         totalSecRef.current = parseInt(exam.durationMinutes) * 60 || 90 * 60;
         setAnswers(saved.answers ?? {});
+        setBookmarks(saved.bookmarks ?? []);
         setCurrent(saved.current ?? 0);
         setTimeLeft(saved.timeLeft);
         setPhase("quiz");
@@ -177,9 +208,9 @@ const TncQuiz = () => {
     if (phase !== "quiz" || !examId) return;
     localStorage.setItem(
       storageKey(examId),
-      JSON.stringify({ answers, current, timeLeft, phase, savedAt: Date.now() }),
+      JSON.stringify({ answers, bookmarks, current, timeLeft, phase, savedAt: Date.now() }),
     );
-  }, [answers, current, timeLeft, phase, examId]);
+  }, [answers, bookmarks, current, timeLeft, phase, examId]);
 
 
   // Timer
@@ -226,7 +257,7 @@ const TncQuiz = () => {
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      await saveTncAttempt({
+      const res = await saveTncAttempt({
         examId: exam.examId,
         examName: exam.name,
         userId: user?.id ?? "guest",
@@ -239,10 +270,45 @@ const TncQuiz = () => {
         skippedCount: skipped,
         timeTakenSeconds: totalSecRef.current - timeLeft,
       });
+      if (res?.attemptId) setAttemptId(res.attemptId);
     } catch (e) {
       console.error("save attempt failed", e);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleBookmark = (rowId: string) =>
+    setBookmarks((b) => (b.includes(rowId) ? b.filter((id) => id !== rowId) : [...b, rowId]));
+
+  const selectOption = (rowId: string, opt: string) =>
+    setAnswers((p) => {
+      // Re-clicking the chosen option clears it so the question can be skipped.
+      if (p[rowId] === opt) {
+        const { [rowId]: _omit, ...rest } = p;
+        return rest;
+      }
+      return { ...p, [rowId]: opt };
+    });
+
+  const shareResult = async () => {
+    if (!attemptId) {
+      toast.error("Result link not ready yet. Please try again in a moment.");
+      return;
+    }
+    const link = `${SITE}/tnc-tests/${examId}/result/${attemptId}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: stripHtml(exam!.name), url: link });
+      } else {
+        await navigator.clipboard.writeText(link);
+        toast.success("Result link copied to clipboard!");
+      }
+    } catch {
+      await navigator.clipboard.writeText(link).then(
+        () => toast.success("Result link copied to clipboard!"),
+        () => toast.error("Could not copy link."),
+      );
     }
   };
 
@@ -368,12 +434,23 @@ const TncQuiz = () => {
             <span className="text-sm font-medium text-muted-foreground">
               Q{current + 1} of {questions.length}
             </span>
-            <div
-              className={`rounded-lg px-3 py-1.5 font-mono text-lg font-bold ${
-                isLow ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"
-              }`}
-            >
-              ⏱ {fmt(timeLeft)}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={bookmarks.includes(q.rowId) ? "default" : "outline"}
+                size="sm"
+                className="gap-1"
+                onClick={() => toggleBookmark(q.rowId)}
+              >
+                <Bookmark className={`h-4 w-4 ${bookmarks.includes(q.rowId) ? "fill-current" : ""}`} />
+                {bookmarks.includes(q.rowId) ? "Bookmarked" : "Bookmark"}
+              </Button>
+              <div
+                className={`rounded-lg px-3 py-1.5 font-mono text-lg font-bold ${
+                  isLow ? "bg-red-100 text-red-600" : "bg-primary/10 text-primary"
+                }`}
+              >
+                ⏱ {fmt(timeLeft)}
+              </div>
             </div>
           </div>
 
@@ -388,7 +465,7 @@ const TncQuiz = () => {
                   return (
                     <button
                       key={opt}
-                      onClick={() => setAnswers((p) => ({ ...p, [q.rowId]: opt }))}
+                      onClick={() => selectOption(q.rowId, opt)}
                       className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
                         selected
                           ? "border-primary bg-primary/5"
@@ -409,6 +486,16 @@ const TncQuiz = () => {
                   );
                 })}
               </div>
+
+              {answers[q.rowId] && (
+                <button
+                  onClick={() => selectOption(q.rowId, answers[q.rowId])}
+                  className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <Eraser className="h-3.5 w-3.5" /> Clear selection (skip this question)
+                </button>
+              )}
+
 
               <div className="mt-6 flex items-center justify-between">
                 <Button
@@ -439,11 +526,12 @@ const TncQuiz = () => {
                 {questions.map((qq, i) => {
                   const isAnswered = !!answers[qq.rowId];
                   const isCurrent = i === current;
+                  const isBookmarked = bookmarks.includes(qq.rowId);
                   return (
                     <button
                       key={qq.rowId}
                       onClick={() => setCurrent(i)}
-                      className={`flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                      className={`relative flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
                         isCurrent
                           ? "border-2 border-primary bg-background text-primary"
                           : isAnswered
@@ -452,14 +540,22 @@ const TncQuiz = () => {
                       }`}
                     >
                       {i + 1}
+                      {isBookmarked && (
+                        <Bookmark className="absolute -right-1 -top-1 h-3 w-3 fill-amber-400 text-amber-500" />
+                      )}
                     </button>
                   );
                 })}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-teal-500" /> Answered</span>
+                <span className="flex items-center gap-1"><Bookmark className="h-3 w-3 fill-amber-400 text-amber-500" /> Bookmarked</span>
               </div>
               <Button className="mt-4 w-full" onClick={attemptSubmit}>
                 Submit Test
               </Button>
             </Card>
+
           </div>
         </main>
 
@@ -531,6 +627,9 @@ const TncQuiz = () => {
             <Button className="gap-2" onClick={handleDownloadPdf}>
               <Download className="h-4 w-4" /> Download PDF
             </Button>
+            <Button variant="outline" className="gap-2" onClick={shareResult} disabled={saving || !attemptId}>
+              <Share2 className="h-4 w-4" /> Share Result
+            </Button>
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}>
               <Trophy className="h-4 w-4" /> Leaderboard
             </Button>
@@ -538,6 +637,7 @@ const TncQuiz = () => {
               Back to Test Series
             </Button>
           </div>
+
         </Card>
 
         <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Answer Review</h2>
