@@ -66,7 +66,26 @@ export interface SaveAttemptPayload {
 }
 
 export function saveTncAttempt(payload: SaveAttemptPayload) {
-  return call<{ saved: boolean }>({ action: "attempt", ...payload });
+  return call<{ saved: boolean; attemptId: string | null }>({ action: "attempt", ...payload });
+}
+
+export interface TncSharedAttempt {
+  attemptId: string;
+  examId: string;
+  examName: string | null;
+  userName: string;
+  answers: Record<string, string>;
+  score: number;
+  totalMarks: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  timeTakenSeconds: number;
+  submittedAt: string | null;
+}
+
+export function fetchTncAttempt(attemptId: string) {
+  return call<TncSharedAttempt>({ action: "getAttempt", attemptId });
 }
 
 export interface TncLeaderboardRow {
