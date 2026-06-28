@@ -54,12 +54,14 @@ function stampWatermark(doc: jsPDF, brand: string, site: string) {
 
 export function downloadTncResultPdf(args: PdfArgs) {
   const { examName, score, maxMarks, correct, wrong, skipped, questions, answers, userName } = args;
+  const site = args.site ?? DEFAULT_SITE;
+  const brand = args.brand ?? DEFAULT_BRAND;
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 40;
   const maxW = pageW - margin * 2;
-  let y = margin;
+  let y = margin + 18;
 
   const ensure = (h: number) => {
     if (y + h > pageH - margin) {
