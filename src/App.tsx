@@ -61,6 +61,7 @@ const App = () => (
             <Route path="/verify" element={<Verify />} />
             <Route path="/tnc-tests" element={<TncTests />} />
             <Route path="/tnc-tests/:examId" element={<TncQuiz />} />
+            <Route path="/tnc-tests/:examId/result/:attemptId" element={<TncSharedResult />} />
             <Route path="/tnc-tests/:examId/leaderboard" element={<TncLeaderboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
