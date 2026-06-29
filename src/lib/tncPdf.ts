@@ -264,8 +264,8 @@ export async function downloadTncResultPdf(args: PdfArgs) {
       const isCorrect = q.correctAnswer === opt;
       const isUser = userAns === opt;
       let label = `${opt}. ${text}`;
-      if (isCorrect) label += "   ✓ Correct";
-      if (isUser && !isCorrect) label += "   ✗ Your answer";
+      if (isCorrect) label += "   [Correct]";
+      if (isUser && !isCorrect) label += "   [Your answer]";
       const color: [number, number, number] = isCorrect
         ? [22, 130, 60]
         : isUser
