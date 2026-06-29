@@ -51,6 +51,16 @@ export function fetchTncTest(examId: string) {
   return call<TncExamWithQuestions>({ action: "test", examId });
 }
 
+/** Proxy a CRM image through the edge function and return a base64 data URL (CORS-safe, for PDF embedding). */
+export async function fetchTncImageDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await call<{ dataUrl: string }>({ action: "image", url });
+    return res?.dataUrl ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export interface SaveAttemptPayload {
   examId: string;
   examName: string;
