@@ -584,7 +584,6 @@ const TncQuiz = () => {
   const pct = exam.maxMarks ? (r.score / exam.maxMarks) * 100 : 0;
   const g = grade(pct);
 
-  const [pdfBusy, setPdfBusy] = useState(false);
   const handleDownloadPdf = async () => {
     if (pdfBusy) return;
     setPdfBusy(true);
