@@ -21,6 +21,7 @@ import { PromoCodeManager } from "@/components/PromoCodeManager";
 import { BypassBlocksSection } from "@/components/BypassBlocksSection";
 import { SmsBroadcastSection } from "@/components/SmsBroadcastSection";
 import { AdminAnalyticsSection } from "@/components/AdminAnalyticsSection";
+import { SecurityEventsSection } from "@/components/SecurityEventsSection";
 
 export interface UserData {
   user_id: string;
