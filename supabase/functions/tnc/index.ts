@@ -334,6 +334,35 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const action = body.action ?? url.searchParams.get("action") ?? "tests";
 
+    // --- Scraping detection: flag IPs that fire too many read requests/min ---
+    const ip = getIp(req);
+    const reqUserId = body.userId ? String(body.userId) : null;
+    if (action === "tests" || action === "test" || action === "image") {
+      const count = trackRequest(ip);
+      if (count > FETCH_THRESHOLD && shouldAlert(`flood:${ip}`)) {
+        await logSecurityEvent({
+          eventType: "high_request_volume",
+          severity: count > FETCH_THRESHOLD * 2 ? "high" : "medium",
+          userId: reqUserId,
+          ip,
+          path: action,
+          details: { requestsPerMinute: count, threshold: FETCH_THRESHOLD },
+        });
+      }
+    }
+
+    // Image proxy — serves CRM images with CORS so PDFs can embed them.
+    if (action === "image") {
+      const target = body.url ?? url.searchParams.get("url");
+      if (!target) return json({ error: "url required" }, 400);
+      try {
+        const { dataUrl } = await proxyImage(String(target));
+        return json({ dataUrl });
+      } catch (e) {
+        return json({ error: e instanceof Error ? e.message : "Image error" }, 400);
+      }
+    }
+
     if (action === "tests") {
       const page = Math.max(1, parseInt(String(body.page ?? url.searchParams.get("page") ?? "1")) || 1);
       const limit = Math.min(50, Math.max(1, parseInt(String(body.limit ?? url.searchParams.get("limit") ?? "20")) || 20));
@@ -351,8 +380,33 @@ Deno.serve(async (req) => {
     if (action === "attempt") {
       const saved = await saveAttempt(body);
       const attemptId = Array.isArray(saved) && saved[0] ? saved[0].id : null;
+      // Flag abnormal submission volume (rapid repeated attempts by same user).
+      try {
+        if (reqUserId && reqUserId !== "guest") {
+          const since = new Date(Date.now() - 5 * 60_000).toISOString();
+          const { count } = await adminClient()
+            .from("quiz_attempts")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", reqUserId)
+            .gte("submitted_at", since);
+          if ((count ?? 0) > 8 && shouldAlert(`attempts:${reqUserId}`)) {
+            await logSecurityEvent({
+              eventType: "high_attempt_volume",
+              severity: (count ?? 0) > 20 ? "high" : "medium",
+              userId: reqUserId,
+              userName: body.userName ?? null,
+              ip,
+              path: "attempt",
+              details: { attemptsLast5Min: count },
+            });
+          }
+        }
+      } catch (e) {
+        console.error("attempt-volume check failed", e);
+      }
       return json({ saved: true, attemptId, data: saved }, 201);
     }
+
 
     if (action === "getAttempt") {
       const attemptId = body.attemptId ?? url.searchParams.get("attemptId");
