@@ -434,6 +434,42 @@ export type Database = {
           },
         ]
       }
+      security_events: {
+        Row: {
+          created_at: string
+          details: Json
+          event_type: string
+          id: string
+          ip_address: string | null
+          path: string | null
+          severity: string
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          path?: string | null
+          severity?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          path?: string | null
+          severity?: string
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: []
+      }
       system_config: {
         Row: {
           config_key: string
