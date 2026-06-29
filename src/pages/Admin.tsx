@@ -1082,6 +1082,9 @@ const Admin = () => {
 
         {/* Bypass Block Attempts */}
         <BypassBlocksSection />
+
+        {/* Security Events / Scraping Alerts */}
+        <SecurityEventsSection />
       </main>
 
       <ManagePremiumDialog
