@@ -24,8 +24,105 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
 
 function buildMediaUrl(path: string | null) {
   if (!path) return null;
-  if (path.startsWith("http")) return path;
-  return `${CRM_BASE}/${path.replace(/^\//, "")}`;
+  const url = path.startsWith("http") ? path : `${CRM_BASE}/${path.replace(/^\//, "")}`;
+  // CRM stores filenames with spaces/unsafe chars unencoded — encode so <img> and
+  // fetch both work. encodeURI leaves already-valid characters (and %xx) untouched.
+  try {
+    return encodeURI(url);
+  } catch {
+    return url;
+  }
+}
+
+function adminClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+}
+
+function getIp(req: Request) {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("cf-connecting-ip") ||
+    "unknown"
+  );
+}
+
+async function logSecurityEvent(ev: {
+  eventType: string;
+  severity?: string;
+  userId?: string | null;
+  userName?: string | null;
+  ip?: string | null;
+  path?: string | null;
+  details?: Record<string, unknown>;
+}) {
+  try {
+    await adminClient().from("security_events").insert([{
+      event_type: ev.eventType,
+      severity: ev.severity ?? "low",
+      user_id: ev.userId ?? null,
+      user_name: ev.userName ?? null,
+      ip_address: ev.ip ?? null,
+      path: ev.path ?? null,
+      details: ev.details ?? {},
+    }]);
+  } catch (e) {
+    console.error("logSecurityEvent failed", e);
+  }
+}
+
+// --- In-memory request tracking for scraping detection (per warm instance) ---
+const reqLog = new Map<string, number[]>();
+const lastAlert = new Map<string, number>();
+const WINDOW_MS = 60_000; // 1 minute sliding window
+const FETCH_THRESHOLD = 45; // requests/min from one IP before we flag it
+const ALERT_COOLDOWN_MS = 5 * 60_000; // don't spam duplicate alerts
+
+/** Returns the request count in the last minute for this IP. */
+function trackRequest(ip: string) {
+  const now = Date.now();
+  const arr = (reqLog.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
+  arr.push(now);
+  reqLog.set(ip, arr);
+  return arr.length;
+}
+
+function shouldAlert(key: string) {
+  const now = Date.now();
+  const last = lastAlert.get(key) ?? 0;
+  if (now - last < ALERT_COOLDOWN_MS) return false;
+  lastAlert.set(key, now);
+  return true;
+}
+
+const ALLOWED_IMG_HOSTS = new Set<string>();
+try {
+  ALLOWED_IMG_HOSTS.add(new URL(CRM_BASE).host);
+} catch {
+  /* ignore */
+}
+
+/** Proxy a CRM image and return it as a base64 data URL (for PDF embedding). */
+async function proxyImage(rawUrl: string) {
+  let target: URL;
+  try {
+    target = new URL(rawUrl);
+  } catch {
+    throw new Error("Invalid image url");
+  }
+  if (!ALLOWED_IMG_HOSTS.has(target.host)) {
+    throw new Error("Image host not allowed");
+  }
+  const res = await fetch(target.toString());
+  if (!res.ok) throw new Error(`Image fetch ${res.status}`);
+  const contentType = res.headers.get("content-type") ?? "image/png";
+  const buf = new Uint8Array(await res.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+  const base64 = btoa(binary);
+  return { dataUrl: `data:${contentType};base64,${base64}`, contentType };
 }
 
 function parseExam(row: any) {
