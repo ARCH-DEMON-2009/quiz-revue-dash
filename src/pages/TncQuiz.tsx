@@ -584,19 +584,31 @@ const TncQuiz = () => {
   const pct = exam.maxMarks ? (r.score / exam.maxMarks) * 100 : 0;
   const g = grade(pct);
 
+  const [pdfBusy, setPdfBusy] = useState(false);
   const handleDownloadPdf = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    downloadTncResultPdf({
-      examName: exam.name,
-      score: r.score,
-      maxMarks: exam.maxMarks,
-      correct: r.correct,
-      wrong: r.wrong,
-      skipped: r.skipped,
-      questions,
-      answers,
-      userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
-    });
+    if (pdfBusy) return;
+    setPdfBusy(true);
+    const toastId = toast.loading("Building your result PDF…");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await downloadTncResultPdf({
+        examName: exam.name,
+        score: r.score,
+        maxMarks: exam.maxMarks,
+        correct: r.correct,
+        wrong: r.wrong,
+        skipped: r.skipped,
+        questions,
+        answers,
+        userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
+      });
+      toast.success("PDF downloaded.", { id: toastId });
+    } catch (e) {
+      console.error("pdf failed", e);
+      toast.error("Could not generate PDF.", { id: toastId });
+    } finally {
+      setPdfBusy(false);
+    }
   };
 
   return (
