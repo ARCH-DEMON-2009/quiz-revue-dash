@@ -154,6 +154,7 @@ const TncQuiz = () => {
   const [saving, setSaving] = useState(false);
   const [resumed, setResumed] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
@@ -585,18 +586,29 @@ const TncQuiz = () => {
   const g = grade(pct);
 
   const handleDownloadPdf = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    downloadTncResultPdf({
-      examName: exam.name,
-      score: r.score,
-      maxMarks: exam.maxMarks,
-      correct: r.correct,
-      wrong: r.wrong,
-      skipped: r.skipped,
-      questions,
-      answers,
-      userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
-    });
+    if (pdfBusy) return;
+    setPdfBusy(true);
+    const toastId = toast.loading("Building your result PDF…");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await downloadTncResultPdf({
+        examName: exam.name,
+        score: r.score,
+        maxMarks: exam.maxMarks,
+        correct: r.correct,
+        wrong: r.wrong,
+        skipped: r.skipped,
+        questions,
+        answers,
+        userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
+      });
+      toast.success("PDF downloaded.", { id: toastId });
+    } catch (e) {
+      console.error("pdf failed", e);
+      toast.error("Could not generate PDF.", { id: toastId });
+    } finally {
+      setPdfBusy(false);
+    }
   };
 
   return (
@@ -624,8 +636,9 @@ const TncQuiz = () => {
           {saving && <p className="mt-3 text-xs text-muted-foreground">Saving your result…</p>}
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button className="gap-2" onClick={handleDownloadPdf}>
-              <Download className="h-4 w-4" /> Download PDF
+            <Button className="gap-2" onClick={handleDownloadPdf} disabled={pdfBusy}>
+              {pdfBusy ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {pdfBusy ? "Preparing…" : "Download PDF"}
             </Button>
             <Button variant="outline" className="gap-2" onClick={shareResult} disabled={saving || !attemptId}>
               <Share2 className="h-4 w-4" /> Share Result

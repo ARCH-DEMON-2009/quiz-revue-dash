@@ -24,8 +24,105 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
 
 function buildMediaUrl(path: string | null) {
   if (!path) return null;
-  if (path.startsWith("http")) return path;
-  return `${CRM_BASE}/${path.replace(/^\//, "")}`;
+  const url = path.startsWith("http") ? path : `${CRM_BASE}/${path.replace(/^\//, "")}`;
+  // CRM stores filenames with spaces/unsafe chars unencoded — encode so <img> and
+  // fetch both work. encodeURI leaves already-valid characters (and %xx) untouched.
+  try {
+    return encodeURI(url);
+  } catch {
+    return url;
+  }
+}
+
+function adminClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+}
+
+function getIp(req: Request) {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("cf-connecting-ip") ||
+    "unknown"
+  );
+}
+
+async function logSecurityEvent(ev: {
+  eventType: string;
+  severity?: string;
+  userId?: string | null;
+  userName?: string | null;
+  ip?: string | null;
+  path?: string | null;
+  details?: Record<string, unknown>;
+}) {
+  try {
+    await adminClient().from("security_events").insert([{
+      event_type: ev.eventType,
+      severity: ev.severity ?? "low",
+      user_id: ev.userId ?? null,
+      user_name: ev.userName ?? null,
+      ip_address: ev.ip ?? null,
+      path: ev.path ?? null,
+      details: ev.details ?? {},
+    }]);
+  } catch (e) {
+    console.error("logSecurityEvent failed", e);
+  }
+}
+
+// --- In-memory request tracking for scraping detection (per warm instance) ---
+const reqLog = new Map<string, number[]>();
+const lastAlert = new Map<string, number>();
+const WINDOW_MS = 60_000; // 1 minute sliding window
+const FETCH_THRESHOLD = 45; // requests/min from one IP before we flag it
+const ALERT_COOLDOWN_MS = 5 * 60_000; // don't spam duplicate alerts
+
+/** Returns the request count in the last minute for this IP. */
+function trackRequest(ip: string) {
+  const now = Date.now();
+  const arr = (reqLog.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
+  arr.push(now);
+  reqLog.set(ip, arr);
+  return arr.length;
+}
+
+function shouldAlert(key: string) {
+  const now = Date.now();
+  const last = lastAlert.get(key) ?? 0;
+  if (now - last < ALERT_COOLDOWN_MS) return false;
+  lastAlert.set(key, now);
+  return true;
+}
+
+const ALLOWED_IMG_HOSTS = new Set<string>();
+try {
+  ALLOWED_IMG_HOSTS.add(new URL(CRM_BASE).host);
+} catch {
+  /* ignore */
+}
+
+/** Proxy a CRM image and return it as a base64 data URL (for PDF embedding). */
+async function proxyImage(rawUrl: string) {
+  let target: URL;
+  try {
+    target = new URL(rawUrl);
+  } catch {
+    throw new Error("Invalid image url");
+  }
+  if (!ALLOWED_IMG_HOSTS.has(target.host)) {
+    throw new Error("Image host not allowed");
+  }
+  const res = await fetch(target.toString());
+  if (!res.ok) throw new Error(`Image fetch ${res.status}`);
+  const contentType = res.headers.get("content-type") ?? "image/png";
+  const buf = new Uint8Array(await res.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+  const base64 = btoa(binary);
+  return { dataUrl: `data:${contentType};base64,${base64}`, contentType };
 }
 
 function parseExam(row: any) {
@@ -237,6 +334,35 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const action = body.action ?? url.searchParams.get("action") ?? "tests";
 
+    // --- Scraping detection: flag IPs that fire too many read requests/min ---
+    const ip = getIp(req);
+    const reqUserId = body.userId ? String(body.userId) : null;
+    if (action === "tests" || action === "test" || action === "image") {
+      const count = trackRequest(ip);
+      if (count > FETCH_THRESHOLD && shouldAlert(`flood:${ip}`)) {
+        await logSecurityEvent({
+          eventType: "high_request_volume",
+          severity: count > FETCH_THRESHOLD * 2 ? "high" : "medium",
+          userId: reqUserId,
+          ip,
+          path: action,
+          details: { requestsPerMinute: count, threshold: FETCH_THRESHOLD },
+        });
+      }
+    }
+
+    // Image proxy — serves CRM images with CORS so PDFs can embed them.
+    if (action === "image") {
+      const target = body.url ?? url.searchParams.get("url");
+      if (!target) return json({ error: "url required" }, 400);
+      try {
+        const { dataUrl } = await proxyImage(String(target));
+        return json({ dataUrl });
+      } catch (e) {
+        return json({ error: e instanceof Error ? e.message : "Image error" }, 400);
+      }
+    }
+
     if (action === "tests") {
       const page = Math.max(1, parseInt(String(body.page ?? url.searchParams.get("page") ?? "1")) || 1);
       const limit = Math.min(50, Math.max(1, parseInt(String(body.limit ?? url.searchParams.get("limit") ?? "20")) || 20));
@@ -254,8 +380,33 @@ Deno.serve(async (req) => {
     if (action === "attempt") {
       const saved = await saveAttempt(body);
       const attemptId = Array.isArray(saved) && saved[0] ? saved[0].id : null;
+      // Flag abnormal submission volume (rapid repeated attempts by same user).
+      try {
+        if (reqUserId && reqUserId !== "guest") {
+          const since = new Date(Date.now() - 5 * 60_000).toISOString();
+          const { count } = await adminClient()
+            .from("quiz_attempts")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", reqUserId)
+            .gte("submitted_at", since);
+          if ((count ?? 0) > 8 && shouldAlert(`attempts:${reqUserId}`)) {
+            await logSecurityEvent({
+              eventType: "high_attempt_volume",
+              severity: (count ?? 0) > 20 ? "high" : "medium",
+              userId: reqUserId,
+              userName: body.userName ?? null,
+              ip,
+              path: "attempt",
+              details: { attemptsLast5Min: count },
+            });
+          }
+        }
+      } catch (e) {
+        console.error("attempt-volume check failed", e);
+      }
       return json({ saved: true, attemptId, data: saved }, 201);
     }
+
 
     if (action === "getAttempt") {
       const attemptId = body.attemptId ?? url.searchParams.get("attemptId");
