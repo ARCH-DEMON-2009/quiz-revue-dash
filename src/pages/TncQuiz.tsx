@@ -636,8 +636,9 @@ const TncQuiz = () => {
           {saving && <p className="mt-3 text-xs text-muted-foreground">Saving your result…</p>}
 
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button className="gap-2" onClick={handleDownloadPdf}>
-              <Download className="h-4 w-4" /> Download PDF
+            <Button className="gap-2" onClick={handleDownloadPdf} disabled={pdfBusy}>
+              {pdfBusy ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {pdfBusy ? "Preparing…" : "Download PDF"}
             </Button>
             <Button variant="outline" className="gap-2" onClick={shareResult} disabled={saving || !attemptId}>
               <Share2 className="h-4 w-4" /> Share Result
