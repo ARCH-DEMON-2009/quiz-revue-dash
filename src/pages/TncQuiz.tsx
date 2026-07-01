@@ -415,7 +415,7 @@ const TncQuiz = () => {
           <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
             <Card className="p-6">
               <Html className="block text-lg font-medium text-foreground" html={q.questionText} />
-              {q.imageUrl && <QImage url={q.imageUrl} />}
+              {q.imageUrl && <TncQuestionImage url={q.imageUrl} />}
               <div className="mt-5 space-y-3">
                 {OPTS.map((opt) => {
                   const selected = answers[q.rowId] === opt;
@@ -634,7 +634,7 @@ const TncQuiz = () => {
                   )}
                 </div>
                 <Html className="block font-medium text-foreground" html={q.questionText} />
-                {q.imageUrl && <QImage url={q.imageUrl} />}
+                {q.imageUrl && <TncQuestionImage url={q.imageUrl} />}
                 <div className="mt-3 space-y-2 text-sm">
                   {OPTS.map((opt) => {
                     const text = q[`option${opt}` as keyof TncQuestion] as string;
