@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncTest,
+  fetchTncImageDataUrl,
   saveTncAttempt,
   type TncExamWithQuestions,
   type TncQuestion,
