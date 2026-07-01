@@ -24,6 +24,7 @@ import {
 } from "@/lib/tncApi";
 import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { downloadTncResultPdf } from "@/lib/tncPdf";
+import TncQuestionImage from "@/components/TncQuestionImage";
 
 const OPTS = ["A", "B", "C", "D"] as const;
 const SITE = "https://quiz-revue-dash.lovable.app";
@@ -187,7 +188,7 @@ const TncSharedResult = () => {
                   )}
                 </div>
                 <Html className="block font-medium text-foreground" html={q.questionText} />
-                {q.imageUrl && <QImage url={q.imageUrl} />}
+                {q.imageUrl && <TncQuestionImage url={q.imageUrl} />}
                 <div className="mt-3 space-y-2 text-sm">
                   {OPTS.map((opt) => {
                     const text = q[`option${opt}` as keyof TncQuestion] as string;
