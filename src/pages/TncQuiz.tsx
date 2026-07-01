@@ -90,21 +90,43 @@ function grade(pct: number) {
   return { label: "Keep Practicing", color: "text-red-600" };
 }
 
-/** Module-level cache of image URLs that have already loaded successfully. */
-const imgCache = new Set<string>();
+/** Module-level cache: original URL -> resolved src (direct URL or proxied data URL). */
+const imgCache = new Map<string, string>();
 
 const QImage = ({ url }: { url: string }) => {
-  const [err, setErr] = useState(false);
+  const [src, setSrc] = useState<string | null>(() => imgCache.get(url) ?? url);
   const [loaded, setLoaded] = useState(() => imgCache.has(url));
-  const [attempt, setAttempt] = useState(0);
+  const [err, setErr] = useState(false);
+  const triedProxy = useRef(imgCache.has(url));
 
-  // Cache-bust only on manual retry so the browser cache is used normally.
-  const src = attempt === 0 ? url : `${url}${url.includes("?") ? "&" : "?"}r=${attempt}`;
+  const loadViaProxy = async () => {
+    // The CRM blocks cross-origin <img> hotlinking, so fall back to the
+    // edge proxy that returns a CORS-safe base64 data URL (same path the PDF uses).
+    const dataUrl = await fetchTncImageDataUrl(url);
+    if (dataUrl) {
+      imgCache.set(url, dataUrl);
+      setSrc(dataUrl);
+      setErr(false);
+    } else {
+      setErr(true);
+    }
+  };
+
+  const handleError = () => {
+    if (!triedProxy.current) {
+      triedProxy.current = true;
+      setLoaded(false);
+      loadViaProxy();
+    } else {
+      setErr(true);
+    }
+  };
 
   const retry = () => {
     setErr(false);
     setLoaded(false);
-    setAttempt((a) => a + 1);
+    triedProxy.current = false;
+    setSrc(`${url}${url.includes("?") ? "&" : "?"}r=${Date.now()}`);
   };
 
   if (err) {
@@ -122,17 +144,19 @@ const QImage = ({ url }: { url: string }) => {
   return (
     <div className="my-3">
       {!loaded && <Skeleton className="h-48 w-full max-w-sm rounded-lg" />}
-      <img
-        src={src}
-        alt="Question illustration"
-        loading="lazy"
-        onError={() => setErr(true)}
-        onLoad={() => {
-          imgCache.add(url);
-          setLoaded(true);
-        }}
-        className={`max-h-72 rounded-lg border object-contain ${loaded ? "" : "hidden"}`}
-      />
+      {src && (
+        <img
+          src={src}
+          alt="Question illustration"
+          loading="lazy"
+          onError={handleError}
+          onLoad={() => {
+            imgCache.set(url, src);
+            setLoaded(true);
+          }}
+          className={`max-h-72 rounded-lg border object-contain ${loaded ? "" : "hidden"}`}
+        />
+      )}
     </div>
   );
 };
