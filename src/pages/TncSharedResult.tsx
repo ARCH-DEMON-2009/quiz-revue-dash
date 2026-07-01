@@ -24,6 +24,7 @@ import {
 } from "@/lib/tncApi";
 import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { downloadTncResultPdf } from "@/lib/tncPdf";
+import TncQuestionImage from "@/components/TncQuestionImage";
 
 const OPTS = ["A", "B", "C", "D"] as const;
 const SITE = "https://quiz-revue-dash.lovable.app";
@@ -32,46 +33,8 @@ const Html = ({ html, className }: { html: string | null | undefined; className?
   <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />
 );
 
-const QImage = ({ url }: { url: string }) => {
-  const [err, setErr] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  const src = attempt === 0 ? url : `${url}${url.includes("?") ? "&" : "?"}r=${attempt}`;
-  if (err) {
-    return (
-      <div className="my-3 flex h-24 flex-col items-center justify-center gap-2 rounded-lg border border-dashed text-xs text-muted-foreground">
-        <span className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4" /> Image could not be loaded
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-7 gap-1 text-xs"
-          onClick={() => {
-            setErr(false);
-            setLoaded(false);
-            setAttempt((a) => a + 1);
-          }}
-        >
-          <RefreshCw className="h-3 w-3" /> Retry
-        </Button>
-      </div>
-    );
-  }
-  return (
-    <div className="my-3">
-      {!loaded && <Skeleton className="h-48 w-full max-w-sm rounded-lg" />}
-      <img
-        src={src}
-        alt="Question illustration"
-        loading="lazy"
-        onError={() => setErr(true)}
-        onLoad={() => setLoaded(true)}
-        className={`max-h-72 rounded-lg border object-contain ${loaded ? "" : "hidden"}`}
-      />
-    </div>
-  );
-};
+
+
 
 function grade(pct: number) {
   if (pct >= 80) return { label: "Excellent", color: "text-green-600" };
@@ -225,7 +188,7 @@ const TncSharedResult = () => {
                   )}
                 </div>
                 <Html className="block font-medium text-foreground" html={q.questionText} />
-                {q.imageUrl && <QImage url={q.imageUrl} />}
+                {q.imageUrl && <TncQuestionImage url={q.imageUrl} />}
                 <div className="mt-3 space-y-2 text-sm">
                   {OPTS.map((opt) => {
                     const text = q[`option${opt}` as keyof TncQuestion] as string;
