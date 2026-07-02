@@ -51,14 +51,43 @@ export function fetchTncTest(examId: string) {
   return call<TncExamWithQuestions>({ action: "test", examId });
 }
 
-/** Proxy a CRM image through the edge function and return a base64 data URL (CORS-safe, for PDF embedding). */
+/**
+ * Shared module-level cache of proxied images: original CRM URL -> base64 data URL.
+ * Reused by both the on-screen image component and the PDF exporter so an image is
+ * only ever proxied once per session (fewer network calls, faster quiz loads).
+ */
+const dataUrlCache = new Map<string, string>();
+/** In-flight requests so concurrent callers await the same fetch instead of duplicating it. */
+const inflight = new Map<string, Promise<string | null>>();
+
+/** Synchronously read a cached proxied data URL, if we already have one. */
+export function getCachedTncImage(url: string): string | undefined {
+  return dataUrlCache.get(url);
+}
+
+/** Proxy a CRM image through the edge function and return a base64 data URL (CORS-safe, cached). */
 export async function fetchTncImageDataUrl(url: string): Promise<string | null> {
-  try {
-    const res = await call<{ dataUrl: string }>({ action: "image", url });
-    return res?.dataUrl ?? null;
-  } catch {
-    return null;
-  }
+  const cached = dataUrlCache.get(url);
+  if (cached) return cached;
+
+  const pending = inflight.get(url);
+  if (pending) return pending;
+
+  const p = (async () => {
+    try {
+      const res = await call<{ dataUrl: string }>({ action: "image", url });
+      const dataUrl = res?.dataUrl ?? null;
+      if (dataUrl) dataUrlCache.set(url, dataUrl);
+      return dataUrl;
+    } catch {
+      return null;
+    } finally {
+      inflight.delete(url);
+    }
+  })();
+
+  inflight.set(url, p);
+  return p;
 }
 
 export interface SaveAttemptPayload {
