@@ -531,6 +531,7 @@ export async function downloadTncResultPdf(args: PdfArgs) {
 
   // Overlay watermark + footer last so it covers every generated page.
   stampOverlay(doc, brand, site, logo, logoRatio);
+  onProgress?.(1);
 
   const safe = (stripHtml(examName) || "tnc-result").replace(/[^a-z0-9]+/gi, "-").slice(0, 40);
   doc.save(`${safe}-result.pdf`);
