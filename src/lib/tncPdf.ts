@@ -370,13 +370,19 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   doc.setFillColor(...BRAND);
   doc.roundedRect(margin, y - 12, 4, 18, 2, 2, "F");
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
+  doc.setFontSize(13.5);
   doc.setTextColor(...INK);
-  doc.text("Detailed Answer Review", margin + 12, y + 2);
+  doc.setCharSpace(0.3);
+  doc.text("DETAILED ANSWER REVIEW", margin + 12, y + 2);
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...MUTED);
+  doc.text(`${questions.length} questions`, pageW - margin, y + 1, { align: "right" });
   y += 18;
   doc.setDrawColor(...LINE);
   doc.line(margin, y, pageW - margin, y);
-  y += 16;
+  y += 18;
 
   // ============ QUESTION CARDS ============
   questions.forEach((q, i) => {
