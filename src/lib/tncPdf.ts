@@ -153,7 +153,7 @@ function stampOverlay(doc: jsPDF, brand: string, site: string, logo: string | nu
 }
 
 export async function downloadTncResultPdf(args: PdfArgs) {
-  const { examName, score, maxMarks, correct, wrong, skipped, questions, answers, userName } = args;
+  const { examName, score, maxMarks, correct, wrong, skipped, questions, answers, userName, onProgress } = args;
   const site = args.site ?? DEFAULT_SITE;
   const brand = args.brand ?? DEFAULT_BRAND;
   const cleanSite = site.replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -165,6 +165,8 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   const maxW = pageW - margin * 2;
   const bottomLimit = pageH - margin - 20;
 
+  onProgress?.(0.02);
+
   // Preload logo + all question images (CORS-safe via the edge proxy).
   const logo = await urlToDataUrl(LOGO_PATH);
   let logoRatio = 1;
@@ -173,18 +175,23 @@ export async function downloadTncResultPdf(args: PdfArgs) {
     if (s.w) logoRatio = s.h / s.w;
   }
 
+  const withImages = questions.filter((q) => q.imageUrl);
+  const totalImgs = withImages.length;
+  let doneImgs = 0;
   const imageMap = new Map<string, { data: string; ratio: number }>();
   await Promise.all(
-    questions
-      .filter((q) => q.imageUrl)
-      .map(async (q) => {
-        const data = await fetchTncImageDataUrl(q.imageUrl as string);
-        if (data) {
-          const s = await imageSize(data);
-          imageMap.set(q.rowId, { data, ratio: s.w ? s.h / s.w : 0.6 });
-        }
-      }),
+    withImages.map(async (q) => {
+      const data = await fetchTncImageDataUrl(q.imageUrl as string);
+      if (data) {
+        const s = await imageSize(data);
+        imageMap.set(q.rowId, { data, ratio: s.w ? s.h / s.w : 0.6 });
+      }
+      doneImgs += 1;
+      // Reserve 10%..85% of the bar for image loading (the heaviest step).
+      if (totalImgs) onProgress?.(0.1 + 0.75 * (doneImgs / totalImgs));
+    }),
   );
+  onProgress?.(0.9);
 
   let y = margin;
 
