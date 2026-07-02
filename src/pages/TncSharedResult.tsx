@@ -52,6 +52,8 @@ const TncSharedResult = () => {
   const [exam, setExam] = useState<TncExamWithQuestions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
 
   const load = () => {
     if (!examId || !attemptId) return;
