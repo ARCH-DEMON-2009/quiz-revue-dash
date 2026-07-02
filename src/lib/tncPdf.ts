@@ -245,11 +245,15 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(22);
   doc.setTextColor(255, 255, 255);
+  doc.setCharSpace(0.4);
   doc.text(brand, brandX, 46);
+  doc.setCharSpace(0);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   setOpacity(doc, 0.85);
-  doc.text("Nursing Test Series", brandX, 62);
+  doc.setCharSpace(1.5);
+  doc.text("NURSING TEST SERIES", brandX, 62);
+  doc.setCharSpace(0);
   setOpacity(doc, 1);
 
   // Report label pill (top-right)
