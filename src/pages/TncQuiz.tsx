@@ -296,7 +296,7 @@ const TncQuiz = () => {
     else handleSubmit();
   };
 
-  if (loading) {
+  if (loading || !authChecked) {
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
@@ -307,6 +307,38 @@ const TncQuiz = () => {
       </div>
     );
   }
+
+  // ---- Login required to access TNC quizzes ----
+  if (!isAuthed) {
+    const redirect = `/tnc-tests/${examId ?? ""}`;
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto max-w-md px-4 py-20">
+          <Card className="p-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <FileText className="h-7 w-7" />
+            </div>
+            <h1 className="text-xl font-bold text-foreground">Login required</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Please log in to take this TNC nursing test, save your score, and download your result PDF.
+            </p>
+            <Button
+              size="lg"
+              className="mt-6 w-full"
+              onClick={() => navigate(`/auth?redirect=${encodeURIComponent(redirect)}`)}
+            >
+              Login to continue
+            </Button>
+            <Button variant="outline" className="mt-3 w-full" onClick={() => navigate("/tnc-tests")}>
+              Back to Test Series
+            </Button>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
 
   if (!exam) {
     return (
