@@ -112,6 +112,9 @@ const TncQuiz = () => {
   const [resumed, setResumed] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
@@ -131,6 +134,24 @@ const TncQuiz = () => {
   };
 
   useEffect(loadExam, [examId]);
+
+  // ---- Require login to take TNC quizzes ----
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!active) return;
+      setIsAuthed(!!user);
+      setAuthChecked(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsAuthed(!!session?.user);
+      setAuthChecked(true);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   // ---- Resume an in-progress attempt from localStorage ----
   useEffect(() => {
@@ -275,7 +296,7 @@ const TncQuiz = () => {
     else handleSubmit();
   };
 
-  if (loading) {
+  if (loading || !authChecked) {
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
@@ -286,6 +307,38 @@ const TncQuiz = () => {
       </div>
     );
   }
+
+  // ---- Login required to access TNC quizzes ----
+  if (!isAuthed) {
+    const redirect = `/tnc-tests/${examId ?? ""}`;
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto max-w-md px-4 py-20">
+          <Card className="p-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <FileText className="h-7 w-7" />
+            </div>
+            <h1 className="text-xl font-bold text-foreground">Login required</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Please log in to take this TNC nursing test, save your score, and download your result PDF.
+            </p>
+            <Button
+              size="lg"
+              className="mt-6 w-full"
+              onClick={() => navigate(`/auth?redirect=${encodeURIComponent(redirect)}`)}
+            >
+              Login to continue
+            </Button>
+            <Button variant="outline" className="mt-3 w-full" onClick={() => navigate("/tnc-tests")}>
+              Back to Test Series
+            </Button>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
 
   if (!exam) {
     return (
@@ -545,6 +598,7 @@ const TncQuiz = () => {
   const handleDownloadPdf = async () => {
     if (pdfBusy) return;
     setPdfBusy(true);
+    setPdfProgress(0);
     const toastId = toast.loading("Building your result PDF…");
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -558,6 +612,7 @@ const TncQuiz = () => {
         questions,
         answers,
         userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
+        onProgress: (p) => setPdfProgress(Math.round(p * 100)),
       });
       toast.success("PDF downloaded.", { id: toastId });
     } catch (e) {
@@ -565,6 +620,7 @@ const TncQuiz = () => {
       toast.error("Could not generate PDF.", { id: toastId });
     } finally {
       setPdfBusy(false);
+      setPdfProgress(0);
     }
   };
 
@@ -592,11 +648,31 @@ const TncQuiz = () => {
           </div>
           {saving && <p className="mt-3 text-xs text-muted-foreground">Saving your result…</p>}
 
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button className="gap-2" onClick={handleDownloadPdf} disabled={pdfBusy}>
-              {pdfBusy ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {pdfBusy ? "Preparing…" : "Download PDF"}
+          <div className="mt-6">
+            <Button
+              size="lg"
+              className="w-full gap-2 bg-gradient-to-r from-primary to-emerald-500 text-base font-semibold shadow-lg transition-transform hover:scale-[1.02] active:scale-100 sm:w-auto sm:px-8"
+              onClick={handleDownloadPdf}
+              disabled={pdfBusy}
+            >
+              {pdfBusy ? (
+                <RefreshCw className="h-5 w-5 animate-spin" />
+              ) : (
+                <Download className="h-5 w-5" />
+              )}
+              {pdfBusy ? `Preparing… ${pdfProgress}%` : "Download my PDF"}
             </Button>
+            {pdfBusy && (
+              <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{ width: `${Math.max(6, pdfProgress)}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Button variant="outline" className="gap-2" onClick={shareResult} disabled={saving || !attemptId}>
               <Share2 className="h-4 w-4" /> Share Result
             </Button>

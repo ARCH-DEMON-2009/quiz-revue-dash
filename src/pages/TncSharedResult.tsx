@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
@@ -51,6 +52,8 @@ const TncSharedResult = () => {
   const [exam, setExam] = useState<TncExamWithQuestions | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
 
   const load = () => {
     if (!examId || !attemptId) return;
@@ -108,18 +111,32 @@ const TncSharedResult = () => {
   const examName = attempt.examName ?? exam.name;
   const canonical = `${SITE}/tnc-tests/${examId}/result/${attemptId}`;
 
-  const handleDownloadPdf = () => {
-    downloadTncResultPdf({
-      examName,
-      score: attempt.score,
-      maxMarks: attempt.totalMarks,
-      correct: attempt.correctCount,
-      wrong: attempt.wrongCount,
-      skipped: attempt.skippedCount,
-      questions,
-      answers,
-      userName: attempt.userName,
-    });
+  const handleDownloadPdf = async () => {
+    if (pdfBusy) return;
+    setPdfBusy(true);
+    setPdfProgress(0);
+    const toastId = toast.loading("Building the result PDF…");
+    try {
+      await downloadTncResultPdf({
+        examName,
+        score: attempt.score,
+        maxMarks: attempt.totalMarks,
+        correct: attempt.correctCount,
+        wrong: attempt.wrongCount,
+        skipped: attempt.skippedCount,
+        questions,
+        answers,
+        userName: attempt.userName,
+        onProgress: (p) => setPdfProgress(Math.round(p * 100)),
+      });
+      toast.success("PDF downloaded.", { id: toastId });
+    } catch (e) {
+      console.error("pdf failed", e);
+      toast.error("Could not generate PDF.", { id: toastId });
+    } finally {
+      setPdfBusy(false);
+      setPdfProgress(0);
+    }
   };
 
   return (
@@ -157,10 +174,31 @@ const TncSharedResult = () => {
             <Stat label="Skipped" value={attempt.skippedCount} color="text-amber-600" icon={<MinusCircle />} />
           </div>
 
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button className="gap-2" onClick={handleDownloadPdf}>
-              <Download className="h-4 w-4" /> Download PDF
+          <div className="mt-6">
+            <Button
+              size="lg"
+              className="w-full gap-2 bg-gradient-to-r from-primary to-emerald-500 text-base font-semibold shadow-lg transition-transform hover:scale-[1.02] active:scale-100 sm:w-auto sm:px-8"
+              onClick={handleDownloadPdf}
+              disabled={pdfBusy}
+            >
+              {pdfBusy ? (
+                <RefreshCw className="h-5 w-5 animate-spin" />
+              ) : (
+                <Download className="h-5 w-5" />
+              )}
+              {pdfBusy ? `Preparing… ${pdfProgress}%` : "Download my PDF"}
             </Button>
+            {pdfBusy && (
+              <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{ width: `${Math.max(6, pdfProgress)}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}>
               <Trophy className="h-4 w-4" /> Leaderboard
             </Button>
