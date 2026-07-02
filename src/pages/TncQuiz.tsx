@@ -598,6 +598,7 @@ const TncQuiz = () => {
   const handleDownloadPdf = async () => {
     if (pdfBusy) return;
     setPdfBusy(true);
+    setPdfProgress(0);
     const toastId = toast.loading("Building your result PDF…");
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -611,6 +612,7 @@ const TncQuiz = () => {
         questions,
         answers,
         userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
+        onProgress: (p) => setPdfProgress(Math.round(p * 100)),
       });
       toast.success("PDF downloaded.", { id: toastId });
     } catch (e) {
@@ -618,6 +620,7 @@ const TncQuiz = () => {
       toast.error("Could not generate PDF.", { id: toastId });
     } finally {
       setPdfBusy(false);
+      setPdfProgress(0);
     }
   };
 
