@@ -112,6 +112,9 @@ const TncQuiz = () => {
   const [resumed, setResumed] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
