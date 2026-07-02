@@ -135,6 +135,24 @@ const TncQuiz = () => {
 
   useEffect(loadExam, [examId]);
 
+  // ---- Require login to take TNC quizzes ----
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!active) return;
+      setIsAuthed(!!user);
+      setAuthChecked(true);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsAuthed(!!session?.user);
+      setAuthChecked(true);
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
   // ---- Resume an in-progress attempt from localStorage ----
   useEffect(() => {
     if (!exam || !examId || restoredRef.current) return;
