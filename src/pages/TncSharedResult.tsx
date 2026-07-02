@@ -111,18 +111,32 @@ const TncSharedResult = () => {
   const examName = attempt.examName ?? exam.name;
   const canonical = `${SITE}/tnc-tests/${examId}/result/${attemptId}`;
 
-  const handleDownloadPdf = () => {
-    downloadTncResultPdf({
-      examName,
-      score: attempt.score,
-      maxMarks: attempt.totalMarks,
-      correct: attempt.correctCount,
-      wrong: attempt.wrongCount,
-      skipped: attempt.skippedCount,
-      questions,
-      answers,
-      userName: attempt.userName,
-    });
+  const handleDownloadPdf = async () => {
+    if (pdfBusy) return;
+    setPdfBusy(true);
+    setPdfProgress(0);
+    const toastId = toast.loading("Building the result PDF…");
+    try {
+      await downloadTncResultPdf({
+        examName,
+        score: attempt.score,
+        maxMarks: attempt.totalMarks,
+        correct: attempt.correctCount,
+        wrong: attempt.wrongCount,
+        skipped: attempt.skippedCount,
+        questions,
+        answers,
+        userName: attempt.userName,
+        onProgress: (p) => setPdfProgress(Math.round(p * 100)),
+      });
+      toast.success("PDF downloaded.", { id: toastId });
+    } catch (e) {
+      console.error("pdf failed", e);
+      toast.error("Could not generate PDF.", { id: toastId });
+    } finally {
+      setPdfBusy(false);
+      setPdfProgress(0);
+    }
   };
 
   return (
