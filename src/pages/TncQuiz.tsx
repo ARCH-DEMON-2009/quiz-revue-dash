@@ -648,11 +648,31 @@ const TncQuiz = () => {
           </div>
           {saving && <p className="mt-3 text-xs text-muted-foreground">Saving your result…</p>}
 
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button className="gap-2" onClick={handleDownloadPdf} disabled={pdfBusy}>
-              {pdfBusy ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {pdfBusy ? "Preparing…" : "Download PDF"}
+          <div className="mt-6">
+            <Button
+              size="lg"
+              className="w-full gap-2 bg-gradient-to-r from-primary to-emerald-500 text-base font-semibold shadow-lg transition-transform hover:scale-[1.02] active:scale-100 sm:w-auto sm:px-8"
+              onClick={handleDownloadPdf}
+              disabled={pdfBusy}
+            >
+              {pdfBusy ? (
+                <RefreshCw className="h-5 w-5 animate-spin" />
+              ) : (
+                <Download className="h-5 w-5" />
+              )}
+              {pdfBusy ? `Preparing… ${pdfProgress}%` : "Download my PDF"}
             </Button>
+            {pdfBusy && (
+              <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-300"
+                  style={{ width: `${Math.max(6, pdfProgress)}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Button variant="outline" className="gap-2" onClick={shareResult} disabled={saving || !attemptId}>
               <Share2 className="h-4 w-4" /> Share Result
             </Button>
