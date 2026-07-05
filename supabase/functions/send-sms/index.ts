@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { mode, user_id, phone_number } = await req.json();
+    const { mode, user_id: bodyUserId } = await req.json();
 
     // Only "bypass_warning" mode is supported now
     if (mode !== 'bypass_warning') {
@@ -31,20 +31,49 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get the user's phone number
-    let targetNumber = phone_number;
+    // ---- Authentication. The phone number can NEVER be supplied by the caller
+    // (that enabled SMS spam to arbitrary numbers). We only ever message the
+    // number on file for a specific user.
+    //   * Internal calls use the service-role key and may pass a target user_id.
+    //   * Otherwise a valid user JWT is required and we message THAT user only.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    let targetUserId: string | null = null;
 
-    if (!targetNumber && user_id) {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('whatsapp_number, name')
-        .eq('user_id', user_id)
-        .maybeSingle();
-
-      if (profile?.whatsapp_number) {
-        targetNumber = profile.whatsapp_number;
+    if (token && token === supabaseServiceKey) {
+      // Trusted internal call (e.g. complete-verification).
+      targetUserId = bodyUserId ?? null;
+    } else if (token) {
+      const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
+      if (authErr || !user) {
+        return new Response(
+          JSON.stringify({ success: false, error: 'Unauthorized' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+        );
       }
+      targetUserId = user.id; // ignore any body-supplied id/number
+    } else {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
     }
+
+    if (!targetUserId) {
+      return new Response(
+        JSON.stringify({ success: true, sent: 0, message: 'No target user' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Resolve the phone number from the user's profile (never from the request).
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('whatsapp_number, name')
+      .eq('user_id', targetUserId)
+      .maybeSingle();
+
+    const targetNumber = profile?.whatsapp_number;
 
     if (!targetNumber) {
       return new Response(
