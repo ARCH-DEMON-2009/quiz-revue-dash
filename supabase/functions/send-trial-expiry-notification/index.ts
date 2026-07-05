@@ -26,9 +26,13 @@ Deno.serve(async (req) => {
     if (token && token === supabaseServiceKey) {
       authorized = true;
     } else if (token) {
-      const { data: { user } } = await supabase.auth.getUser(token);
+      // Evaluate is_admin() in the context of the caller's JWT (it reads auth.jwt()).
+      const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
       if (user) {
-        const { data: isAdmin } = await supabase.rpc('is_admin');
+        const { data: isAdmin } = await userClient.rpc('is_admin');
         authorized = !!isAdmin;
       }
     }
