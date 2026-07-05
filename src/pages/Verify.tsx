@@ -37,68 +37,40 @@ const Verify = () => {
         return;
       }
 
-      // Find pending verification for this user (created within last 10 minutes)
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-      
-      const { data: pending, error: fetchError } = await supabase
-        .from("access_verifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "pending")
-        .gt("initiated_at", tenMinutesAgo)
-        .order("initiated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Completion (timing check, bypass detection, and marking verified) is
+      // done entirely server-side. The client can no longer set status=verified,
+      // so a direct API call cannot skip the ad/link-shortener flow.
+      const { data: result, error: fnError } = await supabase.functions.invoke(
+        "complete-verification",
+        {},
+      );
 
-      if (fetchError) throw fetchError;
+      if (fnError) throw fnError;
 
-      if (!pending) {
+      if (result?.status === "blocked") {
+        // Mirror the block locally so the guard shows the block screen immediately.
+        await blockDevice();
+        setStatus('error');
+        setErrorMessage(result.error || 'Bypass detected! You have been blocked for 24 hours.');
+        setTimeout(() => window.location.reload(), 1500);
+        return;
+      }
+
+      if (result?.status === "no_pending") {
         setStatus('error');
         setErrorMessage('No pending verification found. Please start verification from the dashboard first.');
         return;
       }
 
-      // Check minimum 15 seconds elapsed
-      const initiatedAt = new Date(pending.initiated_at);
-      const elapsed = (Date.now() - initiatedAt.getTime()) / 1000;
-      
-      if (elapsed < 60) {
-        // BYPASS DETECTED - block user for 24 hours
-        const result = await blockDevice();
-        
-        // Also record in database with SMS status
-        await supabase.from("bypass_blocks").insert({
-          user_id: user.id,
-          blocked_until: result.until.toISOString(),
-          reason: `Bypass attempt: completed in ${Math.round(elapsed)}s (min 60s required)`,
-          sms_status: result.smsStatus,
-        } as any);
-
+      if (result?.status !== "verified") {
         setStatus('error');
-        setErrorMessage('Bypass detected! You have been blocked for 24 hours.');
-        
-        // Force reload to show block screen
-        setTimeout(() => window.location.reload(), 1500);
+        setErrorMessage(result?.error || 'Verification could not be completed. Please try again.');
         return;
       }
 
-      // Mark as verified with 12-hour expiry
-      const expiresAt = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
-      
-      const { error: updateError } = await supabase
-        .from("access_verifications")
-        .update({
-          status: "verified",
-          verified_at: new Date().toISOString(),
-          expires_at: expiresAt,
-        })
-        .eq("id", pending.id);
-
-      if (updateError) throw updateError;
-
       setStatus('success');
       toast.success("Verification complete! You have 12 hours of access.");
-      
+
       setTimeout(() => {
         navigate("/");
       }, 2000);
