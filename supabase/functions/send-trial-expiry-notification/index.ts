@@ -110,41 +110,20 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${usersToNotify.length} users to notify`);
 
-    // Generate WhatsApp notification links
-    const notifications = usersToNotify.map(user => {
-      const message = encodeURIComponent(
-        `Hi ${user.name}! Your TestSagar free trial expires tomorrow. ` +
-        `To continue accessing all tests and features, please upgrade to premium. ` +
-        `Contact us: https://t.me/TestSagarHelpRobot or https://t.me/Its_trms`
-      );
-      
-      const whatsappLink = user.whatsapp_number 
-        ? `https://wa.me/${user.whatsapp_number.replace(/[^0-9]/g, '')}?text=${message}`
-        : null;
-
-      return {
-        user_id: user.user_id,
-        name: user.name,
-        email: user.email,
-        whatsapp_number: user.whatsapp_number,
-        whatsapp_link: whatsappLink,
-        message: decodeURIComponent(message),
-        expiry_date: user.expiry_date.toISOString(),
-      };
-    });
-
+    // NOTE: We intentionally do NOT return any user PII (email / phone / links)
+    // in the HTTP response. Only an aggregate count is returned so that even an
+    // authorized caller cannot harvest contact details in bulk.
     console.log('Notification data generated successfully');
 
     return new Response(
       JSON.stringify({
         success: true,
-        count: notifications.length,
-        notifications,
-        message: `Found ${notifications.length} users with trials expiring tomorrow`,
+        count: usersToNotify.length,
+        message: `Found ${usersToNotify.length} users with trials expiring tomorrow`,
       }),
-      { 
+      {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
+        status: 200
       }
     );
 
