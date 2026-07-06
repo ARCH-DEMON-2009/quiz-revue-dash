@@ -41,6 +41,20 @@ function adminClient() {
   );
 }
 
+/** Resolve the authenticated user from the request JWT, or null. */
+async function getAuthUser(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) return null;
+  const userClient = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } },
+  );
+  const { data, error } = await userClient.auth.getUser();
+  if (error || !data?.user) return null;
+  return data.user;
+}
+
 function getIp(req: Request) {
   return (
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
