@@ -127,6 +127,10 @@ const TncSharedResult = () => {
     setPdfProgress(0);
     const toastId = toast.loading("Building the result PDF…");
     try {
+      // Signed, time-limited permission for the intended shared viewer.
+      if (attemptId) {
+        await requestTncPdfPermission(attemptId, true);
+      }
       await downloadTncResultPdf({
         examName,
         score: attempt.score,
