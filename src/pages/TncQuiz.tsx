@@ -436,6 +436,51 @@ const TncQuiz = () => {
   // ---------- Phase 2: Quiz ----------
   if (phase === "quiz") {
     const q = questions[current];
+    const goTo = (i: number) => {
+      setCurrent(i);
+      setNavOpen(false);
+    };
+    // Shared question-navigator palette — rendered as a persistent sidebar on
+    // desktop and inside a slide-in Sheet on mobile (toggled like an app).
+    const palette = (
+      <>
+        <p className="mb-3 text-sm font-medium text-foreground">
+          Questions ({answeredCount}/{questions.length})
+        </p>
+        <div className="grid grid-cols-6 gap-2 sm:grid-cols-5">
+          {questions.map((qq, i) => {
+            const isAnswered = !!answers[qq.rowId];
+            const isCurrent = i === current;
+            const isBookmarked = bookmarks.includes(qq.rowId);
+            return (
+              <button
+                key={qq.rowId}
+                onClick={() => goTo(i)}
+                className={`relative flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                  isCurrent
+                    ? "border-2 border-primary bg-background text-primary"
+                    : isAnswered
+                    ? "bg-teal-500 text-white"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i + 1}
+                {isBookmarked && (
+                  <Bookmark className="absolute -right-1 -top-1 h-3 w-3 fill-amber-400 text-amber-500" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-teal-500" /> Answered</span>
+          <span className="flex items-center gap-1"><Bookmark className="h-3 w-3 fill-amber-400 text-amber-500" /> Bookmarked</span>
+        </div>
+        <Button className="mt-4 w-full" onClick={attemptSubmit}>
+          Submit Test
+        </Button>
+      </>
+    );
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
