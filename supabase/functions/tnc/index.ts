@@ -388,8 +388,60 @@ Deno.serve(async (req) => {
       if (!examId) return json({ error: "examId required" }, 400);
       const result = await getTest(String(examId));
       if (!result) return json({ error: "Not found" }, 404);
-      return json(result);
+      // SECURITY: never send answer keys / explanations to the client before
+      // the quiz is submitted. Scoring and review happen server-side.
+      const safe = {
+        ...result,
+        questions: result.questions.map((q) => ({
+          ...q,
+          correctAnswer: "",
+          explanation: null,
+        })),
+      };
+      return json(safe);
     }
+
+    // Server-side scoring + save. Requires auth; the user id and score are
+    // derived on the server so answer keys never reach the client early and
+    // scores/leaderboard cannot be forged.
+    if (action === "submit") {
+      const user = await getAuthUser(req);
+      if (!user) return json({ error: "Unauthorized" }, 401);
+
+      const examId = body.examId ?? "";
+      if (!examId) return json({ error: "examId required" }, 400);
+      const answers: Record<string, string> = body.answers ?? {};
+      const timeTakenSeconds = Number(body.timeTakenSeconds ?? 0);
+
+      const exam = await getTest(String(examId));
+      if (!exam) return json({ error: "Not found" }, 404);
+
+      const marksPerQ = exam.questions.length ? exam.maxMarks / exam.questions.length : 0;
+      let correct = 0, wrong = 0, skipped = 0;
+      const review = exam.questions.map((q) => {
+        const ans = answers[q.rowId];
+        if (!ans) skipped++;
+        else if (ans === q.correctAnswer) correct++;
+        else wrong++;
+        return { rowId: q.rowId, correctAnswer: q.correctAnswer, explanation: q.explanation };
+      });
+      const score = Math.max(0, correct * marksPerQ - wrong * exam.negativeMarks);
+
+      const userName = String(body.userName ?? user.user_metadata?.name ?? "Student");
+      const saved = await saveAttempt({
+        examId, examName: exam.name, userId: user.id, userName, answers,
+        score, totalMarks: exam.maxMarks, correctCount: correct, wrongCount: wrong,
+        skippedCount: skipped, timeTakenSeconds,
+      });
+      const attemptId = Array.isArray(saved) && saved[0] ? saved[0].id : null;
+
+      return json({
+        attemptId, score, totalMarks: exam.maxMarks,
+        correctCount: correct, wrongCount: wrong, skippedCount: skipped,
+        review,
+      }, 201);
+    }
+
 
     if (action === "attempt") {
       const saved = await saveAttempt(body);
