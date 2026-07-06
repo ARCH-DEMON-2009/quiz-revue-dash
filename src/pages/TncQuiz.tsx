@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
@@ -32,12 +32,15 @@ import {
   Bookmark,
   Eraser,
   Share2,
+  LayoutGrid,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncTest,
-  saveTncAttempt,
+  submitTncAttempt,
+  requestTncPdfPermission,
   type TncExamWithQuestions,
   type TncQuestion,
 } from "@/lib/tncApi";
@@ -58,25 +61,6 @@ const Html = ({ html, className }: { html: string | null | undefined; className?
 );
 
 
-function calcScore(
-  questions: TncQuestion[],
-  answers: Record<string, string>,
-  maxMarks: number,
-  negativeMarks: number,
-) {
-  const marksPerQ = questions.length ? maxMarks / questions.length : 0;
-  let correct = 0,
-    wrong = 0,
-    skipped = 0;
-  for (const q of questions) {
-    const ans = answers[q.rowId];
-    if (!ans) skipped++;
-    else if (ans === q.correctAnswer) correct++;
-    else wrong++;
-  }
-  const score = Math.max(0, correct * marksPerQ - wrong * negativeMarks);
-  return { score, correct, wrong, skipped };
-}
 
 function fmt(sec: number) {
   const m = Math.floor(sec / 60);
@@ -111,10 +95,14 @@ const TncQuiz = () => {
   const [saving, setSaving] = useState(false);
   const [resumed, setResumed] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [serverResults, setServerResults] = useState<
+    { score: number; correct: number; wrong: number; skipped: number } | null
+  >(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
@@ -208,11 +196,9 @@ const TncQuiz = () => {
   const answeredCount = Object.keys(answers).length;
   const isLow = timeLeft < 120;
 
-  const results = useMemo(() => {
-    if (!exam) return null;
-    return calcScore(questions, answers, exam.maxMarks, exam.negativeMarks);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
+  // Score comes from the server after submission (answers are never on the
+  // client before then). Fall back to a client estimate only while saving.
+  const results = serverResults;
 
   const startQuiz = () => {
     if (!exam) return;
@@ -227,35 +213,48 @@ const TncQuiz = () => {
     setConfirmOpen(false);
     setPhase("results");
     if (examId) localStorage.removeItem(storageKey(examId));
-    const { score, correct, wrong, skipped } = calcScore(
-      questions,
-      answers,
-      exam.maxMarks,
-      exam.negativeMarks,
-    );
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const res = await saveTncAttempt({
+      const res = await submitTncAttempt({
         examId: exam.examId,
-        examName: exam.name,
-        userId: user?.id ?? "guest",
-        userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? "Guest",
+        userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? "Student",
         answers,
-        score: Number(score.toFixed(2)),
-        totalMarks: exam.maxMarks,
-        correctCount: correct,
-        wrongCount: wrong,
-        skippedCount: skipped,
         timeTakenSeconds: totalSecRef.current - timeLeft,
       });
-      if (res?.attemptId) setAttemptId(res.attemptId);
+      setServerResults({
+        score: res.score,
+        correct: res.correctCount,
+        wrong: res.wrongCount,
+        skipped: res.skippedCount,
+      });
+      if (res.attemptId) setAttemptId(res.attemptId);
+      // Merge the answer key + explanations (only now available) into the
+      // questions so the review section can highlight correct answers.
+      if (res.review?.length) {
+        const map = new Map(res.review.map((r) => [r.rowId, r]));
+        setExam((prev) =>
+          prev
+            ? {
+                ...prev,
+                questions: prev.questions.map((q) => {
+                  const r = map.get(q.rowId);
+                  return r
+                    ? { ...q, correctAnswer: r.correctAnswer, explanation: r.explanation }
+                    : q;
+                }),
+              }
+            : prev,
+        );
+      }
     } catch (e) {
-      console.error("save attempt failed", e);
+      console.error("submit attempt failed", e);
+      toast.error("Could not submit your quiz. Please try again.");
     } finally {
       setSaving(false);
     }
   };
+
 
   const toggleBookmark = (rowId: string) =>
     setBookmarks((b) => (b.includes(rowId) ? b.filter((id) => id !== rowId) : [...b, rowId]));
@@ -437,6 +436,51 @@ const TncQuiz = () => {
   // ---------- Phase 2: Quiz ----------
   if (phase === "quiz") {
     const q = questions[current];
+    const goTo = (i: number) => {
+      setCurrent(i);
+      setNavOpen(false);
+    };
+    // Shared question-navigator palette — rendered as a persistent sidebar on
+    // desktop and inside a slide-in Sheet on mobile (toggled like an app).
+    const palette = (
+      <>
+        <p className="mb-3 text-sm font-medium text-foreground">
+          Questions ({answeredCount}/{questions.length})
+        </p>
+        <div className="grid grid-cols-6 gap-2 sm:grid-cols-5">
+          {questions.map((qq, i) => {
+            const isAnswered = !!answers[qq.rowId];
+            const isCurrent = i === current;
+            const isBookmarked = bookmarks.includes(qq.rowId);
+            return (
+              <button
+                key={qq.rowId}
+                onClick={() => goTo(i)}
+                className={`relative flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
+                  isCurrent
+                    ? "border-2 border-primary bg-background text-primary"
+                    : isAnswered
+                    ? "bg-teal-500 text-white"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {i + 1}
+                {isBookmarked && (
+                  <Bookmark className="absolute -right-1 -top-1 h-3 w-3 fill-amber-400 text-amber-500" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-teal-500" /> Answered</span>
+          <span className="flex items-center gap-1"><Bookmark className="h-3 w-3 fill-amber-400 text-amber-500" /> Bookmarked</span>
+        </div>
+        <Button className="mt-4 w-full" onClick={attemptSubmit}>
+          Submit Test
+        </Button>
+      </>
+    );
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
@@ -447,13 +491,23 @@ const TncQuiz = () => {
             </span>
             <div className="flex items-center gap-2">
               <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 lg:hidden"
+                onClick={() => setNavOpen(true)}
+                aria-label="Show all questions"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                {answeredCount}/{questions.length}
+              </Button>
+              <Button
                 variant={bookmarks.includes(q.rowId) ? "default" : "outline"}
                 size="sm"
                 className="gap-1"
                 onClick={() => toggleBookmark(q.rowId)}
               >
                 <Bookmark className={`h-4 w-4 ${bookmarks.includes(q.rowId) ? "fill-current" : ""}`} />
-                {bookmarks.includes(q.rowId) ? "Bookmarked" : "Bookmark"}
+                <span className="hidden sm:inline">{bookmarks.includes(q.rowId) ? "Bookmarked" : "Bookmark"}</span>
               </Button>
               <div
                 className={`rounded-lg px-3 py-1.5 font-mono text-lg font-bold ${
@@ -529,45 +583,19 @@ const TncQuiz = () => {
               </div>
             </Card>
 
-            <Card className="h-fit p-4">
-              <p className="mb-3 text-sm font-medium text-foreground">
-                Questions ({answeredCount}/{questions.length})
-              </p>
-              <div className="grid grid-cols-5 gap-2">
-                {questions.map((qq, i) => {
-                  const isAnswered = !!answers[qq.rowId];
-                  const isCurrent = i === current;
-                  const isBookmarked = bookmarks.includes(qq.rowId);
-                  return (
-                    <button
-                      key={qq.rowId}
-                      onClick={() => setCurrent(i)}
-                      className={`relative flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                        isCurrent
-                          ? "border-2 border-primary bg-background text-primary"
-                          : isAnswered
-                          ? "bg-teal-500 text-white"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {i + 1}
-                      {isBookmarked && (
-                        <Bookmark className="absolute -right-1 -top-1 h-3 w-3 fill-amber-400 text-amber-500" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-teal-500" /> Answered</span>
-                <span className="flex items-center gap-1"><Bookmark className="h-3 w-3 fill-amber-400 text-amber-500" /> Bookmarked</span>
-              </div>
-              <Button className="mt-4 w-full" onClick={attemptSubmit}>
-                Submit Test
-              </Button>
-            </Card>
-
+            {/* Persistent sidebar on desktop */}
+            <Card className="hidden h-fit p-4 lg:block">{palette}</Card>
           </div>
+
+          {/* Slide-in question navigator on mobile (app-style) */}
+          <Sheet open={navOpen} onOpenChange={setNavOpen}>
+            <SheetContent side="right" className="w-[85vw] max-w-sm overflow-y-auto">
+              <SheetHeader className="mb-4 text-left">
+                <SheetTitle>Question Navigator</SheetTitle>
+              </SheetHeader>
+              {palette}
+            </SheetContent>
+          </Sheet>
         </main>
 
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
@@ -591,7 +619,19 @@ const TncQuiz = () => {
   }
 
   // ---------- Phase 3: Results ----------
-  const r = results ?? calcScore(questions, answers, exam.maxMarks, exam.negativeMarks);
+  // Wait for the server score before rendering (answers aren't on the client).
+  if (!results) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto max-w-3xl px-4 py-20 text-center">
+          <RefreshCw className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Scoring your quiz…</p>
+        </main>
+      </div>
+    );
+  }
+  const r = results;
   const pct = exam.maxMarks ? (r.score / exam.maxMarks) * 100 : 0;
   const g = grade(pct);
 
@@ -602,6 +642,10 @@ const TncQuiz = () => {
     const toastId = toast.loading("Building your result PDF…");
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      // Signed, time-limited permission — server verifies this user owns the attempt.
+      if (attemptId) {
+        await requestTncPdfPermission(attemptId, false);
+      }
       await downloadTncResultPdf({
         examName: exam.name,
         score: r.score,

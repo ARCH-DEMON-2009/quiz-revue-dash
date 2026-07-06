@@ -19,6 +19,8 @@ import {
 import {
   fetchTncAttempt,
   fetchTncTest,
+  fetchTncReview,
+  requestTncPdfPermission,
   type TncSharedAttempt,
   type TncExamWithQuestions,
   type TncQuestion,
@@ -59,10 +61,19 @@ const TncSharedResult = () => {
     if (!examId || !attemptId) return;
     setLoading(true);
     setError(false);
-    Promise.all([fetchTncAttempt(attemptId), fetchTncTest(examId)])
-      .then(([a, e]) => {
+    Promise.all([fetchTncAttempt(attemptId), fetchTncTest(examId), fetchTncReview(attemptId)])
+      .then(([a, e, rev]) => {
         setAttempt(a);
-        setExam(e);
+        // The public quiz payload no longer includes answer keys; merge in the
+        // review data (correct answers + explanations) for this submitted attempt.
+        const map = new Map(rev.review.map((r) => [r.rowId, r]));
+        setExam({
+          ...e,
+          questions: e.questions.map((q) => {
+            const r = map.get(q.rowId);
+            return r ? { ...q, correctAnswer: r.correctAnswer, explanation: r.explanation } : q;
+          }),
+        });
       })
       .catch((err) => {
         console.error(err);
@@ -117,6 +128,10 @@ const TncSharedResult = () => {
     setPdfProgress(0);
     const toastId = toast.loading("Building the result PDF…");
     try {
+      // Signed, time-limited permission for the intended shared viewer.
+      if (attemptId) {
+        await requestTncPdfPermission(attemptId, true);
+      }
       await downloadTncResultPdf({
         examName,
         score: attempt.score,

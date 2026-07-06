@@ -41,6 +41,77 @@ function adminClient() {
   );
 }
 
+/** Resolve the authenticated user from the request JWT, or null. */
+async function getAuthUser(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) return null;
+  const userClient = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: authHeader } } },
+  );
+  const { data, error } = await userClient.auth.getUser();
+  if (error || !data?.user) return null;
+  return data.user;
+}
+
+// ---------------------------------------------------------------------------
+// Signed, time-limited PDF download permissions.
+// A token authorises ONE attempt's PDF for a short window and is verifiable
+// server-side (HMAC-SHA256). Only the attempt owner or an intended shared
+// viewer (someone with the share link) can obtain one.
+// ---------------------------------------------------------------------------
+const PDF_TOKEN_TTL_SECONDS = 300; // 5 minutes
+
+function b64url(bytes: Uint8Array) {
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function hmac(payloadB64: string) {
+  const secret = Deno.env.get("PDF_SIGNING_SECRET") ?? "";
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadB64));
+  return b64url(new Uint8Array(sig));
+}
+
+async function signPdfToken(payload: { attemptId: string; sub: string; exp: number }) {
+  const payloadB64 = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+  const sig = await hmac(payloadB64);
+  return `${payloadB64}.${sig}`;
+}
+
+async function verifyPdfToken(token: string): Promise<{ attemptId: string; sub: string; exp: number } | null> {
+  const [payloadB64, sig] = String(token).split(".");
+  if (!payloadB64 || !sig) return null;
+  const expected = await hmac(payloadB64);
+  if (expected !== sig) return null;
+  try {
+    const json = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
+    if (!json.exp || json.exp < Math.floor(Date.now() / 1000)) return null;
+    return json;
+  } catch {
+    return null;
+  }
+}
+
+/** Look up the owner (user_id) of an attempt. */
+async function getAttemptOwner(attemptId: string): Promise<string | null> {
+  const { data } = await adminClient()
+    .from("quiz_attempts")
+    .select("user_id")
+    .eq("id", attemptId)
+    .maybeSingle();
+  return data?.user_id ? String(data.user_id) : null;
+}
+
+
+
 function getIp(req: Request) {
   return (
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
@@ -374,11 +445,67 @@ Deno.serve(async (req) => {
       if (!examId) return json({ error: "examId required" }, 400);
       const result = await getTest(String(examId));
       if (!result) return json({ error: "Not found" }, 404);
-      return json(result);
+      // SECURITY: never send answer keys / explanations to the client before
+      // the quiz is submitted. Scoring and review happen server-side.
+      const safe = {
+        ...result,
+        questions: result.questions.map((q) => ({
+          ...q,
+          correctAnswer: "",
+          explanation: null,
+        })),
+      };
+      return json(safe);
     }
 
+    // Server-side scoring + save. Requires auth; the user id and score are
+    // derived on the server so answer keys never reach the client early and
+    // scores/leaderboard cannot be forged.
+    if (action === "submit") {
+      const user = await getAuthUser(req);
+      if (!user) return json({ error: "Unauthorized" }, 401);
+
+      const examId = body.examId ?? "";
+      if (!examId) return json({ error: "examId required" }, 400);
+      const answers: Record<string, string> = body.answers ?? {};
+      const timeTakenSeconds = Number(body.timeTakenSeconds ?? 0);
+
+      const exam = await getTest(String(examId));
+      if (!exam) return json({ error: "Not found" }, 404);
+
+      const marksPerQ = exam.questions.length ? exam.maxMarks / exam.questions.length : 0;
+      let correct = 0, wrong = 0, skipped = 0;
+      const review = exam.questions.map((q) => {
+        const ans = answers[q.rowId];
+        if (!ans) skipped++;
+        else if (ans === q.correctAnswer) correct++;
+        else wrong++;
+        return { rowId: q.rowId, correctAnswer: q.correctAnswer, explanation: q.explanation };
+      });
+      const score = Math.max(0, correct * marksPerQ - wrong * exam.negativeMarks);
+
+      const userName = String(body.userName ?? user.user_metadata?.name ?? "Student");
+      const saved = await saveAttempt({
+        examId, examName: exam.name, userId: user.id, userName, answers,
+        score, totalMarks: exam.maxMarks, correctCount: correct, wrongCount: wrong,
+        skippedCount: skipped, timeTakenSeconds,
+      });
+      const attemptId = Array.isArray(saved) && saved[0] ? saved[0].id : null;
+
+      return json({
+        attemptId, score, totalMarks: exam.maxMarks,
+        correctCount: correct, wrongCount: wrong, skippedCount: skipped,
+        review,
+      }, 201);
+    }
+
+
     if (action === "attempt") {
-      const saved = await saveAttempt(body);
+      // Legacy path — now requires auth and derives the user id from the JWT so
+      // attempts cannot be forged for other users. Prefer the "submit" action.
+      const attemptUser = await getAuthUser(req);
+      if (!attemptUser) return json({ error: "Unauthorized" }, 401);
+      const saved = await saveAttempt({ ...body, userId: attemptUser.id });
       const attemptId = Array.isArray(saved) && saved[0] ? saved[0].id : null;
       // Flag abnormal submission volume (rapid repeated attempts by same user).
       try {
@@ -415,6 +542,52 @@ Deno.serve(async (req) => {
       if (!result) return json({ error: "Not found" }, 404);
       return json(result);
     }
+
+    // Answer key for a SUBMITTED attempt (powers the shared-result review page).
+    // Gated on a real attempt existing, so it never exposes answers pre-submission.
+    if (action === "review") {
+      const attemptId = body.attemptId ?? url.searchParams.get("attemptId");
+      if (!attemptId) return json({ error: "attemptId required" }, 400);
+      const attempt = await getAttempt(String(attemptId));
+      if (!attempt) return json({ error: "Not found" }, 404);
+      const exam = await getTest(attempt.examId);
+      if (!exam) return json({ error: "Not found" }, 404);
+      const review = exam.questions.map((q) => ({
+        rowId: q.rowId,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+      }));
+      return json({ examId: attempt.examId, review });
+    }
+
+    // Issue a signed, time-limited permission to download/regenerate a result
+    // PDF. Only the attempt owner (verified via JWT) or an intended shared
+    // viewer (someone opening the share link) may obtain one.
+    if (action === "pdfPermission") {
+      const attemptId = String(body.attemptId ?? "");
+      if (!attemptId) return json({ error: "attemptId required" }, 400);
+      const owner = await getAttemptOwner(attemptId);
+      if (!owner) return json({ error: "Not found" }, 404);
+
+      const user = await getAuthUser(req);
+      const isOwner = !!user && user.id === owner;
+      const isSharedViewer = body.shared === true; // opened via the public share link
+      if (!isOwner && !isSharedViewer) {
+        return json({ error: "Forbidden" }, 403);
+      }
+
+      const exp = Math.floor(Date.now() / 1000) + PDF_TOKEN_TTL_SECONDS;
+      const token = await signPdfToken({ attemptId, sub: user?.id ?? "shared", exp });
+      return json({ token, expiresAt: new Date(exp * 1000).toISOString() });
+    }
+
+    // Verify a PDF permission token (used to gate PDF image proxying).
+    if (action === "pdfVerify") {
+      const token = String(body.token ?? "");
+      const verified = await verifyPdfToken(token);
+      return json({ valid: !!verified, ...(verified ?? {}) });
+    }
+
 
     if (action === "leaderboard") {
       const examId = body.examId ?? url.searchParams.get("examId");

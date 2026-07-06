@@ -108,6 +108,41 @@ export function saveTncAttempt(payload: SaveAttemptPayload) {
   return call<{ saved: boolean; attemptId: string | null }>({ action: "attempt", ...payload });
 }
 
+/** Answer key + explanation for one question, returned only AFTER submission. */
+export interface TncReviewItem {
+  rowId: string;
+  correctAnswer: string;
+  explanation: string | null;
+}
+
+export interface TncSubmitResult {
+  attemptId: string | null;
+  score: number;
+  totalMarks: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  review: TncReviewItem[];
+}
+
+export interface SubmitAttemptPayload {
+  examId: string;
+  userName?: string;
+  answers: Record<string, string>;
+  timeTakenSeconds: number;
+}
+
+/**
+ * Submit a quiz for SERVER-SIDE scoring. Answer keys are never sent to the
+ * browser before this call; the server grades using the CRM answer key,
+ * derives the user from the JWT, saves the attempt, and returns the score plus
+ * the answer key for review.
+ */
+export function submitTncAttempt(payload: SubmitAttemptPayload) {
+  return call<TncSubmitResult>({ action: "submit", ...payload });
+}
+
+
 export interface TncSharedAttempt {
   attemptId: string;
   examId: string;
@@ -126,6 +161,26 @@ export interface TncSharedAttempt {
 export function fetchTncAttempt(attemptId: string) {
   return call<TncSharedAttempt>({ action: "getAttempt", attemptId });
 }
+
+/** Fetch the answer key for a submitted attempt (for the shared review page). */
+export function fetchTncReview(attemptId: string) {
+  return call<{ examId: string; review: TncReviewItem[] }>({ action: "review", attemptId });
+}
+
+/**
+ * Request a signed, time-limited permission to download/regenerate a result
+ * PDF. The server authorises only the attempt owner (via JWT) or an intended
+ * shared viewer (opening the share link). Throws if not permitted.
+ */
+export function requestTncPdfPermission(attemptId: string, shared = false) {
+  return call<{ token: string; expiresAt: string }>({
+    action: "pdfPermission",
+    attemptId,
+    shared,
+  });
+}
+
+
 
 export interface TncLeaderboardRow {
   rank: number;

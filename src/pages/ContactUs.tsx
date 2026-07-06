@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Phone } from "lucide-react";
@@ -39,6 +40,14 @@ const ContactUs = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex flex-col">
+      <Helmet>
+        <title>Contact & Support | Test Sagar</title>
+        <meta name="description" content="Need help with Test Sagar? Reach our support team on WhatsApp for account, payment and test-related queries." />
+        <link rel="canonical" href="https://quiz-revue-dash.lovable.app/contact" />
+        <meta property="og:title" content="Contact & Support | Test Sagar" />
+        <meta property="og:description" content="Get help from the Test Sagar support team on WhatsApp." />
+        <meta property="og:url" content="https://quiz-revue-dash.lovable.app/contact" />
+      </Helmet>
       <nav className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" onClick={() => navigate("/")}>
