@@ -20,6 +20,7 @@ import {
   fetchTncAttempt,
   fetchTncTest,
   fetchTncReview,
+  requestTncPdfPermission,
   type TncSharedAttempt,
   type TncExamWithQuestions,
   type TncQuestion,
