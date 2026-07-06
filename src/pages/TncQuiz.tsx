@@ -609,6 +609,10 @@ const TncQuiz = () => {
     const toastId = toast.loading("Building your result PDF…");
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      // Signed, time-limited permission — server verifies this user owns the attempt.
+      if (attemptId) {
+        await requestTncPdfPermission(attemptId, false);
+      }
       await downloadTncResultPdf({
         examName: exam.name,
         score: r.score,
