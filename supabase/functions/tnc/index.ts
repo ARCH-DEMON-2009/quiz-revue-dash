@@ -55,6 +55,63 @@ async function getAuthUser(req: Request) {
   return data.user;
 }
 
+// ---------------------------------------------------------------------------
+// Signed, time-limited PDF download permissions.
+// A token authorises ONE attempt's PDF for a short window and is verifiable
+// server-side (HMAC-SHA256). Only the attempt owner or an intended shared
+// viewer (someone with the share link) can obtain one.
+// ---------------------------------------------------------------------------
+const PDF_TOKEN_TTL_SECONDS = 300; // 5 minutes
+
+function b64url(bytes: Uint8Array) {
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function hmac(payloadB64: string) {
+  const secret = Deno.env.get("PDF_SIGNING_SECRET") ?? "";
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadB64));
+  return b64url(new Uint8Array(sig));
+}
+
+async function signPdfToken(payload: { attemptId: string; sub: string; exp: number }) {
+  const payloadB64 = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+  const sig = await hmac(payloadB64);
+  return `${payloadB64}.${sig}`;
+}
+
+async function verifyPdfToken(token: string): Promise<{ attemptId: string; sub: string; exp: number } | null> {
+  const [payloadB64, sig] = String(token).split(".");
+  if (!payloadB64 || !sig) return null;
+  const expected = await hmac(payloadB64);
+  if (expected !== sig) return null;
+  try {
+    const json = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
+    if (!json.exp || json.exp < Math.floor(Date.now() / 1000)) return null;
+    return json;
+  } catch {
+    return null;
+  }
+}
+
+/** Look up the owner (user_id) of an attempt. */
+async function getAttemptOwner(attemptId: string): Promise<string | null> {
+  const { data } = await adminClient()
+    .from("quiz_attempts")
+    .select("user_id")
+    .eq("id", attemptId)
+    .maybeSingle();
+  return data?.user_id ? String(data.user_id) : null;
+}
+
+
+
 function getIp(req: Request) {
   return (
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
