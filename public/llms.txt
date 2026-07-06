@@ -1,0 +1,15 @@
+# Test Sagar
+
+> Test Sagar is a free online exam-preparation platform for nursing and competitive exams. It offers full-length mock tests, the TNC Nursing Test Series, instant server-scored results, detailed solutions, subject-wise analytics, and all-India leaderboards.
+
+## Key pages
+- [Home](https://quiz-revue-dash.lovable.app/): Dashboard with available tests and quick start.
+- [TNC Nursing Test Series](https://quiz-revue-dash.lovable.app/tnc-tests): Searchable, category-filtered nursing mock tests (NORCET, AIIMS, SGPGI, BTSC, CHO, and more) with timed quizzes, instant scoring, and PDF result export.
+- [Pricing](https://quiz-revue-dash.lovable.app/pricing): Premium subscription plans (1 week to 2 years) with promo-code support.
+- [Leaderboard](https://quiz-revue-dash.lovable.app/leaderboard): All-India rankings by average score and accuracy.
+- [Analytics](https://quiz-revue-dash.lovable.app/analytics): Personal performance analytics across attempts.
+- [Contact](https://quiz-revue-dash.lovable.app/contact): Support via WhatsApp.
+
+## Notes
+- Taking quizzes requires a free account. Quiz answers are graded server-side; answer keys are never exposed before submission.
+- Support is provided over WhatsApp.
