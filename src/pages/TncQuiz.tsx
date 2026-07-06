@@ -211,11 +211,9 @@ const TncQuiz = () => {
   const answeredCount = Object.keys(answers).length;
   const isLow = timeLeft < 120;
 
-  const results = useMemo(() => {
-    if (!exam) return null;
-    return calcScore(questions, answers, exam.maxMarks, exam.negativeMarks);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
+  // Score comes from the server after submission (answers are never on the
+  // client before then). Fall back to a client estimate only while saving.
+  const results = serverResults;
 
   const startQuiz = () => {
     if (!exam) return;
@@ -230,35 +228,48 @@ const TncQuiz = () => {
     setConfirmOpen(false);
     setPhase("results");
     if (examId) localStorage.removeItem(storageKey(examId));
-    const { score, correct, wrong, skipped } = calcScore(
-      questions,
-      answers,
-      exam.maxMarks,
-      exam.negativeMarks,
-    );
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const res = await saveTncAttempt({
+      const res = await submitTncAttempt({
         examId: exam.examId,
-        examName: exam.name,
-        userId: user?.id ?? "guest",
-        userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? "Guest",
+        userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? "Student",
         answers,
-        score: Number(score.toFixed(2)),
-        totalMarks: exam.maxMarks,
-        correctCount: correct,
-        wrongCount: wrong,
-        skippedCount: skipped,
         timeTakenSeconds: totalSecRef.current - timeLeft,
       });
-      if (res?.attemptId) setAttemptId(res.attemptId);
+      setServerResults({
+        score: res.score,
+        correct: res.correctCount,
+        wrong: res.wrongCount,
+        skipped: res.skippedCount,
+      });
+      if (res.attemptId) setAttemptId(res.attemptId);
+      // Merge the answer key + explanations (only now available) into the
+      // questions so the review section can highlight correct answers.
+      if (res.review?.length) {
+        const map = new Map(res.review.map((r) => [r.rowId, r]));
+        setExam((prev) =>
+          prev
+            ? {
+                ...prev,
+                questions: prev.questions.map((q) => {
+                  const r = map.get(q.rowId);
+                  return r
+                    ? { ...q, correctAnswer: r.correctAnswer, explanation: r.explanation }
+                    : q;
+                }),
+              }
+            : prev,
+        );
+      }
     } catch (e) {
-      console.error("save attempt failed", e);
+      console.error("submit attempt failed", e);
+      toast.error("Could not submit your quiz. Please try again.");
     } finally {
       setSaving(false);
     }
   };
+
 
   const toggleBookmark = (rowId: string) =>
     setBookmarks((b) => (b.includes(rowId) ? b.filter((id) => id !== rowId) : [...b, rowId]));
