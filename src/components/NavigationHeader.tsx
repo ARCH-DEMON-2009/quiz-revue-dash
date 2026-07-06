@@ -41,9 +41,9 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
             alt="Test Sagar Logo" 
             className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-xl shadow-md"
           />
-          <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          <div className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Test Sagar
-          </h1>
+          </div>
           {isPremium && (
             <Badge className="ml-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white border-0 shadow-md">
               <Crown className="h-3 w-3 mr-1" />
