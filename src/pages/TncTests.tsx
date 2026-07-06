@@ -85,7 +85,7 @@ const TncTests = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>TNC Test Series — 6,800+ Free Nursing Mock Tests (NORCET, AIIMS)</title>
+        <title>TNC Nursing Test Series — Free Mock Tests</title>
         <meta
           name="description"
           content="Practice 6,800+ free TNC nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO. Timed exams, instant scoring, detailed solutions and leaderboards."
