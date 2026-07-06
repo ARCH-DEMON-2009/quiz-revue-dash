@@ -605,7 +605,19 @@ const TncQuiz = () => {
   }
 
   // ---------- Phase 3: Results ----------
-  const r = results ?? calcScore(questions, answers, exam.maxMarks, exam.negativeMarks);
+  // Wait for the server score before rendering (answers aren't on the client).
+  if (!results) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto max-w-3xl px-4 py-20 text-center">
+          <RefreshCw className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Scoring your quiz…</p>
+        </main>
+      </div>
+    );
+  }
+  const r = results;
   const pct = exam.maxMarks ? (r.score / exam.maxMarks) * 100 : 0;
   const g = grade(pct);
 
