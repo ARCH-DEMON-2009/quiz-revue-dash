@@ -58,25 +58,6 @@ const Html = ({ html, className }: { html: string | null | undefined; className?
 );
 
 
-function calcScore(
-  questions: TncQuestion[],
-  answers: Record<string, string>,
-  maxMarks: number,
-  negativeMarks: number,
-) {
-  const marksPerQ = questions.length ? maxMarks / questions.length : 0;
-  let correct = 0,
-    wrong = 0,
-    skipped = 0;
-  for (const q of questions) {
-    const ans = answers[q.rowId];
-    if (!ans) skipped++;
-    else if (ans === q.correctAnswer) correct++;
-    else wrong++;
-  }
-  const score = Math.max(0, correct * marksPerQ - wrong * negativeMarks);
-  return { score, correct, wrong, skipped };
-}
 
 function fmt(sec: number) {
   const m = Math.floor(sec / 60);
