@@ -489,7 +489,17 @@ const TncQuiz = () => {
             <span className="text-sm font-medium text-muted-foreground">
               Q{current + 1} of {questions.length}
             </span>
-            <div className="flex items-center gap-2">
+            <div class Name="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 lg:hidden"
+                onClick={() => setNavOpen(true)}
+                aria-label="Show all questions"
+              >
+                <LayoutGrid className="h-4 w-4" />
+                {answeredCount}/{questions.length}
+              </Button>
               <Button
                 variant={bookmarks.includes(q.rowId) ? "default" : "outline"}
                 size="sm"
@@ -497,7 +507,7 @@ const TncQuiz = () => {
                 onClick={() => toggleBookmark(q.rowId)}
               >
                 <Bookmark className={`h-4 w-4 ${bookmarks.includes(q.rowId) ? "fill-current" : ""}`} />
-                {bookmarks.includes(q.rowId) ? "Bookmarked" : "Bookmark"}
+                <span className="hidden sm:inline">{bookmarks.includes(q.rowId) ? "Bookmarked" : "Bookmark"}</span>
               </Button>
               <div
                 className={`rounded-lg px-3 py-1.5 font-mono text-lg font-bold ${
