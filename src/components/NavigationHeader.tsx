@@ -82,7 +82,7 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <Trophy className="h-4 w-4 mr-2" />
               <span className="hidden md:inline">Leaderboard</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Profile">
               <User className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Profile</span>
             </Button>
