@@ -162,6 +162,12 @@ export function fetchTncAttempt(attemptId: string) {
   return call<TncSharedAttempt>({ action: "getAttempt", attemptId });
 }
 
+/** Fetch the answer key for a submitted attempt (for the shared review page). */
+export function fetchTncReview(attemptId: string) {
+  return call<{ examId: string; review: TncReviewItem[] }>({ action: "review", attemptId });
+}
+
+
 export interface TncLeaderboardRow {
   rank: number;
   userId: string;
