@@ -486,6 +486,23 @@ Deno.serve(async (req) => {
       return json(result);
     }
 
+    // Answer key for a SUBMITTED attempt (powers the shared-result review page).
+    // Gated on a real attempt existing, so it never exposes answers pre-submission.
+    if (action === "review") {
+      const attemptId = body.attemptId ?? url.searchParams.get("attemptId");
+      if (!attemptId) return json({ error: "attemptId required" }, 400);
+      const attempt = await getAttempt(String(attemptId));
+      if (!attempt) return json({ error: "Not found" }, 404);
+      const exam = await getTest(attempt.examId);
+      if (!exam) return json({ error: "Not found" }, 404);
+      const review = exam.questions.map((q) => ({
+        rowId: q.rowId,
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation,
+      }));
+      return json({ examId: attempt.examId, review });
+    }
+
     if (action === "leaderboard") {
       const examId = body.examId ?? url.searchParams.get("examId");
       if (!examId) return json({ error: "examId required" }, 400);
