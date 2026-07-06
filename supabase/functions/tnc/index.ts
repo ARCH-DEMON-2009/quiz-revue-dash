@@ -444,7 +444,11 @@ Deno.serve(async (req) => {
 
 
     if (action === "attempt") {
-      const saved = await saveAttempt(body);
+      // Legacy path — now requires auth and derives the user id from the JWT so
+      // attempts cannot be forged for other users. Prefer the "submit" action.
+      const attemptUser = await getAuthUser(req);
+      if (!attemptUser) return json({ error: "Unauthorized" }, 401);
+      const saved = await saveAttempt({ ...body, userId: attemptUser.id });
       const attemptId = Array.isArray(saved) && saved[0] ? saved[0].id : null;
       // Flag abnormal submission volume (rapid repeated attempts by same user).
       try {
