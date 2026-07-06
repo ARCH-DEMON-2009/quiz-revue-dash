@@ -583,45 +583,19 @@ const TncQuiz = () => {
               </div>
             </Card>
 
-            <Card className="h-fit p-4">
-              <p className="mb-3 text-sm font-medium text-foreground">
-                Questions ({answeredCount}/{questions.length})
-              </p>
-              <div className="grid grid-cols-5 gap-2">
-                {questions.map((qq, i) => {
-                  const isAnswered = !!answers[qq.rowId];
-                  const isCurrent = i === current;
-                  const isBookmarked = bookmarks.includes(qq.rowId);
-                  return (
-                    <button
-                      key={qq.rowId}
-                      onClick={() => setCurrent(i)}
-                      className={`relative flex h-9 w-9 items-center justify-center rounded-md text-sm font-medium transition-colors ${
-                        isCurrent
-                          ? "border-2 border-primary bg-background text-primary"
-                          : isAnswered
-                          ? "bg-teal-500 text-white"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {i + 1}
-                      {isBookmarked && (
-                        <Bookmark className="absolute -right-1 -top-1 h-3 w-3 fill-amber-400 text-amber-500" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-teal-500" /> Answered</span>
-                <span className="flex items-center gap-1"><Bookmark className="h-3 w-3 fill-amber-400 text-amber-500" /> Bookmarked</span>
-              </div>
-              <Button className="mt-4 w-full" onClick={attemptSubmit}>
-                Submit Test
-              </Button>
-            </Card>
-
+            {/* Persistent sidebar on desktop */}
+            <Card className="hidden h-fit p-4 lg:block">{palette}</Card>
           </div>
+
+          {/* Slide-in question navigator on mobile (app-style) */}
+          <Sheet open={navOpen} onOpenChange={setNavOpen}>
+            <SheetContent side="right" className="w-[85vw] max-w-sm overflow-y-auto">
+              <SheetHeader className="mb-4 text-left">
+                <SheetTitle>Question Navigator</SheetTitle>
+              </SheetHeader>
+              {palette}
+            </SheetContent>
+          </Sheet>
         </main>
 
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
