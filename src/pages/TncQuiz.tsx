@@ -111,6 +111,9 @@ const TncQuiz = () => {
   const [saving, setSaving] = useState(false);
   const [resumed, setResumed] = useState(false);
   const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [serverResults, setServerResults] = useState<
+    { score: number; correct: number; wrong: number; skipped: number } | null
+  >(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
   const [authChecked, setAuthChecked] = useState(false);
