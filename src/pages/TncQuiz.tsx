@@ -38,6 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncTest,
   submitTncAttempt,
+  requestTncPdfPermission,
   type TncExamWithQuestions,
   type TncQuestion,
 } from "@/lib/tncApi";
