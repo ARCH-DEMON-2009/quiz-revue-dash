@@ -32,7 +32,9 @@ import {
   Bookmark,
   Eraser,
   Share2,
+  LayoutGrid,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
