@@ -167,6 +167,20 @@ export function fetchTncReview(attemptId: string) {
   return call<{ examId: string; review: TncReviewItem[] }>({ action: "review", attemptId });
 }
 
+/**
+ * Request a signed, time-limited permission to download/regenerate a result
+ * PDF. The server authorises only the attempt owner (via JWT) or an intended
+ * shared viewer (opening the share link). Throws if not permitted.
+ */
+export function requestTncPdfPermission(attemptId: string, shared = false) {
+  return call<{ token: string; expiresAt: string }>({
+    action: "pdfPermission",
+    attemptId,
+    shared,
+  });
+}
+
+
 
 export interface TncLeaderboardRow {
   rank: number;
