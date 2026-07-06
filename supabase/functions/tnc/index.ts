@@ -560,6 +560,35 @@ Deno.serve(async (req) => {
       return json({ examId: attempt.examId, review });
     }
 
+    // Issue a signed, time-limited permission to download/regenerate a result
+    // PDF. Only the attempt owner (verified via JWT) or an intended shared
+    // viewer (someone opening the share link) may obtain one.
+    if (action === "pdfPermission") {
+      const attemptId = String(body.attemptId ?? "");
+      if (!attemptId) return json({ error: "attemptId required" }, 400);
+      const owner = await getAttemptOwner(attemptId);
+      if (!owner) return json({ error: "Not found" }, 404);
+
+      const user = await getAuthUser(req);
+      const isOwner = !!user && user.id === owner;
+      const isSharedViewer = body.shared === true; // opened via the public share link
+      if (!isOwner && !isSharedViewer) {
+        return json({ error: "Forbidden" }, 403);
+      }
+
+      const exp = Math.floor(Date.now() / 1000) + PDF_TOKEN_TTL_SECONDS;
+      const token = await signPdfToken({ attemptId, sub: user?.id ?? "shared", exp });
+      return json({ token, expiresAt: new Date(exp * 1000).toISOString() });
+    }
+
+    // Verify a PDF permission token (used to gate PDF image proxying).
+    if (action === "pdfVerify") {
+      const token = String(body.token ?? "");
+      const verified = await verifyPdfToken(token);
+      return json({ valid: !!verified, ...(verified ?? {}) });
+    }
+
+
     if (action === "leaderboard") {
       const examId = body.examId ?? url.searchParams.get("examId");
       if (!examId) return json({ error: "examId required" }, 400);
