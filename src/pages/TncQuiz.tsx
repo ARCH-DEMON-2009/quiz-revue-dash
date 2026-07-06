@@ -489,7 +489,7 @@ const TncQuiz = () => {
             <span className="text-sm font-medium text-muted-foreground">
               Q{current + 1} of {questions.length}
             </span>
-            <div class Name="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
