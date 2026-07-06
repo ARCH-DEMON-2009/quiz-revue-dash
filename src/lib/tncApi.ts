@@ -108,6 +108,41 @@ export function saveTncAttempt(payload: SaveAttemptPayload) {
   return call<{ saved: boolean; attemptId: string | null }>({ action: "attempt", ...payload });
 }
 
+/** Answer key + explanation for one question, returned only AFTER submission. */
+export interface TncReviewItem {
+  rowId: string;
+  correctAnswer: string;
+  explanation: string | null;
+}
+
+export interface TncSubmitResult {
+  attemptId: string | null;
+  score: number;
+  totalMarks: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  review: TncReviewItem[];
+}
+
+export interface SubmitAttemptPayload {
+  examId: string;
+  userName?: string;
+  answers: Record<string, string>;
+  timeTakenSeconds: number;
+}
+
+/**
+ * Submit a quiz for SERVER-SIDE scoring. Answer keys are never sent to the
+ * browser before this call; the server grades using the CRM answer key,
+ * derives the user from the JWT, saves the attempt, and returns the score plus
+ * the answer key for review.
+ */
+export function submitTncAttempt(payload: SubmitAttemptPayload) {
+  return call<TncSubmitResult>({ action: "submit", ...payload });
+}
+
+
 export interface TncSharedAttempt {
   attemptId: string;
   examId: string;
