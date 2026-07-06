@@ -144,6 +144,14 @@ const Analytics = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background flex flex-col">
+      <Helmet>
+        <title>My Performance Analytics | Test Sagar</title>
+        <meta name="description" content="Track your Test Sagar performance with subject-wise accuracy, score trends and attempt history to focus your exam preparation." />
+        <link rel="canonical" href="https://quiz-revue-dash.lovable.app/analytics" />
+        <meta property="og:title" content="My Performance Analytics | Test Sagar" />
+        <meta property="og:description" content="Subject-wise accuracy, score trends and attempt history." />
+        <meta property="og:url" content="https://quiz-revue-dash.lovable.app/analytics" />
+      </Helmet>
       <NavigationHeader />
       <div className="p-4 md:p-8 flex-1">
         <div className="max-w-7xl mx-auto space-y-6">
