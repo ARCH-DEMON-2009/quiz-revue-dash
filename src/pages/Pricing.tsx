@@ -311,6 +311,14 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background">
+      <Helmet>
+        <title>Premium Plans & Pricing | Test Sagar</title>
+        <meta name="description" content="Upgrade to Test Sagar Premium for unlimited mock tests, detailed solutions and analytics. Flexible plans from 1 week to 2 years with promo-code discounts." />
+        <link rel="canonical" href="https://quiz-revue-dash.lovable.app/pricing" />
+        <meta property="og:title" content="Premium Plans & Pricing | Test Sagar" />
+        <meta property="og:description" content="Flexible premium plans from 1 week to 2 years for unlimited mock tests and analytics." />
+        <meta property="og:url" content="https://quiz-revue-dash.lovable.app/pricing" />
+      </Helmet>
       <nav className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <Button variant="ghost" onClick={() => navigate("/")}>
