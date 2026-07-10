@@ -467,6 +467,17 @@ Deno.serve(async (req) => {
       if (!examId) return json({ error: "examId required" }, 400);
       const result = await getTest(String(examId));
       if (!result) return json({ error: "Not found" }, 404);
+
+      // SECURITY: premium-gated exams require an authenticated premium user.
+      // Enforced server-side so non-premium users cannot bypass the gate by
+      // calling the edge function directly or tampering with the client.
+      if (result.allowForPremium) {
+        const user = await getAuthUser(req);
+        if (!user) return json({ error: "Login required", code: "auth_required" }, 401);
+        const premium = await isPremiumUser(user);
+        if (!premium) return json({ error: "Premium subscription required", code: "premium_required" }, 403);
+      }
+
       // SECURITY: never send answer keys / explanations to the client before
       // the quiz is submitted. Scoring and review happen server-side.
       const safe = {
