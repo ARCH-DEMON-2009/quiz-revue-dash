@@ -71,6 +71,7 @@ const TncSharedResult = () => {
   const [error, setError] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
+  const [pdfStage, setPdfStage] = useState<"idle" | "queued" | "rendering" | "saving" | "done" | "error">("idle");
 
   const load = () => {
     if (!examId || !attemptId) return;
