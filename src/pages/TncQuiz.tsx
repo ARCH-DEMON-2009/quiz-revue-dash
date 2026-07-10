@@ -41,6 +41,7 @@ import {
   fetchTncTest,
   submitTncAttempt,
   requestTncPdfPermission,
+  TncApiError,
   type TncExamWithQuestions,
   type TncQuestion,
 } from "@/lib/tncApi";
