@@ -376,30 +376,36 @@ const Admin = () => {
         from += batchSize;
       }
 
-      // Fetch ALL premium users (active and inactive) to track expired ones too
-      const { data: premiumUsers, error: premiumError } = await supabase
-        .from("premium_users")
-        .select("user_id, email, expiry_date, status");
+      // Helper to fetch ALL rows beyond the 1000-row default cap
+      const fetchAll = async (table: string, columns: string) => {
+        let all: any[] = [];
+        let start = 0;
+        while (true) {
+          const { data, error } = await supabase
+            .from(table as any)
+            .select(columns)
+            .range(start, start + batchSize - 1);
+          if (error) {
+            console.error(`${table} error:`, error);
+            break;
+          }
+          if (!data || data.length === 0) break;
+          all = [...all, ...data];
+          if (data.length < batchSize) break;
+          start += batchSize;
+        }
+        return all;
+      };
 
-      if (premiumError) console.error("Premium users error:", premiumError);
+      // Fetch ALL premium users (active and inactive) to track expired ones too
+      const premiumUsers = await fetchAll("premium_users", "user_id, email, expiry_date, status");
 
       // Fetch all trial users
-      const { data: trialUsers, error: trialError } = await supabase
-        .from("user_trials")
-        .select("user_id, start_date, email");
-
-      if (trialError) {
-        console.error("Trial users error:", trialError);
-      } else {
-        console.log(`Fetched ${trialUsers?.length || 0} trial users`);
-      }
+      const trialUsers = await fetchAll("user_trials", "user_id, start_date, email");
+      console.log(`Fetched ${trialUsers.length} trial users`);
 
       // Fetch all test results
-      const { data: testResults, error: resultsError } = await supabase
-        .from("test_results")
-        .select("user_id, percentage");
-
-      if (resultsError) console.error("Results error:", resultsError);
+      const testResults = await fetchAll("test_results", "user_id, percentage");
 
       // Create maps for quick lookups - use email as fallback key
       const premiumByUserId = new Map<string, string>();
