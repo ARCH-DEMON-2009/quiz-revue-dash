@@ -109,6 +109,10 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <span className="text-xs">Admin</span>
             </Button>
           )}
+          <Button variant="ghost" size="sm" onClick={() => navigate("/tnc-tests")} className="flex-col h-auto py-1">
+            <Target className="h-4 w-4 text-emerald-600" />
+            <span className="text-xs font-semibold">TNC</span>
+          </Button>
           <Button variant="ghost" size="sm" onClick={handleAIQuiz} className="flex-col h-auto py-1">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-xs">AI Quiz</span>
