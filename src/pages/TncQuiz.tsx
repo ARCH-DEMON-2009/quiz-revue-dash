@@ -698,7 +698,8 @@ const TncQuiz = () => {
     if (pdfBusy) return;
     setPdfBusy(true);
     setPdfProgress(0);
-    const toastId = toast.loading("Building your result PDF…");
+    setPdfStage("queued");
+    const toastId = toast.loading("Queued your result PDF…");
     try {
       const { data: { user } } = await supabase.auth.getUser();
       // Signed, time-limited permission — server verifies this user owns the attempt.
@@ -715,17 +716,23 @@ const TncQuiz = () => {
         questions,
         answers,
         userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
-        onProgress: (p) => setPdfProgress(Math.round(p * 100)),
+        onProgress: (p) => {
+          setPdfProgress(Math.round(p * 100));
+          setPdfStage(pdfStageFromProgress(p));
+        },
       });
+      setPdfStage("done");
       toast.success("PDF downloaded.", { id: toastId });
     } catch (e) {
       console.error("pdf failed", e);
-      toast.error("Could not generate PDF.", { id: toastId });
+      setPdfStage("error");
+      toast.error("Could not generate PDF. Please try again.", { id: toastId });
     } finally {
       setPdfBusy(false);
       setPdfProgress(0);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
