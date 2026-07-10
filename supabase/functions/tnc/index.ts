@@ -55,6 +55,28 @@ async function getAuthUser(req: Request) {
   return data.user;
 }
 
+/** Returns true if the user currently has an active, non-expired premium plan. */
+async function isPremiumUser(user: { id: string; email?: string | null }) {
+  const admin = adminClient();
+  const nowIso = new Date().toISOString();
+  const orFilter = user.email
+    ? `user_id.eq.${user.id},email.eq.${user.email}`
+    : `user_id.eq.${user.id}`;
+  const { data, error } = await admin
+    .from("premium_users")
+    .select("expiry_date")
+    .or(orFilter)
+    .eq("status", "active")
+    .gt("expiry_date", nowIso)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error("isPremiumUser error", error);
+    return false;
+  }
+  return !!data;
+}
+
 // ---------------------------------------------------------------------------
 // Signed, time-limited PDF download permissions.
 // A token authorises ONE attempt's PDF for a short window and is verifiable
