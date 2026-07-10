@@ -32,6 +32,21 @@ import TncQuestionImage from "@/components/TncQuestionImage";
 const OPTS = ["A", "B", "C", "D"] as const;
 const SITE = "https://quiz-revue-dash.lovable.app";
 
+const pdfStageFromProgress = (p: number): "queued" | "rendering" | "saving" | "done" => {
+  if (p >= 1) return "done";
+  if (p >= 0.9) return "saving";
+  if (p > 0.02) return "rendering";
+  return "queued";
+};
+
+const PDF_STAGE_LABEL: Record<string, string> = {
+  queued: "Queued…",
+  rendering: "Rendering PDF…",
+  saving: "Saving file…",
+  done: "Completed",
+  error: "Failed — tap to retry",
+};
+
 const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => (
   <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />
 );
