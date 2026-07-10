@@ -221,20 +221,33 @@ const TncSharedResult = () => {
             >
               {pdfBusy ? (
                 <RefreshCw className="h-5 w-5 animate-spin" />
+              ) : pdfStage === "error" ? (
+                <AlertCircle className="h-5 w-5" />
               ) : (
                 <Download className="h-5 w-5" />
               )}
-              {pdfBusy ? `Preparing… ${pdfProgress}%` : "Download my PDF"}
+              {pdfBusy
+                ? `${PDF_STAGE_LABEL[pdfStage] ?? "Preparing…"} ${pdfProgress}%`
+                : pdfStage === "error"
+                ? "Retry PDF download"
+                : "Download my PDF"}
             </Button>
             {pdfBusy && (
-              <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
-                  style={{ width: `${Math.max(6, pdfProgress)}%` }}
-                />
-              </div>
+              <>
+                <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-300"
+                    style={{ width: `${Math.max(6, pdfProgress)}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">{PDF_STAGE_LABEL[pdfStage]}</p>
+              </>
+            )}
+            {!pdfBusy && pdfStage === "error" && (
+              <p className="mt-2 text-xs text-destructive">Generation failed. Tap the button above to try again.</p>
             )}
           </div>
+
 
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}>
