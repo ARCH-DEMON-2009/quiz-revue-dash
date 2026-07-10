@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Trophy, User, Sparkles, Shield, Crown } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
+import { toast } from "sonner";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
@@ -26,7 +27,7 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   }, []);
 
   const handleAIQuiz = () => {
-    window.open("https://shashank-quiz-maker.vercel.app/", "_blank");
+    toast.info("AI quiz making is temporarily disabled.");
   };
 
   return (
@@ -68,6 +69,15 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
             <Button 
               variant="outline" 
               size="sm" 
+              onClick={() => navigate("/tnc-tests")} 
+              className="bg-gradient-to-r from-emerald-500/15 to-primary/15 border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-500/20 transition-all font-semibold"
+            >
+              <Target className="h-4 w-4 mr-1 sm:mr-2 text-emerald-600" />
+              <span className="hidden xs:inline sm:inline">TNC Tests</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
               onClick={handleAIQuiz} 
               className="hidden sm:flex bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 hover:border-primary hover:bg-primary/20 transition-all"
             >
@@ -99,6 +109,10 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <span className="text-xs">Admin</span>
             </Button>
           )}
+          <Button variant="ghost" size="sm" onClick={() => navigate("/tnc-tests")} className="flex-col h-auto py-1">
+            <Target className="h-4 w-4 text-emerald-600" />
+            <span className="text-xs font-semibold">TNC</span>
+          </Button>
           <Button variant="ghost" size="sm" onClick={handleAIQuiz} className="flex-col h-auto py-1">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-xs">AI Quiz</span>

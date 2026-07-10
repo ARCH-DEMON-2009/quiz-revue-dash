@@ -32,6 +32,21 @@ import TncQuestionImage from "@/components/TncQuestionImage";
 const OPTS = ["A", "B", "C", "D"] as const;
 const SITE = "https://quiz-revue-dash.lovable.app";
 
+const pdfStageFromProgress = (p: number): "queued" | "rendering" | "saving" | "done" => {
+  if (p >= 1) return "done";
+  if (p >= 0.9) return "saving";
+  if (p > 0.02) return "rendering";
+  return "queued";
+};
+
+const PDF_STAGE_LABEL: Record<string, string> = {
+  queued: "Queued…",
+  rendering: "Rendering PDF…",
+  saving: "Saving file…",
+  done: "Completed",
+  error: "Failed — tap to retry",
+};
+
 const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => (
   <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />
 );
@@ -56,6 +71,7 @@ const TncSharedResult = () => {
   const [error, setError] = useState(false);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
+  const [pdfStage, setPdfStage] = useState<"idle" | "queued" | "rendering" | "saving" | "done" | "error">("idle");
 
   const load = () => {
     if (!examId || !attemptId) return;
@@ -126,7 +142,8 @@ const TncSharedResult = () => {
     if (pdfBusy) return;
     setPdfBusy(true);
     setPdfProgress(0);
-    const toastId = toast.loading("Building the result PDF…");
+    setPdfStage("queued");
+    const toastId = toast.loading("Queued the result PDF…");
     try {
       // Signed, time-limited permission for the intended shared viewer.
       if (attemptId) {
@@ -142,17 +159,23 @@ const TncSharedResult = () => {
         questions,
         answers,
         userName: attempt.userName,
-        onProgress: (p) => setPdfProgress(Math.round(p * 100)),
+        onProgress: (p) => {
+          setPdfProgress(Math.round(p * 100));
+          setPdfStage(pdfStageFromProgress(p));
+        },
       });
+      setPdfStage("done");
       toast.success("PDF downloaded.", { id: toastId });
     } catch (e) {
       console.error("pdf failed", e);
-      toast.error("Could not generate PDF.", { id: toastId });
+      setPdfStage("error");
+      toast.error("Could not generate PDF. Please try again.", { id: toastId });
     } finally {
       setPdfBusy(false);
       setPdfProgress(0);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -198,20 +221,33 @@ const TncSharedResult = () => {
             >
               {pdfBusy ? (
                 <RefreshCw className="h-5 w-5 animate-spin" />
+              ) : pdfStage === "error" ? (
+                <AlertCircle className="h-5 w-5" />
               ) : (
                 <Download className="h-5 w-5" />
               )}
-              {pdfBusy ? `Preparing… ${pdfProgress}%` : "Download my PDF"}
+              {pdfBusy
+                ? `${PDF_STAGE_LABEL[pdfStage] ?? "Preparing…"} ${pdfProgress}%`
+                : pdfStage === "error"
+                ? "Retry PDF download"
+                : "Download my PDF"}
             </Button>
             {pdfBusy && (
-              <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
-                  style={{ width: `${Math.max(6, pdfProgress)}%` }}
-                />
-              </div>
+              <>
+                <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-300"
+                    style={{ width: `${Math.max(6, pdfProgress)}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">{PDF_STAGE_LABEL[pdfStage]}</p>
+              </>
+            )}
+            {!pdfBusy && pdfStage === "error" && (
+              <p className="mt-2 text-xs text-destructive">Generation failed. Tap the button above to try again.</p>
             )}
           </div>
+
 
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}>

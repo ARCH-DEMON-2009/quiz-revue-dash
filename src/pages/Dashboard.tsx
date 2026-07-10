@@ -10,7 +10,6 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import NavigationHeader from "@/components/NavigationHeader";
 import FloatingBackground from "@/components/FloatingBackground";
 import TelegramPopup from "@/components/TelegramPopup";
-import TncPopup from "@/components/TncPopup";
 import Footer from "@/components/Footer";
 import { LinkShortenerGate } from "@/components/LinkShortenerGate";
 interface Test {
@@ -73,7 +72,6 @@ const Dashboard = () => {
       <FloatingBackground />
       <NavigationHeader showFullNav />
       <TelegramPopup />
-      <TncPopup />
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>

@@ -36,10 +36,36 @@ export interface TncListResponse {
   limit: number;
 }
 
+export class TncApiError extends Error {
+  code?: string;
+  status?: number;
+  constructor(message: string, code?: string, status?: number) {
+    super(message);
+    this.name = "TncApiError";
+    this.code = code;
+    this.status = status;
+  }
+}
+
 async function call<T>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke("tnc", { body });
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
+  if (error) {
+    // Non-2xx responses land here; try to surface the server's error code/message.
+    let message = error.message;
+    let code: string | undefined;
+    let status: number | undefined;
+    try {
+      const ctx = (error as any).context;
+      status = ctx?.status;
+      if (ctx && typeof ctx.json === "function") {
+        const parsed = await ctx.json();
+        message = parsed?.error ?? message;
+        code = parsed?.code;
+      }
+    } catch { /* ignore parse errors */ }
+    throw new TncApiError(message, code, status);
+  }
+  if (data?.error) throw new TncApiError(data.error, data.code);
   return data as T;
 }
 

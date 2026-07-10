@@ -41,6 +41,7 @@ import {
   fetchTncTest,
   submitTncAttempt,
   requestTncPdfPermission,
+  TncApiError,
   type TncExamWithQuestions,
   type TncQuestion,
 } from "@/lib/tncApi";
@@ -54,6 +55,22 @@ const OPTS = ["A", "B", "C", "D"] as const;
 const SITE = "https://quiz-revue-dash.lovable.app";
 
 const storageKey = (id: string) => `tnc-attempt-${id}`;
+
+/** Map a 0..1 progress fraction to a user-facing PDF generation stage. */
+const pdfStageFromProgress = (p: number): "queued" | "rendering" | "saving" | "done" => {
+  if (p >= 1) return "done";
+  if (p >= 0.9) return "saving";
+  if (p > 0.02) return "rendering";
+  return "queued";
+};
+
+const PDF_STAGE_LABEL: Record<string, string> = {
+  queued: "Queued…",
+  rendering: "Rendering PDF…",
+  saving: "Saving file…",
+  done: "Completed",
+  error: "Failed — tap to retry",
+};
 
 /** Render sanitized CRM HTML so legacy <font>/<span> markup doesn't leak as text. */
 const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => (
@@ -100,9 +117,11 @@ const TncQuiz = () => {
   >(null);
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
+  const [pdfStage, setPdfStage] = useState<"idle" | "queued" | "rendering" | "saving" | "done" | "error">("idle");
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [premiumRequired, setPremiumRequired] = useState(false);
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
@@ -111,12 +130,20 @@ const TncQuiz = () => {
     if (!examId) return;
     setLoading(true);
     setLoadError(false);
+    setPremiumRequired(false);
     fetchTncTest(examId)
       .then((res) => setExam(res))
       .catch((e) => {
         console.error(e);
-        setLoadError(true);
-        toast.error("Failed to load this test.");
+        if (e instanceof TncApiError && e.code === "premium_required") {
+          setPremiumRequired(true);
+        } else if (e instanceof TncApiError && e.code === "auth_required") {
+          setIsAuthed(false);
+          setAuthChecked(true);
+        } else {
+          setLoadError(true);
+          toast.error("Failed to load this test.");
+        }
       })
       .finally(() => setLoading(false));
   };
@@ -337,6 +364,38 @@ const TncQuiz = () => {
       </div>
     );
   }
+
+  // ---- Premium subscription required for this exam ----
+  if (premiumRequired) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto max-w-md px-4 py-20">
+          <Card className="p-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-600">
+              <Trophy className="h-7 w-7" />
+            </div>
+            <h1 className="text-xl font-bold text-foreground">Premium test</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              This TNC nursing test is available to premium members only. Upgrade to unlock all premium tests, detailed solutions, and PDF downloads.
+            </p>
+            <Button
+              size="lg"
+              className="mt-6 w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white hover:from-amber-600 hover:to-yellow-600"
+              onClick={() => navigate("/pricing")}
+            >
+              Buy Premium
+            </Button>
+            <Button variant="outline" className="mt-3 w-full" onClick={() => navigate("/tnc-tests")}>
+              Back to Test Series
+            </Button>
+          </Card>
+        </main>
+      </div>
+    );
+  }
+
+
 
 
   if (!exam) {
@@ -639,7 +698,8 @@ const TncQuiz = () => {
     if (pdfBusy) return;
     setPdfBusy(true);
     setPdfProgress(0);
-    const toastId = toast.loading("Building your result PDF…");
+    setPdfStage("queued");
+    const toastId = toast.loading("Queued your result PDF…");
     try {
       const { data: { user } } = await supabase.auth.getUser();
       // Signed, time-limited permission — server verifies this user owns the attempt.
@@ -656,17 +716,23 @@ const TncQuiz = () => {
         questions,
         answers,
         userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
-        onProgress: (p) => setPdfProgress(Math.round(p * 100)),
+        onProgress: (p) => {
+          setPdfProgress(Math.round(p * 100));
+          setPdfStage(pdfStageFromProgress(p));
+        },
       });
+      setPdfStage("done");
       toast.success("PDF downloaded.", { id: toastId });
     } catch (e) {
       console.error("pdf failed", e);
-      toast.error("Could not generate PDF.", { id: toastId });
+      setPdfStage("error");
+      toast.error("Could not generate PDF. Please try again.", { id: toastId });
     } finally {
       setPdfBusy(false);
       setPdfProgress(0);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -701,20 +767,33 @@ const TncQuiz = () => {
             >
               {pdfBusy ? (
                 <RefreshCw className="h-5 w-5 animate-spin" />
+              ) : pdfStage === "error" ? (
+                <AlertCircle className="h-5 w-5" />
               ) : (
                 <Download className="h-5 w-5" />
               )}
-              {pdfBusy ? `Preparing… ${pdfProgress}%` : "Download my PDF"}
+              {pdfBusy
+                ? `${PDF_STAGE_LABEL[pdfStage] ?? "Preparing…"} ${pdfProgress}%`
+                : pdfStage === "error"
+                ? "Retry PDF download"
+                : "Download my PDF"}
             </Button>
             {pdfBusy && (
-              <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
-                  style={{ width: `${Math.max(6, pdfProgress)}%` }}
-                />
-              </div>
+              <>
+                <div className="mx-auto mt-3 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-300"
+                    style={{ width: `${Math.max(6, pdfProgress)}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">{PDF_STAGE_LABEL[pdfStage]}</p>
+              </>
+            )}
+            {!pdfBusy && pdfStage === "error" && (
+              <p className="mt-2 text-xs text-destructive">Generation failed. Tap the button above to try again.</p>
             )}
           </div>
+
 
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             <Button variant="outline" className="gap-2" onClick={shareResult} disabled={saving || !attemptId}>
