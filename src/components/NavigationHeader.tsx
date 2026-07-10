@@ -27,7 +27,7 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   }, []);
 
   const handleAIQuiz = () => {
-    window.open("https://shashank-quiz-maker.vercel.app/", "_blank");
+    toast.info("AI quiz making is temporarily disabled.");
   };
 
   return (
