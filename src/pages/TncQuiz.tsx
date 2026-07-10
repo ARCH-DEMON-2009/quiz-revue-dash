@@ -104,6 +104,7 @@ const TncQuiz = () => {
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [premiumRequired, setPremiumRequired] = useState(false);
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
@@ -112,12 +113,20 @@ const TncQuiz = () => {
     if (!examId) return;
     setLoading(true);
     setLoadError(false);
+    setPremiumRequired(false);
     fetchTncTest(examId)
       .then((res) => setExam(res))
       .catch((e) => {
         console.error(e);
-        setLoadError(true);
-        toast.error("Failed to load this test.");
+        if (e instanceof TncApiError && e.code === "premium_required") {
+          setPremiumRequired(true);
+        } else if (e instanceof TncApiError && e.code === "auth_required") {
+          setIsAuthed(false);
+          setAuthChecked(true);
+        } else {
+          setLoadError(true);
+          toast.error("Failed to load this test.");
+        }
       })
       .finally(() => setLoading(false));
   };
