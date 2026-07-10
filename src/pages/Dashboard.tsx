@@ -10,7 +10,6 @@ import { User as SupabaseUser } from "@supabase/supabase-js";
 import NavigationHeader from "@/components/NavigationHeader";
 import FloatingBackground from "@/components/FloatingBackground";
 import TelegramPopup from "@/components/TelegramPopup";
-import TncPopup from "@/components/TncPopup";
 import Footer from "@/components/Footer";
 import { LinkShortenerGate } from "@/components/LinkShortenerGate";
 interface Test {
