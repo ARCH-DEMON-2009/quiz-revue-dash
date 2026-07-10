@@ -142,7 +142,8 @@ const TncSharedResult = () => {
     if (pdfBusy) return;
     setPdfBusy(true);
     setPdfProgress(0);
-    const toastId = toast.loading("Building the result PDF…");
+    setPdfStage("queued");
+    const toastId = toast.loading("Queued the result PDF…");
     try {
       // Signed, time-limited permission for the intended shared viewer.
       if (attemptId) {
@@ -158,17 +159,23 @@ const TncSharedResult = () => {
         questions,
         answers,
         userName: attempt.userName,
-        onProgress: (p) => setPdfProgress(Math.round(p * 100)),
+        onProgress: (p) => {
+          setPdfProgress(Math.round(p * 100));
+          setPdfStage(pdfStageFromProgress(p));
+        },
       });
+      setPdfStage("done");
       toast.success("PDF downloaded.", { id: toastId });
     } catch (e) {
       console.error("pdf failed", e);
-      toast.error("Could not generate PDF.", { id: toastId });
+      setPdfStage("error");
+      toast.error("Could not generate PDF. Please try again.", { id: toastId });
     } finally {
       setPdfBusy(false);
       setPdfProgress(0);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
