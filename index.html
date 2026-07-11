@@ -51,7 +51,70 @@
       }
     </script>
 
+    <!--
+      Non-SSR per-route metadata fallback.
+      Runs synchronously before the app loads so crawlers that read the initial
+      HTML (and don't wait for React/Helmet hydration) still get the right
+      og:title / og:description / <title> for the requested route. React-Helmet
+      later refines these per page for full-JS crawlers.
+    -->
+    <script>
+      (function () {
+        try {
+          var SITE = "https://quiz-revue-dash.lovable.app";
+          var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
+          var routes = {
+            "/": {
+              t: "Test Sagar — Free JEE & NEET Mock Tests, Analytics & Rankings",
+              d: "Practice JEE & NEET with realistic full-length mock tests on Test Sagar. Live timer, detailed solutions, subject-wise analytics, and all-India rankings."
+            },
+            "/tnc-tests": {
+              t: "TNC Nursing Test Series — Free Mock Tests & Solutions | Test Sagar",
+              d: "Attempt free TNC nursing mock tests with instant scoring, detailed solutions, leaderboards, and downloadable result PDFs."
+            },
+            "/pricing": {
+              t: "Premium Plans & Pricing — Ad-Free Mock Tests | Test Sagar",
+              d: "Go premium for unlimited ad-free access to JEE, NEET & TNC mock tests, analytics, and priority features."
+            },
+            "/leaderboard": {
+              t: "Leaderboard — All-India Rankings | Test Sagar",
+              d: "See where you rank against students across India on Test Sagar mock tests."
+            },
+            "/analytics": {
+              t: "Performance Analytics — Subject-wise Insights | Test Sagar",
+              d: "Track your accuracy, speed, and subject-wise strengths with detailed Test Sagar analytics."
+            },
+            "/contact": {
+              t: "Contact Us — Test Sagar Support",
+              d: "Reach the Test Sagar team for help with mock tests, premium, and account support."
+            },
+            "/auth": {
+              t: "Login or Sign Up — Test Sagar",
+              d: "Sign in to Test Sagar to take mock tests, save scores, and track your progress."
+            }
+          };
+          var meta = routes[path];
+          if (!meta) return;
+          document.title = meta.t;
+          function setTag(sel, attr, val) {
+            var el = document.head.querySelector(sel);
+            if (el) el.setAttribute(attr, val);
+          }
+          setTag('meta[name="description"]', "content", meta.d);
+          setTag('meta[property="og:title"]', "content", meta.t);
+          setTag('meta[property="og:description"]', "content", meta.d);
+          setTag('meta[property="og:url"]', "content", SITE + (path === "/" ? "/" : path));
+          setTag('meta[name="twitter:title"]', "content", meta.t);
+          setTag('meta[name="twitter:description"]', "content", meta.d);
+          setTag('link[rel="canonical"]', "href", SITE + (path === "/" ? "/" : path));
+        } catch (e) {
+          /* metadata fallback is best-effort */
+        }
+      })();
+    </script>
+
   </head>
+
 
   <body>
     <div id="root"></div>
