@@ -366,35 +366,23 @@ const TncQuiz = () => {
     );
   }
 
-  // ---- Premium subscription required for this exam ----
-  if (premiumRequired) {
+  // ---- Premium test: verify (free, ad-supported) or go premium ----
+  // Reuses the exact same gate + server-side anti-bypass as the main site.
+  if (accessRequired) {
     return (
       <div className="min-h-screen bg-background">
+        <Helmet>
+          <title>{`Unlock ${stripHtml(exam?.name ?? "TNC Test")} | TNC Nursing Test`}</title>
+          <meta name="robots" content="noindex" />
+        </Helmet>
         <NavigationHeader />
-        <main className="container mx-auto max-w-md px-4 py-20">
-          <Card className="p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-600">
-              <Trophy className="h-7 w-7" />
-            </div>
-            <h1 className="text-xl font-bold text-foreground">Premium test</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              This TNC nursing test is available to premium members only. Upgrade to unlock all premium tests, detailed solutions, and PDF downloads.
-            </p>
-            <Button
-              size="lg"
-              className="mt-6 w-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white hover:from-amber-600 hover:to-yellow-600"
-              onClick={() => navigate("/pricing")}
-            >
-              Buy Premium
-            </Button>
-            <Button variant="outline" className="mt-3 w-full" onClick={() => navigate("/tnc-tests")}>
-              Back to Test Series
-            </Button>
-          </Card>
-        </main>
+        <LinkShortenerGate>
+          <TncAccessGranted onReady={loadExam} />
+        </LinkShortenerGate>
       </div>
     );
   }
+
 
 
 
