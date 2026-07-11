@@ -77,6 +77,35 @@ async function isPremiumUser(user: { id: string; email?: string | null }) {
   return !!data;
 }
 
+/** Returns true if the user has a valid (non-expired) free access verification. */
+async function hasValidVerification(userId: string) {
+  const admin = adminClient();
+  const { data, error } = await admin
+    .from("access_verifications")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "verified")
+    .gt("expires_at", new Date().toISOString())
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error("hasValidVerification error", error);
+    return false;
+  }
+  return !!data;
+}
+
+/**
+ * Access decision for premium-gated TNC exams. Mirrors the main site:
+ * premium users get in ad-free; everyone else needs an active free verification.
+ * Both checks run server-side so the gate cannot be bypassed from the client.
+ */
+async function resolveTncAccess(user: { id: string; email?: string | null }) {
+  if (await isPremiumUser(user)) return { ok: true as const, premium: true };
+  if (await hasValidVerification(user.id)) return { ok: true as const, premium: false };
+  return { ok: false as const, premium: false };
+}
+
 // ---------------------------------------------------------------------------
 // Signed, time-limited PDF download permissions.
 // A token authorises ONE attempt's PDF for a short window and is verifiable
@@ -468,15 +497,18 @@ Deno.serve(async (req) => {
       const result = await getTest(String(examId));
       if (!result) return json({ error: "Not found" }, 404);
 
-      // SECURITY: premium-gated exams require an authenticated premium user.
-      // Enforced server-side so non-premium users cannot bypass the gate by
-      // calling the edge function directly or tampering with the client.
+      // SECURITY: premium-gated exams require either an active premium plan OR a
+      // valid free access verification (same ad-verify model as the main site).
+      // Enforced server-side so the gate cannot be bypassed from the client.
       if (result.allowForPremium) {
         const user = await getAuthUser(req);
         if (!user) return json({ error: "Login required", code: "auth_required" }, 401);
-        const premium = await isPremiumUser(user);
-        if (!premium) return json({ error: "Premium subscription required", code: "premium_required" }, 403);
+        const access = await resolveTncAccess(user);
+        if (!access.ok) {
+          return json({ error: "Verification or premium required", code: "verification_required" }, 403);
+        }
       }
+
 
       // SECURITY: never send answer keys / explanations to the client before
       // the quiz is submitted. Scoring and review happen server-side.
@@ -506,9 +538,9 @@ Deno.serve(async (req) => {
       const exam = await getTest(String(examId));
       if (!exam) return json({ error: "Not found" }, 404);
 
-      // Premium-gated exams: block scoring/saving for non-premium users.
-      if (exam.allowForPremium && !(await isPremiumUser(user))) {
-        return json({ error: "Premium subscription required", code: "premium_required" }, 403);
+      // Premium-gated exams: require premium OR a valid free verification.
+      if (exam.allowForPremium && !(await resolveTncAccess(user)).ok) {
+        return json({ error: "Verification or premium required", code: "verification_required" }, 403);
       }
 
       const marksPerQ = exam.questions.length ? exam.maxMarks / exam.questions.length : 0;
