@@ -78,6 +78,24 @@ const Html = ({ html, className }: { html: string | null | undefined; className?
   <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />
 );
 
+/**
+ * Rendered inside LinkShortenerGate once the user has premium OR a valid free
+ * verification. It re-fetches the exam (which now passes the server-side gate)
+ * and shows a short loading state while that happens.
+ */
+const TncAccessGranted = ({ onReady }: { onReady: () => void }) => {
+  useEffect(() => {
+    onReady();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
+      <div className="h-10 w-10 animate-spin rounded-full border-b-2 border-primary" />
+      <p className="text-sm text-muted-foreground">Access granted — loading your test…</p>
+    </div>
+  );
+};
+
 
 
 function fmt(sec: number) {
