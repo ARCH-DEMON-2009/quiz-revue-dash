@@ -20,6 +20,19 @@ const Verify = () => {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Where to send the user after a successful verification. Prefer an explicit
+  // ?redirect= param, then the path saved when the gate started verification.
+  const resolveReturnPath = (): string => {
+    const fromQuery = new URLSearchParams(window.location.search).get("redirect");
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(VERIFY_RETURN_KEY);
+    } catch {
+      /* ignore */
+    }
+    return safeReturnPath(fromQuery ?? stored);
+  };
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
