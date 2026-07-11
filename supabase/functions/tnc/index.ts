@@ -77,6 +77,35 @@ async function isPremiumUser(user: { id: string; email?: string | null }) {
   return !!data;
 }
 
+/** Returns true if the user has a valid (non-expired) free access verification. */
+async function hasValidVerification(userId: string) {
+  const admin = adminClient();
+  const { data, error } = await admin
+    .from("access_verifications")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("status", "verified")
+    .gt("expires_at", new Date().toISOString())
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error("hasValidVerification error", error);
+    return false;
+  }
+  return !!data;
+}
+
+/**
+ * Access decision for premium-gated TNC exams. Mirrors the main site:
+ * premium users get in ad-free; everyone else needs an active free verification.
+ * Both checks run server-side so the gate cannot be bypassed from the client.
+ */
+async function resolveTncAccess(user: { id: string; email?: string | null }) {
+  if (await isPremiumUser(user)) return { ok: true as const, premium: true };
+  if (await hasValidVerification(user.id)) return { ok: true as const, premium: false };
+  return { ok: false as const, premium: false };
+}
+
 // ---------------------------------------------------------------------------
 // Signed, time-limited PDF download permissions.
 // A token authorises ONE attempt's PDF for a short window and is verifiable
