@@ -8,10 +8,30 @@ import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 
 interface LinkShortenerGateProps {
   children: React.ReactNode;
+  /**
+   * Path to return to after verification completes on /verify.
+   * Persisted so the shortener round-trip can resume the exact test.
+   */
+  returnTo?: string;
 }
 
-export const LinkShortenerGate = ({ children }: LinkShortenerGateProps) => {
+/** Shared localStorage key so /verify knows where to send the user back. */
+export const VERIFY_RETURN_KEY = "verify-return-to";
+
+export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps) => {
   const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
+
+  // Remember where to resume once verification finishes on /verify.
+  useEffect(() => {
+    if (returnTo) {
+      try {
+        localStorage.setItem(VERIFY_RETURN_KEY, returnTo);
+      } catch {
+        /* ignore storage errors */
+      }
+    }
+  }, [returnTo]);
+
   const [accessStatus, setAccessStatus] = useState<'loading' | 'verified' | 'free'>('loading');
   const [shortenerLink, setShortenerLink] = useState<string>('');
   const [initiating, setInitiating] = useState(false);
