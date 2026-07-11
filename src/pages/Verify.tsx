@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { blockDevice, isDeviceBlockedFor } from "@/components/BypassBlockGuard";
+import { VERIFY_RETURN_KEY } from "@/components/LinkShortenerGate";
+
+/** Only allow same-app relative paths to prevent open-redirects. */
+const safeReturnPath = (raw: string | null): string => {
+  if (!raw) return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+};
 
 const Verify = () => {
   const navigate = useNavigate();
