@@ -395,7 +395,7 @@ const TncQuiz = () => {
           <meta name="robots" content="noindex" />
         </Helmet>
         <NavigationHeader />
-        <LinkShortenerGate>
+        <LinkShortenerGate returnTo={`/tnc-tests/${examId ?? ""}`}>
           <TncAccessGranted onReady={loadExam} />
         </LinkShortenerGate>
       </div>

@@ -6,11 +6,32 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { blockDevice, isDeviceBlockedFor } from "@/components/BypassBlockGuard";
+import { VERIFY_RETURN_KEY } from "@/components/LinkShortenerGate";
+
+/** Only allow same-app relative paths to prevent open-redirects. */
+const safeReturnPath = (raw: string | null): string => {
+  if (!raw) return "/";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return "/";
+  return raw;
+};
 
 const Verify = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Where to send the user after a successful verification. Prefer an explicit
+  // ?redirect= param, then the path saved when the gate started verification.
+  const resolveReturnPath = (): string => {
+    const fromQuery = new URLSearchParams(window.location.search).get("redirect");
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(VERIFY_RETURN_KEY);
+    } catch {
+      /* ignore */
+    }
+    return safeReturnPath(fromQuery ?? stored);
+  };
 
   useEffect(() => {
     (async () => {
@@ -71,8 +92,14 @@ const Verify = () => {
       setStatus('success');
       toast.success("Verification complete! You have 12 hours of access.");
 
+      const target = resolveReturnPath();
+      try {
+        localStorage.removeItem(VERIFY_RETURN_KEY);
+      } catch {
+        /* ignore */
+      }
       setTimeout(() => {
-        navigate("/");
+        navigate(target);
       }, 2000);
     } catch (error) {
       console.error("Verification error:", error);
