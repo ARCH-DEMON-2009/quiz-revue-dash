@@ -92,8 +92,14 @@ const Verify = () => {
       setStatus('success');
       toast.success("Verification complete! You have 12 hours of access.");
 
+      const target = resolveReturnPath();
+      try {
+        localStorage.removeItem(VERIFY_RETURN_KEY);
+      } catch {
+        /* ignore */
+      }
       setTimeout(() => {
-        navigate("/");
+        navigate(target);
       }, 2000);
     } catch (error) {
       console.error("Verification error:", error);
