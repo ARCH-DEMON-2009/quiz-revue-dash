@@ -46,6 +46,7 @@ import {
   type TncQuestion,
 } from "@/lib/tncApi";
 import TncQuestionImage from "@/components/TncQuestionImage";
+import { LinkShortenerGate } from "@/components/LinkShortenerGate";
 import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { downloadTncResultPdf } from "@/lib/tncPdf";
 
