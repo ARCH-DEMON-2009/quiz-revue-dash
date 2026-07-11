@@ -538,9 +538,9 @@ Deno.serve(async (req) => {
       const exam = await getTest(String(examId));
       if (!exam) return json({ error: "Not found" }, 404);
 
-      // Premium-gated exams: block scoring/saving for non-premium users.
-      if (exam.allowForPremium && !(await isPremiumUser(user))) {
-        return json({ error: "Premium subscription required", code: "premium_required" }, 403);
+      // Premium-gated exams: require premium OR a valid free verification.
+      if (exam.allowForPremium && !(await resolveTncAccess(user)).ok) {
+        return json({ error: "Verification or premium required", code: "verification_required" }, 403);
       }
 
       const marksPerQ = exam.questions.length ? exam.maxMarks / exam.questions.length : 0;
