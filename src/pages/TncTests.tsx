@@ -37,6 +37,7 @@ const TncTests = () => {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const loadTests = () => {
     setLoading(true);
@@ -48,8 +49,21 @@ const TncTests = () => {
       })
       .catch((e) => {
         console.error(e);
+        const raw = String(e?.message ?? "");
+        // Distinguish a TNC provider outage from a local network problem so the
+        // user isn't told to check a connection that is actually fine.
+        const upstreamDown = /Connection refused|error sending request|502|503|504|timed out/i.test(raw);
+        setErrorMsg(
+          upstreamDown
+            ? "The TNC test provider is temporarily unreachable. This is on their side — please try again in a few minutes."
+            : "Couldn't load the test series. Check your connection and try again."
+        );
         setError(true);
-        toast.error("Failed to load tests. Please try again.");
+        toast.error(
+          upstreamDown
+            ? "TNC provider is temporarily down. Please retry shortly."
+            : "Failed to load tests. Please try again."
+        );
       })
       .finally(() => setLoading(false));
   };
@@ -113,6 +127,9 @@ const TncTests = () => {
           <p className="mt-2 text-muted-foreground">
             6,800+ Free Mock Tests — NORCET · AIIMS · SGPGI · BTSC · CHO
           </p>
+          <Button variant="outline" className="mt-4 gap-2" onClick={() => navigate("/tnc-tests/leaderboard")}>
+            <Trophy className="h-4 w-4" /> Overall Leaderboard
+          </Button>
         </div>
 
         {/* Search */}
@@ -163,7 +180,9 @@ const TncTests = () => {
         ) : error ? (
           <Card className="flex flex-col items-center gap-3 p-12 text-center">
             <AlertCircle className="h-10 w-10 text-destructive" />
-            <p className="text-muted-foreground">Couldn't load the test series. Check your connection and try again.</p>
+            <p className="max-w-md text-muted-foreground">
+              {errorMsg || "Couldn't load the test series. Check your connection and try again."}
+            </p>
             <Button className="gap-2" onClick={loadTests}>
               <RefreshCw className="h-4 w-4" /> Retry
             </Button>

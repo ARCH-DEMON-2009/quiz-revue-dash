@@ -448,6 +448,149 @@ async function getLeaderboard(examId: string) {
   };
 }
 
+/**
+ * Global TNC leaderboard — ranks users across ALL TNC test series
+ * (not a single exam). Supports "daily" (last 24h), "monthly" (last 30d)
+ * and "all" time ranges, and flags premium vs free users.
+ */
+async function getGlobalLeaderboard(period: "daily" | "monthly" | "all") {
+  const admin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  const since =
+    period === "daily"
+      ? new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      : period === "monthly"
+        ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        : null;
+
+  // Page through attempts so we are not silently capped at 1000 rows.
+  const rows: any[] = [];
+  const PAGE = 1000;
+  for (let from = 0; from < 20_000; from += PAGE) {
+    let q = admin
+      .from("quiz_attempts")
+      .select("user_id, user_name, exam_id, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
+      .order("submitted_at", { ascending: false })
+      .range(from, from + PAGE - 1);
+    if (since) q = q.gte("submitted_at", since);
+    const { data, error } = await q;
+    if (error) throw new Error(error.message);
+    rows.push(...(data ?? []));
+    if (!data || data.length < PAGE) break;
+  }
+
+  // Aggregate per user: best attempt per exam, then totals across all exams.
+  type Agg = {
+    userId: string;
+    userName: string;
+    perExam: Map<string, any>;
+  };
+  const users = new Map<string, Agg>();
+  for (const row of rows) {
+    const uid = String(row.user_id ?? "");
+    if (!uid || uid === "guest") continue;
+    let u = users.get(uid);
+    if (!u) {
+      u = { userId: uid, userName: row.user_name ?? "Student", perExam: new Map() };
+      users.set(uid, u);
+    }
+    if (row.user_name) u.userName = row.user_name;
+    const ex = String(row.exam_id ?? "");
+    const prev = u.perExam.get(ex);
+    if (
+      !prev ||
+      Number(row.score) > Number(prev.score) ||
+      (Number(row.score) === Number(prev.score) &&
+        Number(row.time_taken_seconds ?? 0) < Number(prev.time_taken_seconds ?? 0))
+    ) {
+      u.perExam.set(ex, row);
+    }
+  }
+
+  const aggregated = [...users.values()].map((u) => {
+    const attempts = [...u.perExam.values()];
+    const totalScore = attempts.reduce((s, r) => s + Number(r.score ?? 0), 0);
+    const totalMarks = attempts.reduce((s, r) => s + Number(r.total_marks ?? 0), 0);
+    const correct = attempts.reduce((s, r) => s + Number(r.correct_count ?? 0), 0);
+    const wrong = attempts.reduce((s, r) => s + Number(r.wrong_count ?? 0), 0);
+    const skipped = attempts.reduce((s, r) => s + Number(r.skipped_count ?? 0), 0);
+    const time = attempts.reduce((s, r) => s + Number(r.time_taken_seconds ?? 0), 0);
+    const answered = correct + wrong;
+    const lastAttemptAt = attempts
+      .map((r) => r.submitted_at)
+      .filter(Boolean)
+      .sort()
+      .pop() ?? null;
+    return {
+      userId: u.userId,
+      userName: u.userName,
+      testsTaken: attempts.length,
+      totalScore: Math.round(totalScore * 100) / 100,
+      totalMarks: Math.round(totalMarks * 100) / 100,
+      percentage: totalMarks > 0 ? Math.round((totalScore / totalMarks) * 10000) / 100 : 0,
+      accuracy: answered > 0 ? Math.round((correct / answered) * 10000) / 100 : 0,
+      correctCount: correct,
+      wrongCount: wrong,
+      skippedCount: skipped,
+      timeTakenSeconds: time,
+      lastAttemptAt,
+      isPremium: false,
+    };
+  });
+
+  // Flag premium members (display only — free users are ranked equally).
+  const ids = aggregated.map((a) => a.userId);
+  if (ids.length) {
+    const { data: prem } = await admin
+      .from("premium_users")
+      .select("user_id, status, expiry_date")
+      .in("user_id", ids);
+    const premiumIds = new Set(
+      (prem ?? [])
+        .filter((p: any) => p.status === "active" && new Date(p.expiry_date) > new Date())
+        .map((p: any) => String(p.user_id)),
+    );
+    for (const a of aggregated) a.isPremium = premiumIds.has(a.userId);
+
+    // Prefer real display names; never publish raw email addresses (PII).
+    const { data: profiles } = await admin
+      .from("user_profiles")
+      .select("user_id, name")
+      .in("user_id", ids);
+    const nameById = new Map(
+      (profiles ?? [])
+        .filter((p: any) => p.name && p.name !== "User")
+        .map((p: any) => [String(p.user_id), String(p.name)]),
+    );
+    for (const a of aggregated) {
+      const profileName = nameById.get(a.userId);
+      if (profileName) {
+        a.userName = profileName;
+      } else if (a.userName.includes("@")) {
+        const local = a.userName.split("@")[0];
+        a.userName = local.length > 3 ? `${local.slice(0, 3)}${"*".repeat(3)}` : "Student";
+      }
+    }
+  }
+
+
+  const ranked = aggregated
+    .sort(
+      (a, b) =>
+        b.totalScore - a.totalScore ||
+        b.percentage - a.percentage ||
+        a.timeTakenSeconds - b.timeTakenSeconds,
+    )
+    .slice(0, 200)
+    .map((row, i) => ({ rank: i + 1, ...row }));
+
+  return { period, totalUsers: aggregated.length, rows: ranked };
+}
+
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -664,6 +807,14 @@ Deno.serve(async (req) => {
       if (!examId) return json({ error: "examId required" }, 400);
       return json(await getLeaderboard(String(examId)));
     }
+
+    // Global TNC leaderboard across every test series (daily / monthly / all-time).
+    if (action === "globalLeaderboard") {
+      const raw = String(body.period ?? url.searchParams.get("period") ?? "all");
+      const period = raw === "daily" || raw === "monthly" ? raw : "all";
+      return json(await getGlobalLeaderboard(period));
+    }
+
 
 
     return json({ error: "Unknown action" }, 400);

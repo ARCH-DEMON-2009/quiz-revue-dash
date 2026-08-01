@@ -33,6 +33,15 @@ const Verify = () => {
     return safeReturnPath(fromQuery ?? stored);
   };
 
+  /** Clear any saved redirect so a stale path can never be reused later. */
+  const clearReturnPath = () => {
+    try {
+      localStorage.removeItem(VERIFY_RETURN_KEY);
+    } catch {
+      /* ignore */
+    }
+  };
+
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -72,6 +81,7 @@ const Verify = () => {
         // Mirror the block locally so the guard shows the block screen immediately.
         await blockDevice();
         setStatus('error');
+        clearReturnPath();
         setErrorMessage(result.error || 'Bypass detected! You have been blocked for 24 hours.');
         setTimeout(() => window.location.reload(), 1500);
         return;
@@ -93,17 +103,14 @@ const Verify = () => {
       toast.success("Verification complete! You have 12 hours of access.");
 
       const target = resolveReturnPath();
-      try {
-        localStorage.removeItem(VERIFY_RETURN_KEY);
-      } catch {
-        /* ignore */
-      }
+      clearReturnPath();
       setTimeout(() => {
         navigate(target);
       }, 2000);
     } catch (error) {
       console.error("Verification error:", error);
       setStatus('error');
+      clearReturnPath();
       setErrorMessage('Something went wrong. Please try again.');
     }
   };

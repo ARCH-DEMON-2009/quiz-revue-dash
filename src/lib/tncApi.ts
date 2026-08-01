@@ -231,6 +231,37 @@ export function fetchTncLeaderboard(examId: string) {
   return call<TncLeaderboardResponse>({ action: "leaderboard", examId });
 }
 
+export type TncLeaderboardPeriod = "daily" | "monthly" | "all";
+
+export interface TncGlobalLeaderboardRow {
+  rank: number;
+  userId: string;
+  userName: string;
+  testsTaken: number;
+  totalScore: number;
+  totalMarks: number;
+  percentage: number;
+  accuracy: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  timeTakenSeconds: number;
+  lastAttemptAt: string | null;
+  isPremium: boolean;
+}
+
+export interface TncGlobalLeaderboardResponse {
+  period: TncLeaderboardPeriod;
+  totalUsers: number;
+  rows: TncGlobalLeaderboardRow[];
+}
+
+/** Overall TNC ranking across every test series, by time period. */
+export function fetchTncGlobalLeaderboard(period: TncLeaderboardPeriod = "all") {
+  return call<TncGlobalLeaderboardResponse>({ action: "globalLeaderboard", period });
+}
+
+
 export function getCategory(name = ""): string {
   const n = name.toUpperCase();
   if (n.includes("NORCET")) return "NORCET";
