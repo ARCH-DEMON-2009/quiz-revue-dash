@@ -1,0 +1,186 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import NavigationHeader from "@/components/NavigationHeader";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchTncGlobalLeaderboard,
+  type TncGlobalLeaderboardRow,
+  type TncLeaderboardPeriod,
+} from "@/lib/tncApi";
+
+const SITE = "https://quiz-revue-dash.lovable.app";
+
+const PERIODS: { value: TncLeaderboardPeriod; label: string }[] = [
+  { value: "daily", label: "Today" },
+  { value: "monthly", label: "This Month" },
+  { value: "all", label: "All Time" },
+];
+
+const fmtTime = (sec: number) => {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+};
+
+const TncGlobalLeaderboard = () => {
+  const [period, setPeriod] = useState<TncLeaderboardPeriod>("all");
+  const [rows, setRows] = useState<TncGlobalLeaderboardRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [meId, setMeId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setMeId(data.user?.id ?? null));
+  }, []);
+
+  const load = (p: TncLeaderboardPeriod) => {
+    setLoading(true);
+    setError(false);
+    fetchTncGlobalLeaderboard(p)
+      .then((res) => setRows(res.rows))
+      .catch((e) => {
+        console.error(e);
+        setError(true);
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load(period);
+  }, [period]);
+
+  const medal = (rank: number) => {
+    if (rank === 1) return "text-amber-500";
+    if (rank === 2) return "text-slate-400";
+    if (rank === 3) return "text-orange-600";
+    return "text-muted-foreground";
+  };
+
+  const title = "TNC Test Series Leaderboard — All-India Rankings";
+  const canonical = `${SITE}/tnc-tests/leaderboard`;
+  const me = rows.find((r) => r.userId === meId);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>{title}</title>
+        <meta
+          name="description"
+          content="Overall TNC nursing test series rankings across all mock tests. Daily, monthly and all-time leaderboards for free and premium students."
+        />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content="Daily, monthly and all-time TNC test series rankings across every mock test." />
+        <meta property="og:url" content={canonical} />
+      </Helmet>
+      <NavigationHeader />
+      <main className="container mx-auto max-w-3xl px-4 py-6 sm:py-8">
+        <Button variant="ghost" className="mb-4 gap-2" asChild>
+          <Link to="/tnc-tests">
+            <ArrowLeft className="h-4 w-4" /> Back to Test Series
+          </Link>
+        </Button>
+
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10">
+            <Trophy className="h-7 w-7 text-amber-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">TNC Overall Leaderboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ranked on total marks scored across every TNC test series
+          </p>
+        </div>
+
+        <Tabs value={period} onValueChange={(v) => setPeriod(v as TncLeaderboardPeriod)} className="mb-5">
+          <TabsList className="grid w-full grid-cols-3">
+            {PERIODS.map((p) => (
+              <TabsTrigger key={p.value} value={p.value}>
+                {p.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
+        {me && (
+          <Card className="mb-4 border-primary/40 bg-primary/5 p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-primary">Your Rank</p>
+            <div className="mt-1 flex items-center justify-between gap-3">
+              <span className="text-lg font-bold text-foreground">#{me.rank}</span>
+              <span className="text-sm text-muted-foreground">
+                {me.testsTaken} tests · {me.accuracy.toFixed(1)}% accuracy
+              </span>
+              <span className="font-bold text-primary">{me.totalScore.toFixed(1)} pts</span>
+            </div>
+          </Card>
+        )}
+
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-[76px] w-full rounded-xl" />
+            ))}
+          </div>
+        ) : error ? (
+          <Card className="flex flex-col items-center gap-3 p-10 text-center">
+            <AlertCircle className="h-10 w-10 text-destructive" />
+            <p className="text-muted-foreground">Couldn't load the leaderboard.</p>
+            <Button onClick={() => load(period)} className="gap-2">
+              <RefreshCw className="h-4 w-4" /> Retry
+            </Button>
+          </Card>
+        ) : rows.length === 0 ? (
+          <Card className="p-10 text-center text-muted-foreground">
+            No attempts in this period yet. Take a test to claim the top spot!
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {rows.map((r) => (
+              <Card
+                key={r.userId}
+                className={`flex items-center gap-3 p-3 sm:gap-4 sm:p-4 ${
+                  r.userId === meId ? "border-primary/50 bg-primary/5" : ""
+                }`}
+              >
+                <div className={`flex w-8 shrink-0 items-center justify-center font-bold ${medal(r.rank)}`}>
+                  {r.rank <= 3 ? <Medal className="h-5 w-5" /> : r.rank}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <p className="truncate font-semibold text-foreground">{r.userName}</p>
+                    {r.isPremium ? (
+                      <Badge className="shrink-0 gap-1 bg-amber-500 px-1.5 text-[10px] text-white hover:bg-amber-500">
+                        <Crown className="h-2.5 w-2.5" /> Premium
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="shrink-0 px-1.5 text-[10px]">
+                        Free
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {r.testsTaken} tests · {r.accuracy.toFixed(1)}% accuracy · {fmtTime(r.timeTakenSeconds)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-base font-bold text-primary sm:text-lg">{r.totalScore.toFixed(1)}</p>
+                  <p className="text-xs text-muted-foreground">/ {r.totalMarks.toFixed(0)}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default TncGlobalLeaderboard;
