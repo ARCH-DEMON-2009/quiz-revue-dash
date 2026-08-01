@@ -787,6 +787,14 @@ Deno.serve(async (req) => {
       return json(await getLeaderboard(String(examId)));
     }
 
+    // Global TNC leaderboard across every test series (daily / monthly / all-time).
+    if (action === "globalLeaderboard") {
+      const raw = String(body.period ?? url.searchParams.get("period") ?? "all");
+      const period = raw === "daily" || raw === "monthly" ? raw : "all";
+      return json(await getGlobalLeaderboard(period));
+    }
+
+
 
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
