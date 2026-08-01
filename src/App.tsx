@@ -24,6 +24,7 @@ import Verify from "./pages/Verify";
 import TncTests from "./pages/TncTests";
 import TncQuiz from "./pages/TncQuiz";
 import TncLeaderboard from "./pages/TncLeaderboard";
+import TncGlobalLeaderboard from "./pages/TncGlobalLeaderboard";
 import TncSharedResult from "./pages/TncSharedResult";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { BypassBlockGuard } from "./components/BypassBlockGuard";
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/tnc-tests" element={<TncTests />} />
+            <Route path="/tnc-tests/leaderboard" element={<TncGlobalLeaderboard />} />
             <Route path="/tnc-tests/:examId" element={<TncQuiz />} />
             <Route path="/tnc-tests/:examId/result/:attemptId" element={<TncSharedResult />} />
             <Route path="/tnc-tests/:examId/leaderboard" element={<TncLeaderboard />} />
