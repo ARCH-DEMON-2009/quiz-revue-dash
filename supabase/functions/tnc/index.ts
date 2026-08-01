@@ -554,7 +554,28 @@ async function getGlobalLeaderboard(period: "daily" | "monthly" | "all") {
         .map((p: any) => String(p.user_id)),
     );
     for (const a of aggregated) a.isPremium = premiumIds.has(a.userId);
+
+    // Prefer real display names; never publish raw email addresses (PII).
+    const { data: profiles } = await admin
+      .from("user_profiles")
+      .select("user_id, name")
+      .in("user_id", ids);
+    const nameById = new Map(
+      (profiles ?? [])
+        .filter((p: any) => p.name && p.name !== "User")
+        .map((p: any) => [String(p.user_id), String(p.name)]),
+    );
+    for (const a of aggregated) {
+      const profileName = nameById.get(a.userId);
+      if (profileName) {
+        a.userName = profileName;
+      } else if (a.userName.includes("@")) {
+        const local = a.userName.split("@")[0];
+        a.userName = local.length > 3 ? `${local.slice(0, 3)}${"*".repeat(3)}` : "Student";
+      }
+    }
   }
+
 
   const ranked = aggregated
     .sort(
