@@ -993,7 +993,9 @@ const Admin = () => {
                 <div className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg border mb-2">
                   <div className="text-[10px] text-muted-foreground">Live Preview:</div>
                   {['b1', 'b2', 'b3'].includes(adminBadgeConfig.badge_icon) && (
-                    <img src={`/badges/${adminBadgeConfig.badge_icon}.png`} alt="Preview" className="w-8 h-8 object-contain" />
+                    <div className="relative w-10 h-10">
+                      <img src={`/badges/${adminBadgeConfig.badge_icon}.png`} alt="Preview" className="w-full h-full object-contain" />
+                    </div>
                   )}
                 </div>
                 <Select 

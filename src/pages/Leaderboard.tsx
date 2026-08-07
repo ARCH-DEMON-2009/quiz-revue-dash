@@ -54,7 +54,7 @@ const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback
   return (
     <>
       {avatarUrl ? (
-        <AvatarImage src={avatarUrl} className="object-cover" />
+        <AvatarImage src={avatarUrl} className="object-cover" loading="lazy" />
       ) : null}
       <AvatarFallback className="bg-primary/20 text-primary font-semibold">
         {fallback}
@@ -116,7 +116,7 @@ const Leaderboard = () => {
           .eq('role', 'admin')
       ]);
 
-      const premiumMap = new Map(premiumResponse.data?.map(p => [p.user_id, p.plan_duration_type]) || []);
+      const premiumMap = new Map(premiumResponse.data?.map(p => [p.user_id, p.plan_duration_type || 'standard']) || []);
       const adminSet = new Set(adminResponse.data?.map(a => a.user_id) || []);
 
       const leaderboardData: LeaderboardEntry[] = (data || []).map((entry: any) => ({
@@ -161,9 +161,9 @@ const Leaderboard = () => {
     if (entry.is_admin) return getAdminNameColor(true);
     if (!entry.is_premium) return "text-foreground";
     // Different colors based on plan
-    if (entry.plan_duration_type === 'yearly' || entry.plan_duration_type === '12_months' || entry.plan_duration_type === '2years') return "text-amber-500 font-bold";
-    if (entry.plan_duration_type === '6_months') return "text-blue-500 font-bold";
-    return "text-emerald-500 font-bold";
+    if (entry.plan_duration_type === 'yearly' || entry.plan_duration_type === '12_months' || entry.plan_duration_type === '2years') return "text-amber-500 font-bold drop-shadow-sm";
+    if (entry.plan_duration_type === '6_months') return "text-blue-500 font-bold drop-shadow-sm";
+    return "text-emerald-500 font-bold drop-shadow-sm";
   };
 
   if (loading) {
@@ -256,12 +256,12 @@ const Leaderboard = () => {
                         <div className="absolute -inset-0 z-0 pointer-events-none">
                           {entry.is_admin ? (
                             ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                              <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.5]" />
+                              <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
                             ) : (
                               <div className={getAdminFrameStyles(true) || ""} />
                             )
                           ) : entry.is_premium ? (
-                            <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.5]" />
+                            <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
                           ) : null}
                         </div>
                         
@@ -276,7 +276,7 @@ const Leaderboard = () => {
                         </Avatar>
                         
                         {entry.is_admin ? (
-                          <div className="absolute -top-3 -right-3 w-8 h-8 z-10 animate-pulse">
+                          <div className="absolute -top-3.5 -right-3.5 w-10 h-10 z-10 animate-pulse">
                             {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
                               <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
                             ) : getAdminBadgeIcon(true) === 'shield' ? (
@@ -294,8 +294,8 @@ const Leaderboard = () => {
                             )}
                           </div>
                         ) : entry.is_premium ? (
-                          <div className="absolute -top-2 -right-2 z-10">
-                            <img src="/badges/b3.png" alt="Premium Badge" className="w-6 h-6 object-contain" />
+                          <div className="absolute -top-3 -right-3 z-10">
+                            <img src="/badges/b1.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
                           </div>
                         ) : null}
                       </div>
@@ -348,12 +348,12 @@ const Leaderboard = () => {
                           <div className="absolute -inset-0 z-0 pointer-events-none">
                             {currentUserEntry.is_admin ? (
                               ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                                <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.5]" />
+                                <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
                               ) : (
                                 <div className={getAdminFrameStyles(true) || ""} />
                               )
                             ) : currentUserEntry.is_premium ? (
-                              <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.5]" />
+                              <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
                             ) : null}
                           </div>
 
@@ -368,7 +368,7 @@ const Leaderboard = () => {
                           </Avatar>
                           
                           {currentUserEntry.is_admin ? (
-                            <div className="absolute -top-3 -right-3 w-8 h-8 z-10 animate-pulse">
+                            <div className="absolute -top-3.5 -right-3.5 w-10 h-10 z-10 animate-pulse">
                               {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
                                 <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
                               ) : getAdminBadgeIcon(true) === 'shield' ? (
