@@ -8,15 +8,17 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft } from "lucide-react";
+import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncGlobalLeaderboard,
   type TncGlobalLeaderboardRow,
   type TncLeaderboardPeriod,
 } from "@/lib/tncApi";
+import { toast } from "sonner";
 
 const SITE = "https://quiz-revue-dash.lovable.app";
+const CACHE_KEY = "tnc_global_leaderboard_cache";
 
 const PERIODS: { value: TncLeaderboardPeriod; label: string }[] = [
   { value: "daily", label: "Today" },
@@ -36,21 +38,51 @@ const TncGlobalLeaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMeId(data.user?.id ?? null));
   }, []);
 
-  const load = (p: TncLeaderboardPeriod) => {
+  const load = async (p: TncLeaderboardPeriod, isRetry = false, attempt = 0) => {
     setLoading(true);
     setError(false);
-    fetchTncGlobalLeaderboard(p)
-      .then((res) => setRows(res.rows))
-      .catch((e) => {
-        console.error(e);
-        setError(true);
-      })
-      .finally(() => setLoading(false));
+    
+    // Try to load from cache first if not a retry
+    if (!isRetry) {
+      const cached = localStorage.getItem(`${CACHE_KEY}_${p}`);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          setRows(data);
+          setLastUpdated(timestamp);
+        } catch (e) {
+          console.error("Cache parse error", e);
+        }
+      }
+    }
+
+    try {
+      const res = await fetchTncGlobalLeaderboard(p);
+      setRows(res.rows);
+      const now = Date.now();
+      setLastUpdated(now);
+      localStorage.setItem(`${CACHE_KEY}_${p}`, JSON.stringify({ data: res.rows, timestamp: now }));
+    } catch (e) {
+      console.error(e);
+      if (attempt < 3) {
+        const delay = Math.pow(2, attempt) * 1000;
+        setTimeout(() => load(p, true, attempt + 1), delay);
+        return;
+      }
+      
+      setError(true);
+      if (!rows.length) {
+        toast.error("Couldn't refresh the leaderboard. Showing last cached data if available.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -97,9 +129,32 @@ const TncGlobalLeaderboard = () => {
           <p className="mt-1 text-sm text-muted-foreground">
             Ranked on total marks scored across every TNC test series
           </p>
+          {lastUpdated && (
+            <div className="mt-2 flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+              <button 
+                onClick={() => load(period, true)} 
+                className="ml-1 flex items-center gap-1 text-primary hover:underline disabled:opacity-50"
+                disabled={loading}
+              >
+                <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
+                Refresh Now
+              </button>
+            </div>
+          )}
         </div>
 
-        <Tabs value={period} onValueChange={(v) => setPeriod(v as TncLeaderboardPeriod)} className="mb-5">
+        <Tabs 
+          value={period} 
+          onValueChange={(v) => {
+            const p = v as TncLeaderboardPeriod;
+            setPeriod(p);
+            // Analytics event for tab change (Mock example)
+            console.log(`Leaderboard tab changed to: ${p}`);
+          }} 
+          className="mb-5"
+        >
           <TabsList className="grid w-full grid-cols-3">
             {PERIODS.map((p) => (
               <TabsTrigger key={p.value} value={p.value}>
@@ -110,7 +165,13 @@ const TncGlobalLeaderboard = () => {
         </Tabs>
 
         {me && (
-          <Card className="mb-4 border-primary/40 bg-primary/5 p-4">
+          <Card 
+            className="mb-4 cursor-pointer border-primary/40 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+            onClick={() => {
+              console.log("Clicked on own rank card");
+              toast.info("This is your current ranking based on your best performance.");
+            }}
+          >
             <p className="text-xs font-medium uppercase tracking-wide text-primary">Your Rank</p>
             <div className="mt-1 flex items-center justify-between gap-3">
               <span className="text-lg font-bold text-foreground">#{me.rank}</span>
@@ -122,26 +183,26 @@ const TncGlobalLeaderboard = () => {
           </Card>
         )}
 
-        {loading ? (
+        {loading && !rows.length ? (
           <div className="space-y-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-[76px] w-full rounded-xl" />
             ))}
           </div>
-        ) : error ? (
+        ) : error && !rows.length ? (
           <Card className="flex flex-col items-center gap-3 p-10 text-center">
             <AlertCircle className="h-10 w-10 text-destructive" />
             <p className="text-muted-foreground">Couldn't load the leaderboard.</p>
-            <Button onClick={() => load(period)} className="gap-2">
+            <Button onClick={() => load(period, true)} className="gap-2">
               <RefreshCw className="h-4 w-4" /> Retry
             </Button>
           </Card>
-        ) : rows.length === 0 ? (
+        ) : rows.length === 0 && !loading ? (
           <Card className="p-10 text-center text-muted-foreground">
             No attempts in this period yet. Take a test to claim the top spot!
           </Card>
         ) : (
-          <div className="space-y-2">
+          <div className={`space-y-2 ${loading ? "opacity-60" : ""}`}>
             {rows.map((r) => (
               <Card
                 key={r.userId}
