@@ -298,7 +298,7 @@ const TncGlobalLeaderboard = () => {
                         <div className={getAdminFrameStyles(true) || ""} />
                       )
                     ) : r.isPremium ? (
-                      <img src="/frames/f1.png" alt="Premium Frame" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" />
+                      <img src="/frames/f3.png" alt="Premium Frame" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" />
                     ) : null}
                   </div>
                   <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden shrink-0 z-0 ${r.isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
@@ -342,11 +342,6 @@ const TncGlobalLeaderboard = () => {
                     {r.isAdmin && (
                       <Badge className="shrink-0 bg-red-600 text-[10px] text-white hover:bg-red-600">
                         Admin
-                      </Badge>
-                    )}
-                    {r.isPremium && !r.isAdmin && (
-                      <Badge className="shrink-0 gap-1 bg-amber-500 px-1.5 text-[10px] text-white hover:bg-amber-500">
-                        <Crown className="h-2.5 w-2.5" /> Premium
                       </Badge>
                     )}
                   </div>

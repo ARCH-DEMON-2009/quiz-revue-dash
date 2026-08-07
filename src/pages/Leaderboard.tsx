@@ -269,11 +269,11 @@ const Leaderboard = () => {
                             )
                           ) : entry.is_premium ? (
                             <img 
-                              src="/frames/f1.png" 
+                              src="/frames/f3.png" 
                               alt="Premium Frame" 
                               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" 
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/frames/f1.png";
+                                (e.target as HTMLImageElement).src = "/frames/f3.png";
                               }}
                             />
                           ) : null}
@@ -328,9 +328,6 @@ const Leaderboard = () => {
                           </p>
                           {entry.is_admin && (
                             <Badge className="bg-red-600 text-[10px] text-white hover:bg-red-600 px-1 py-0 h-4">Admin</Badge>
-                          )}
-                          {entry.is_premium && !entry.is_admin && (
-                            <Crown className="h-3 w-3 text-amber-500 shrink-0" />
                           )}
                           {isCurrentUser(entry.user_id) && (
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
