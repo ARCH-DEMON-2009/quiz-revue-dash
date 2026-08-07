@@ -256,12 +256,26 @@ const Leaderboard = () => {
                         <div className="absolute -inset-0 z-0 pointer-events-none">
                           {entry.is_admin ? (
                             ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                              <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
+                              <img 
+                                src={`/frames/${config.frame_type}.png`} 
+                                alt="Admin Frame" 
+                                className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/frames/f3.png"; // Fallback to f3 for admin
+                                }}
+                              />
                             ) : (
                               <div className={getAdminFrameStyles(true) || ""} />
                             )
                           ) : entry.is_premium ? (
-                            <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
+                            <img 
+                              src="/frames/f1.png" 
+                              alt="Premium Frame" 
+                              className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/frames/f1.png"; // Already pointing to f1 but just in case
+                              }}
+                            />
                           ) : null}
                         </div>
                         
@@ -278,7 +292,14 @@ const Leaderboard = () => {
                         {entry.is_admin ? (
                           <div className="absolute -top-3.5 -right-3.5 w-10 h-10 z-10 animate-pulse">
                             {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
-                              <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
+                              <img 
+                                src={`/badges/${getAdminBadgeIcon(true)}.png`} 
+                                alt="Admin Badge" 
+                                className="w-full h-full object-contain" 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/badges/b3.png"; // Admin default fallback
+                                }}
+                              />
                             ) : getAdminBadgeIcon(true) === 'shield' ? (
                               <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
                                 <Shield className="h-4 w-4 text-white fill-white" />
@@ -305,7 +326,10 @@ const Leaderboard = () => {
                           <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(entry)}`}>
                             {entry.name}
                           </p>
-                          {entry.is_premium && (
+                          {entry.is_admin && (
+                            <Badge className="bg-red-600 text-[10px] text-white hover:bg-red-600 px-1 py-0 h-4">Admin</Badge>
+                          )}
+                          {entry.is_premium && !entry.is_admin && (
                             <Crown className="h-3 w-3 text-amber-500 shrink-0" />
                           )}
                           {isCurrentUser(entry.user_id) && (
@@ -348,12 +372,26 @@ const Leaderboard = () => {
                           <div className="absolute -inset-0 z-0 pointer-events-none">
                             {currentUserEntry.is_admin ? (
                               ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                                <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
+                                <img 
+                                  src={`/frames/${config.frame_type}.png`} 
+                                  alt="Admin Frame" 
+                                  className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/frames/f3.png";
+                                  }}
+                                />
                               ) : (
                                 <div className={getAdminFrameStyles(true) || ""} />
                               )
                             ) : currentUserEntry.is_premium ? (
-                              <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
+                              <img 
+                                src="/frames/f1.png" 
+                                alt="Premium Frame" 
+                                className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/frames/f1.png";
+                                }}
+                              />
                             ) : null}
                           </div>
 

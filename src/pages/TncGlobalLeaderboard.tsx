@@ -349,11 +349,6 @@ const TncGlobalLeaderboard = () => {
                         <Crown className="h-2.5 w-2.5" /> Premium
                       </Badge>
                     )}
-                    {!r.isPremium && !r.isAdmin && (
-                      <Badge variant="secondary" className="shrink-0 px-1.5 text-[10px]">
-                        Free
-                      </Badge>
-                    )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {r.testsTaken} tests · {r.accuracy.toFixed(1)}% accuracy · {fmtTime(r.timeTakenSeconds)}

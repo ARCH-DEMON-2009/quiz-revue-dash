@@ -196,7 +196,7 @@ const TncLeaderboard = () => {
                   <div className="flex items-center gap-1.5">
                     <p className={`truncate font-semibold ${getNameColor(r)}`}>{r.userName}</p>
                     {r.isAdmin && (
-                      <Badge className="bg-red-600 text-[10px] text-white hover:bg-red-600">Admin</Badge>
+                      <Badge className="bg-red-600 text-[10px] text-white hover:bg-red-600 px-1 py-0 h-4">Admin</Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">

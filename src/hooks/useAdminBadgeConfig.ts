@@ -11,7 +11,7 @@ export interface AdminBadgeConfig {
 
 const DEFAULT_CONFIG: AdminBadgeConfig = {
   frame_type: "f3",
-  badge_icon: "b1",
+  badge_icon: "b3", // Changed default admin badge to b3
   text_effect: "gradient_black",
   glow_color: "#9b87f5",
   anti_extraction: true,

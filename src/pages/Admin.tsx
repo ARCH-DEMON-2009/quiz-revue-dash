@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X, Link2, ShieldCheck } from "lucide-react";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X, Link2, ShieldCheck, Star } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
@@ -1006,45 +1006,68 @@ const Admin = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-card">
-                    <SelectItem value="b1">Admin Badge (b1)</SelectItem>
-                    <SelectItem value="b2">Admin Badge (b2)</SelectItem>
-                    <SelectItem value="b3">Premium Badge (b3)</SelectItem>
+                    <SelectItem value="b1">Premium Badge (b1)</SelectItem>
+                    <SelectItem value="b2">Pro Badge (b2)</SelectItem>
+                    <SelectItem value="b3">Admin Badge (b3)</SelectItem>
                     <SelectItem value="star">Star Icon</SelectItem>
                     <SelectItem value="shield">Shield Icon</SelectItem>
                     <SelectItem value="crown">Crown Icon</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium">Name Text Effect</label>
-                <Select 
-                  value={adminBadgeConfig.text_effect} 
-                  onValueChange={(v) => setAdminBadgeConfig(prev => ({ ...prev, text_effect: v }))}
-                >
-                  <SelectTrigger className="text-xs sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card">
-                    <SelectItem value="gradient_black">Heavy Gradient (Black Weight)</SelectItem>
-                    <SelectItem value="solid_red">Solid Red</SelectItem>
-                    <SelectItem value="glow_purple">Glowing Purple</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium">Glow Color (Hex)</label>
-                <div className="flex gap-2">
-                  <Input 
-                    value={adminBadgeConfig.glow_color} 
-                    onChange={(e) => setAdminBadgeConfig(prev => ({ ...prev, glow_color: e.target.value }))}
-                    className="text-xs sm:text-sm"
-                  />
-                  <div 
-                    className="w-10 h-10 rounded border" 
-                    style={{ backgroundColor: adminBadgeConfig.glow_color }}
-                  />
-                </div>
-              </div>
+                      <div className="relative">
+                        <div className="absolute -inset-0 z-0 pointer-events-none">
+                          {['f1', 'f2', 'f3'].includes(adminBadgeConfig.frame_type) ? (
+                            <img 
+                              src={`/frames/${adminBadgeConfig.frame_type}.png`} 
+                              alt="Frame Preview" 
+                              className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/frames/f3.png";
+                              }}
+                            />
+                          ) : adminBadgeConfig.frame_type === 'rainbow' ? (
+                            <div className="absolute -inset-1.5 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                          ) : adminBadgeConfig.frame_type === 'gold' ? (
+                            <div className="absolute -inset-1.5 rounded-full blur-[2px] animate-pulse bg-amber-500/20 border border-amber-500" />
+                          ) : null}
+                        </div>
+                        <div className={cn(
+                          "w-24 h-24 rounded-full border-4 overflow-hidden bg-muted relative z-0",
+                          adminBadgeConfig.frame_type === 'gold' ? 'border-amber-500' : 
+                          adminBadgeConfig.frame_type === 'rainbow' ? 'border-transparent' : 
+                          ['f1', 'f2', 'f3'].includes(adminBadgeConfig.frame_type) ? 'border-transparent' : 'border-purple-500'
+                        )}>
+                          <img 
+                            src="/admin-avatar.png" 
+                            alt="Admin" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = "https://api.dicebear.com/7.x/initials/svg?seed=Admin";
+                            }}
+                          />
+                        </div>
+                        <div className="absolute -top-6 -right-6 w-16 h-16 z-10 animate-pulse">
+                          {['b1', 'b2', 'b3'].includes(adminBadgeConfig.badge_icon) ? (
+                            <img 
+                              src={`/badges/${adminBadgeConfig.badge_icon}.png`} 
+                              alt="Badge Preview" 
+                              className="w-full h-full object-contain" 
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/badges/b3.png";
+                              }}
+                            />
+                          ) : adminBadgeConfig.badge_icon === 'shield' ? (
+                            <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-2 border-2 border-white shadow-lg">
+                              <ShieldCheck className="h-8 w-8 text-white fill-white" />
+                            </div>
+                          ) : (
+                            <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-2 border-2 border-white shadow-lg">
+                              <Star className="h-8 w-8 text-white fill-white" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
               <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
                 <div className="space-y-0.5">
                   <label className="text-xs font-medium block">Anti-Extraction Protection</label>
