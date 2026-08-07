@@ -1039,6 +1039,7 @@ const Admin = () => {
               {badgeConfigLoading ? "Saving..." : "Save Identity Config"}
             </Button>
           </CardContent>
+        </Card>
 
         {/* Subject Filter */}
         <Card className="mb-3 sm:mb-4">
