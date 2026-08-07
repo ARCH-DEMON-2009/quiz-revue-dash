@@ -393,7 +393,6 @@ const Leaderboard = () => {
                                 }}
                               />
                             ) : null}
-                            ) : null}
                           </div>
 
                           <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${currentUserEntry.is_admin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
