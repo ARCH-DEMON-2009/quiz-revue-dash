@@ -9,8 +9,8 @@ import DOMPurify from "dompurify";
 export function cleanHtml(input: string | null | undefined): string {
   if (!input) return "";
   const sanitized = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "sub", "sup", "br", "p", "span", "ul", "ol", "li", "table", "thead", "tbody", "tr", "td", "th"],
-    ALLOWED_ATTR: [],
+    ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "sub", "sup", "br", "p", "span", "ul", "ol", "li", "table", "thead", "tbody", "tr", "td", "th", "font", "div"],
+    ALLOWED_ATTR: ["style", "color", "face", "size"],
   });
   return sanitized;
 }
