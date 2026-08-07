@@ -84,6 +84,14 @@ const TncLeaderboard = () => {
     return "text-muted-foreground";
   };
 
+  const getNameColor = (r: ExtendedTncRow) => {
+    if (r.isAdmin) return "text-red-600 font-bold";
+    if (!r.isPremium) return "text-foreground";
+    if (r.planType === 'yearly' || r.planType === '12_months') return "text-amber-500 font-bold";
+    if (r.planType === '6_months') return "text-blue-500 font-bold";
+    return "text-emerald-500 font-bold";
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
@@ -132,8 +140,37 @@ const TncLeaderboard = () => {
                 <div className={`flex w-8 shrink-0 items-center justify-center font-bold ${medal(r.rank)}`}>
                   {r.rank <= 3 ? <Medal className="h-5 w-5" /> : r.rank}
                 </div>
+                
+                <div className="relative shrink-0">
+                  {r.isAdmin ? (
+                    <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                  ) : r.isPremium ? (
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
+                  ) : null}
+                  <Avatar className={`h-10 w-10 relative bg-background border-2 ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                    <AvatarImage src={r.avatarUrl || undefined} className="object-cover" />
+                    <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                      {r.userName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {r.isAdmin ? (
+                    <div className="absolute -top-1 -right-1 bg-red-600 rounded-full p-0.5 border border-white shadow-sm z-10">
+                      <Star className="h-2 w-2 text-white fill-white" />
+                    </div>
+                  ) : r.isPremium ? (
+                    <div className="absolute -top-0.5 -right-0.5 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
+                      <Crown className="h-2 w-2 text-white fill-white" />
+                    </div>
+                  ) : null}
+                </div>
+
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-foreground">{r.userName}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className={`truncate font-semibold ${getNameColor(r)}`}>{r.userName}</p>
+                    {r.isAdmin && (
+                      <Badge className="bg-red-600 text-[10px] text-white hover:bg-red-600">Admin</Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     <span className="text-green-600">{r.correctCount} correct</span> ·{" "}
                     <span className="text-red-600">{r.wrongCount} wrong</span> ·{" "}
