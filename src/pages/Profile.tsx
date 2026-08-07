@@ -325,7 +325,7 @@ const Profile = () => {
             </CardContent>
           </Card>
         )}
-            <CardContent className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <CardContent className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-primary/10">
                   <User className="h-4 w-4 text-primary" />
