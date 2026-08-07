@@ -393,6 +393,7 @@ const TncQuiz = () => {
   // ---- Premium test: verify (free, ad-supported) or go premium ----
   // Reuses the exact same gate + server-side anti-bypass as the main site.
   if (accessRequired) {
+    const canonical = `${SITE}/tnc-tests/${examId ?? ""}`;
     return (
       <div className="min-h-screen bg-background">
         <Helmet>
