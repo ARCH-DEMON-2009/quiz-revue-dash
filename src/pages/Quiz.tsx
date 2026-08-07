@@ -625,14 +625,20 @@ const Quiz = () => {
                       <button
                         key={key}
                         onClick={() => handleAnswer(key)}
-                        className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                        className={`w-full text-left p-4 rounded-lg border-2 transition-all flex items-center gap-3 ${
                           currentAnswer?.selected === key
                             ? "border-primary bg-primary/10 shadow-sm"
                             : "border-border hover:border-primary/50 hover:bg-muted"
                         }`}
                       >
-                        <span className="font-semibold mr-3">{key}.</span>
-                        {value}
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          currentAnswer?.selected === key 
+                            ? "bg-primary border-primary text-white" 
+                            : "border-muted-foreground/30"
+                        }`}>
+                          <span className="text-xs font-bold">{key}</span>
+                        </div>
+                        <span className="flex-1">{value}</span>
                       </button>
                     ))}
                   </div>
@@ -647,21 +653,21 @@ const Quiz = () => {
             </Card>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleSkip}>
+            <div className="flex items-center justify-between gap-4 flex-wrap pb-20 sm:pb-0">
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleSkip}>
                   Skip
                 </Button>
-                <Button variant="outline" onClick={handleClear}>
-                  Clear
+                <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleClear}>
+                  Clear Selection
                 </Button>
               </div>
 
-              <div className="flex gap-2">
-                <Button variant="default" className="bg-warning hover:bg-warning/90 text-warning-foreground" onClick={handleMarkForReview}>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button variant="default" className="flex-1 sm:flex-none bg-warning hover:bg-warning/90 text-warning-foreground" onClick={handleMarkForReview}>
                   Mark for Review
                 </Button>
-                <Button onClick={handleSaveAndNext}>
+                <Button className="flex-1 sm:flex-none" onClick={handleSaveAndNext}>
                   Save & Next
                 </Button>
               </div>
