@@ -47,7 +47,7 @@ const TncLeaderboard = () => {
         const [premiumRes, adminRes, profileRes] = await Promise.all([
           supabase.from('premium_users').select('user_id, plan_duration_type').in('user_id', userIds).eq('status', 'active').gt('expiry_date', new Date().toISOString()),
           supabase.from('user_roles').select('user_id').in('user_id', userIds).eq('role', 'admin'),
-          supabase.from('user_profiles').select('user_id, avatar_url').in('user_id', userIds)
+          supabase.from('user_profiles').select('user_id, avatar_url, name').in('user_id', userIds)
         ]);
 
         const premMap = new Map(premiumRes.data?.map(p => [p.user_id, p.plan_duration_type]) || []);

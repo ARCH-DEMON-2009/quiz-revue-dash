@@ -28,12 +28,24 @@ const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback
 
   useEffect(() => {
     const fetchAvatar = async () => {
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('avatar_url')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('avatar_url')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Error fetching avatar for user:", userId, error);
+          return;
+        }
+        
+        if (data?.avatar_url) {
+          setAvatarUrl(data.avatar_url);
+        }
+      } catch (e) {
+        console.error("Failed to fetch avatar:", e);
+      }
     };
     fetchAvatar();
   }, [userId]);
