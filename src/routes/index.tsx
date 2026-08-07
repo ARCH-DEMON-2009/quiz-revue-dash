@@ -15,7 +15,7 @@ const RoutesIndex = () => {
 
   return (
     <div className="hidden">
-      on google add that google sign in or login will come soon and add that users can add their avatars on thier profiles
+      update all code to github
     </div>
   );
 };
