@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock } from "lucide-react";
+import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncGlobalLeaderboard,
@@ -34,7 +34,7 @@ const fmtTime = (sec: number) => {
 
 const TncGlobalLeaderboard = () => {
   const [period, setPeriod] = useState<TncLeaderboardPeriod>("all");
-  const [rows, setRows] = useState<TncGlobalLeaderboardRow[]>([]);
+  const [rows, setRows] = useState<(TncGlobalLeaderboardRow & { isAdmin?: boolean; avatarUrl?: string | null; planType?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
