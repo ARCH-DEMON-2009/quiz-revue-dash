@@ -127,18 +127,7 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
                 <Skeleton className="h-6 w-6 rounded-full" />
               ) : avatarUrl ? (
                 <div className="relative flex items-center gap-2">
-                  <div className="absolute -inset-0 z-0 pointer-events-none">
-                    {isAdmin ? (
-                      ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
-                      ) : (
-                        <div className={getAdminFrameStyles(true) || ""} />
-                      )
-                    ) : isPremium ? (
-                      <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
-                    ) : null}
-                  </div>
-                  <div className={`relative h-7 w-7 rounded-full border ${isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'} overflow-hidden bg-muted aspect-square shadow-sm`}>
+                  <div className={`relative h-7 w-7 rounded-full border border-primary/10 overflow-hidden bg-muted aspect-square shadow-sm`}>
                     {!imgLoaded && <Skeleton className="absolute inset-0 h-full w-full rounded-full" />}
                     <img 
                       src={avatarUrl} 
@@ -147,17 +136,6 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
                       onLoad={() => setImgLoaded(true)}
                     />
                   </div>
-                  {isAdmin ? (
-                    <div className="absolute -top-2.5 -right-2.5 w-6 h-6 z-10 animate-pulse">
-                      {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
-                        <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
-                      ) : (
-                        <Star className="h-3 w-3 text-white fill-white" />
-                      )}
-                    </div>
-                  ) : isPremium && (
-                    <img src="/badges/b1.png" alt="Premium" className="absolute -top-2.5 -right-2.5 w-6 h-6 object-contain drop-shadow-sm z-10" />
-                  )}
                   <span className="hidden sm:inline font-medium text-sm">Profile</span>
                 </div>
               ) : (
@@ -210,11 +188,9 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
                 />
               </div>
             ) : (
-              <>
-                <User className="h-4 w-4" />
-                <span className="text-xs">Profile</span>
-              </>
+              <User className="h-4 w-4" />
             )}
+            <span className="text-xs">Profile</span>
           </Button>
         </div>
       )}
