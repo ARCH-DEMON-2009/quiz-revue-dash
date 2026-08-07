@@ -36,6 +36,7 @@ const TncLeaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const { 
+    config,
     getAdminFrameStyles, 
     getAdminAvatarBorder, 
     getAdminBadgeIcon, 

@@ -69,6 +69,7 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { 
+    config,
     getAdminFrameStyles, 
     getAdminAvatarBorder, 
     getAdminBadgeIcon, 

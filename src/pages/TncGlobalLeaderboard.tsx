@@ -41,6 +41,7 @@ const TncGlobalLeaderboard = () => {
   const [meId, setMeId] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const { 
+    config,
     getAdminFrameStyles, 
     getAdminAvatarBorder, 
     getAdminBadgeIcon, 
