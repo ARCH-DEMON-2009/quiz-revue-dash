@@ -17,22 +17,22 @@ const FeatureAnnouncements = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  // We use a useEffect that is only called once.
-  // Note: If mounted outside BrowserRouter, useNavigate will fail.
-  // To handle the "Router-safe fallback", we wrap the component
-  // in the actual router within App.tsx (already done) 
-  // and add an internal check here.
-
   useState(() => {
-    const LAST_ANNOUNCEMENT_KEY = "last_announcement_seen_v1";
+    const LAST_ANNOUNCEMENT_KEY = "last_announcement_seen_v2";
+    const SHOW_DURATION_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
     
-    // Check if we are inside a Router by looking for location.
-    // If not, we just won't show the modal to prevent crashes.
     try {
-      const lastSeen = localStorage.getItem(LAST_ANNOUNCEMENT_KEY);
-      if (!lastSeen) {
+      const stored = localStorage.getItem(LAST_ANNOUNCEMENT_KEY);
+      const now = new Date().getTime();
+      
+      if (!stored) {
         setOpen(true);
-        localStorage.setItem(LAST_ANNOUNCEMENT_KEY, new Date().getTime().toString());
+        localStorage.setItem(LAST_ANNOUNCEMENT_KEY, now.toString());
+      } else {
+        const firstSeen = parseInt(stored);
+        if (now - firstSeen < SHOW_DURATION_MS) {
+          setOpen(true);
+        }
       }
     } catch (e) {
       console.error("Announcement check failed", e);
