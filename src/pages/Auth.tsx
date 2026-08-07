@@ -145,7 +145,46 @@ const Auth = () => {
     }
   };
 
-  if (user) {
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + "/auth"
+        }
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast.error(error.message || "Could not sign in with Google");
+    }
+  };
+
+  const handleUpdateWhatsapp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!whatsappNumber.trim()) {
+      toast.error("Please enter your WhatsApp number");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { whatsapp_number: whatsappNumber.trim() }
+      });
+      
+      if (error) throw error;
+      
+      toast.success("Profile updated successfully!");
+      setShowWhatsappDialog(false);
+      navigate(redirectTo);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update WhatsApp number");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (user && user.user_metadata?.whatsapp_number) {
     return null;
   }
 
