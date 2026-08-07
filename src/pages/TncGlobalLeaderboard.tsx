@@ -339,11 +339,6 @@ const TncGlobalLeaderboard = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
                     <p className={`truncate font-semibold ${getNameColor(r)}`}>{r.userName}</p>
-                    {r.isAdmin && (
-                      <Badge className="shrink-0 bg-red-600 text-[10px] text-white hover:bg-red-600">
-                        Admin
-                      </Badge>
-                    )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {r.testsTaken} tests · {r.accuracy.toFixed(1)}% accuracy · {fmtTime(r.timeTakenSeconds)}

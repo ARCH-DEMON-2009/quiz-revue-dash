@@ -326,9 +326,6 @@ const Leaderboard = () => {
                           <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(entry)}`}>
                             {entry.name}
                           </p>
-                          {entry.is_admin && (
-                            <Badge className="bg-red-600 text-[10px] text-white hover:bg-red-600 px-1 py-0 h-4">Admin</Badge>
-                          )}
                           {isCurrentUser(entry.user_id) && (
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
@@ -382,11 +379,11 @@ const Leaderboard = () => {
                               )
                             ) : currentUserEntry.is_premium ? (
                               <img 
-                                src="/frames/f1.png" 
+                                src="/frames/f3.png" 
                                 alt="Premium Frame" 
-                                className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" 
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/frames/f1.png";
+                                  (e.target as HTMLImageElement).src = "/frames/f3.png";
                                 }}
                               />
                             ) : null}
@@ -432,9 +429,6 @@ const Leaderboard = () => {
                             <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(currentUserEntry)}`}>
                               {currentUserEntry.name}
                             </p>
-                            {currentUserEntry.is_premium && (
-                              <Crown className="h-3 w-3 text-amber-500 shrink-0" />
-                            )}
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                               You
