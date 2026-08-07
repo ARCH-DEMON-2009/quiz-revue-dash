@@ -100,11 +100,13 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
             </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Profile" className="gap-2">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="User" className="h-5 w-5 rounded-full" />
+                <img src={avatarUrl} alt="User" className="h-6 w-6 rounded-full border border-primary/20 object-cover" />
               ) : (
-                <User className="h-4 w-4" />
+                <>
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:inline">Profile</span>
+                </>
               )}
-              <span className="hidden sm:inline">Profile</span>
             </Button>
           </div>
         )}
@@ -137,11 +139,13 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
           </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="flex-col h-auto py-1">
             {avatarUrl ? (
-              <img src={avatarUrl} alt="User" className="h-4 w-4 rounded-full" />
+              <img src={avatarUrl} alt="User" className="h-6 w-6 rounded-full border border-primary/20 object-cover" />
             ) : (
-              <User className="h-4 w-4" />
+              <>
+                <User className="h-4 w-4" />
+                <span className="text-xs">Profile</span>
+              </>
             )}
-            <span className="text-xs">Profile</span>
           </Button>
         </div>
       )}

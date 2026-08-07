@@ -21,6 +21,22 @@ interface UserDetails {
   avatarUrl?: string;
 }
 
+const AVATARS = [
+  { id: 'f1', url: 'https://i.pinimg.com/736x/e4/32/12/e43212860a10e5e63c80c2ce5f76f8b3.jpg', premium: false },
+  { id: 'f2', url: 'https://i.pinimg.com/736x/9c/f0/81/9cf08115f983cf802fde44e07b62413d.jpg', premium: false },
+  { id: 'p1', url: 'https://i.pinimg.com/1200x/dd/f6/46/ddf6466855c93a74ed814ce66860e9a3.jpg', premium: true },
+  { id: 'p2', url: 'https://i.pinimg.com/1200x/b1/ea/85/b1ea858dde1f60b3d7ff7ba62c7739f0.jpg', premium: true },
+  { id: 'p3', url: 'https://i.pinimg.com/736x/15/1b/d1/151bd1fb461ab318a3b06a331c9e5d4d.jpg', premium: true },
+  { id: 'p4', url: 'https://i.pinimg.com/736x/b8/81/01/b88101506ac0d03a27325247d1ef88d0.jpg', premium: true },
+  { id: 'p5', url: 'https://i.pinimg.com/736x/9f/b1/c6/9fb1c6354e2b4261904d1762a60c2d4e.jpg', premium: true },
+  { id: 'p6', url: 'https://i.pinimg.com/736x/02/af/aa/02afaabec94dc7ca657480d44c1eab78.jpg', premium: true },
+  { id: 'p7', url: 'https://i.pinimg.com/736x/d7/ea/4b/d7ea4b7cdf6cb72e7e7d1c98df2774aa.jpg', premium: true },
+  { id: 'p8', url: 'https://i.pinimg.com/1200x/c8/6f/2c/c86f2c7160dee9bb73c359051887dc15.jpg', premium: true },
+  { id: 'p9', url: 'https://i.pinimg.com/736x/aa/20/dc/aa20dcdacd49131834639f61f8f8026d.jpg', premium: true },
+  { id: 'p10', url: 'https://i.pinimg.com/736x/41/0c/ca/410ccab41a6ca4aa38a4de35da59bc43.jpg', premium: true },
+  { id: 'p11', url: 'https://i.pinimg.com/736x/46/98/52/469852f2ac6c7ace80f5eb65a61aede2.jpg', premium: true },
+];
+
 interface Stats {
   totalTests: number;
   averageScore: number;
@@ -120,8 +136,13 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarChange = async (url: string) => {
+  const handleAvatarChange = async (url: string, isPremiumAvatar: boolean) => {
     try {
+      if (isPremiumAvatar && accessStatus?.type !== 'premium') {
+        toast.error("This avatar is for premium users only!");
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -233,30 +254,51 @@ const Profile = () => {
         {userDetails && (
           <Card className="mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-br from-card to-muted/30">
             <CardHeader className="p-3 sm:p-4 lg:p-6 pb-0">
-              <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center justify-between gap-3 w-full">
-                <div className="flex items-center gap-3">
-                  {userDetails.avatarUrl ? (
-                    <img 
-                      src={userDetails.avatarUrl} 
-                      alt={userDetails.name} 
-                      className="h-10 w-10 rounded-full border-2 border-primary/20 object-cover"
-                    />
-                  ) : (
-                    <User className="h-6 w-6 text-primary" />
-                  )}
-                  <span>Profile Details</span>
+              <CardTitle className="text-base sm:text-lg lg:text-xl flex flex-col gap-4">
+                <div className="flex items-center justify-between gap-3 w-full">
+                  <div className="flex items-center gap-3">
+                    {userDetails.avatarUrl ? (
+                      <img 
+                        src={userDetails.avatarUrl} 
+                        alt={userDetails.name} 
+                        className="h-10 w-10 rounded-full border-2 border-primary/20 object-cover"
+                      />
+                    ) : (
+                      <User className="h-6 w-6 text-primary" />
+                    )}
+                    <span>Profile Details</span>
+                  </div>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    const url = prompt("Enter Image URL for your avatar:");
-                    if (url) handleAvatarChange(url);
-                  }}
-                  className="text-xs h-8"
-                >
-                  Change Avatar
-                </Button>
+                
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    Select Avatar {accessStatus?.type !== 'premium' && <span className="text-xs font-normal">(Premium avatars locked)</span>}
+                  </p>
+                  <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+                    {AVATARS.map((avatar) => (
+                      <div 
+                        key={avatar.id}
+                        onClick={() => handleAvatarChange(avatar.url, avatar.premium)}
+                        className={`relative cursor-pointer group rounded-full p-0.5 border-2 transition-all ${
+                          userDetails.avatarUrl === avatar.url 
+                            ? 'border-primary scale-105' 
+                            : 'border-transparent hover:border-primary/50'
+                        } ${avatar.premium && accessStatus?.type !== 'premium' ? 'opacity-50 grayscale' : ''}`}
+                      >
+                        <img 
+                          src={avatar.url} 
+                          alt="Avatar option" 
+                          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover"
+                        />
+                        {avatar.premium && (
+                          <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 shadow-sm">
+                            <Crown className="h-2 w-2 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
