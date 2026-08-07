@@ -584,7 +584,7 @@ const Quiz = () => {
         {/* Main Question Area */}
         <main className="flex-1 overflow-auto">
           <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 max-w-4xl">
-            <Card className="mb-4 sm:mb-6">
+            <Card className="mb-4 sm:mb-6 select-none" onContextMenu={(e) => e.preventDefault()}>
               <CardContent className="p-3 sm:p-4 lg:pt-6">
                 <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -595,12 +595,13 @@ const Quiz = () => {
                 
                 <div className="space-y-3 sm:space-y-4">
                   {currentQuestion.image && (
-                    <div className="mb-4">
+                    <div className="mb-4 relative group">
                       <img 
                         src={currentQuestion.image} 
                         alt="Question" 
-                        className="max-w-full h-auto rounded-lg border shadow-sm"
+                        className="max-w-full h-auto rounded-lg border shadow-sm pointer-events-none"
                       />
+                      <div className="absolute inset-0 bg-transparent" />
                     </div>
                   )}
                   {currentQuestion.question_text && (
