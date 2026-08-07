@@ -21,9 +21,22 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    // ---- Internal-only endpoint: this relays branded email through a trusted
+    // sender, so it must only be callable by our own server-side code
+    // (verify-razorpay-payment / razorpay-webhook) using the service-role key.
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
+    if (!serviceKey || token !== serviceKey) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Forbidden" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     const { email, name, plan_name, plan_days, amount, payment_id, expiry_date }: PremiumEmailRequest = await req.json();
 
-    console.log("Sending premium confirmation email to:", email);
+    console.log("Sending premium confirmation email");
+
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
