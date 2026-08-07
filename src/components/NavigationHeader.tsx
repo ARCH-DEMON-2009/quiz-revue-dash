@@ -2,10 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
@@ -16,6 +17,8 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { isPremium } = usePremiumStatus();
+  const [loading, setLoading] = useState(true);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -28,6 +31,7 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
       if (user.user_metadata?.avatar_url) {
         setAvatarUrl(user.user_metadata.avatar_url);
       }
+      setLoading(false);
     };
     fetchUserData();
   }, []);
@@ -98,9 +102,19 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <Trophy className="h-4 w-4 mr-2" />
               <span className="hidden md:inline">Leaderboard</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Profile" className="gap-2">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="User" className="h-6 w-6 rounded-full border border-primary/20 object-cover" />
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Profile" className="gap-2 relative min-w-[40px]">
+              {loading ? (
+                <Skeleton className="h-6 w-6 rounded-full" />
+              ) : avatarUrl ? (
+                <div className="relative h-6 w-6 rounded-full border border-primary/20 overflow-hidden bg-muted aspect-square">
+                  {!imgLoaded && <Skeleton className="absolute inset-0 h-full w-full rounded-full" />}
+                  <img 
+                    src={avatarUrl} 
+                    alt="User" 
+                    className={`h-full w-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                    onLoad={() => setImgLoaded(true)}
+                  />
+                </div>
               ) : (
                 <>
                   <User className="h-4 w-4" />
@@ -137,9 +151,19 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
             <Trophy className="h-4 w-4" />
             <span className="text-xs">Ranks</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="flex-col h-auto py-1">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="User" className="h-6 w-6 rounded-full border border-primary/20 object-cover" />
+          <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="flex-col h-auto py-1 min-w-[40px]">
+            {loading ? (
+              <Skeleton className="h-6 w-6 rounded-full mb-1" />
+            ) : avatarUrl ? (
+              <div className="relative h-6 w-6 rounded-full border border-primary/20 overflow-hidden bg-muted aspect-square mb-1">
+                {!imgLoaded && <Skeleton className="absolute inset-0 h-full w-full rounded-full" />}
+                <img 
+                  src={avatarUrl} 
+                  alt="User" 
+                  className={`h-full w-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  onLoad={() => setImgLoaded(true)}
+                />
+              </div>
             ) : (
               <>
                 <User className="h-4 w-4" />

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Medal, Award, Star } from "lucide-react";
+import { Trophy, Medal, Award, Star, Crown } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
@@ -18,6 +18,8 @@ interface LeaderboardEntry {
   overall_accuracy: number;
   rank_percentile: number;
   global_rank: number;
+  is_premium?: boolean;
+  plan_duration_type?: string;
 }
 
 const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback: string }) => {
@@ -76,6 +78,17 @@ const Leaderboard = () => {
 
       if (error) throw error;
 
+      // Fetch premium status for these users
+      const userIds = (data || []).map((e: any) => e.user_id);
+      const { data: premiumData } = await supabase
+        .from('premium_users')
+        .select('user_id, plan_duration_type')
+        .in('user_id', userIds)
+        .eq('status', 'active')
+        .gt('expiry_date', new Date().toISOString());
+
+      const premiumMap = new Map(premiumData?.map(p => [p.user_id, p.plan_duration_type]) || []);
+
       const leaderboardData: LeaderboardEntry[] = (data || []).map((entry: any) => ({
         user_id: entry.user_id,
         name: entry.name || 'Student',
@@ -83,7 +96,9 @@ const Leaderboard = () => {
         total_tests: Number(entry.total_tests) || 0,
         overall_accuracy: Number(entry.overall_accuracy) || 0,
         rank_percentile: Number(entry.rank_percentile) || 0,
-        global_rank: Number(entry.global_rank) || 0
+        global_rank: Number(entry.global_rank) || 0,
+        is_premium: premiumMap.has(entry.user_id),
+        plan_duration_type: premiumMap.get(entry.user_id)
       }));
 
       setLeaderboard(leaderboardData);
@@ -110,6 +125,14 @@ const Leaderboard = () => {
   };
 
   const isCurrentUser = (userId: string) => currentUserId === userId;
+
+  const getNameColor = (entry: LeaderboardEntry) => {
+    if (!entry.is_premium) return "text-foreground";
+    // Different colors based on plan
+    if (entry.plan_duration_type === 'yearly' || entry.plan_duration_type === '12_months') return "text-amber-500 font-bold";
+    if (entry.plan_duration_type === '6_months') return "text-blue-500 font-bold";
+    return "text-emerald-500 font-bold";
+  };
 
   if (loading) {
     return (
@@ -209,7 +232,12 @@ const Leaderboard = () => {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                          <p className="font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">{entry.name}</p>
+                          <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(entry)}`}>
+                            {entry.name}
+                          </p>
+                          {entry.is_premium && (
+                            <Crown className="h-3 w-3 text-amber-500 shrink-0" />
+                          )}
                           {isCurrentUser(entry.user_id) && (
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
@@ -258,7 +286,12 @@ const Leaderboard = () => {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                            <p className="font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">{currentUserEntry.name}</p>
+                            <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(currentUserEntry)}`}>
+                              {currentUserEntry.name}
+                            </p>
+                            {currentUserEntry.is_premium && (
+                              <Crown className="h-3 w-3 text-amber-500 shrink-0" />
+                            )}
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                               You

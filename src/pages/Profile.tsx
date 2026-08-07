@@ -5,11 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar } from "lucide-react";
+import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar, Check, X, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 
 interface UserDetails {
@@ -56,6 +64,9 @@ interface AccessStatus {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState<{url: string, premium: boolean} | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [stats, setStats] = useState<Stats>({
     totalTests: 0,
     averageScore: 0,
@@ -136,27 +147,71 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarChange = async (url: string, isPremiumAvatar: boolean) => {
-    try {
-      if (isPremiumAvatar && accessStatus?.type !== 'premium') {
-        toast.error("This avatar is for premium users only!");
-        return;
-      }
+  const handleAvatarClick = (url: string, isPremiumAvatar: boolean) => {
+    if (isPremiumAvatar && accessStatus?.type !== 'premium') {
+      toast.error("This avatar is for premium users only! Upgrade to unlock.");
+      navigate("/pricing");
+      return;
+    }
+    setSelectedAvatar({ url, premium: isPremiumAvatar });
+    setShowConfirmModal(true);
+  };
 
+  const confirmAvatarChange = async () => {
+    if (!selectedAvatar) return;
+    
+    try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase
         .from('user_profiles')
-        .update({ avatar_url: url })
+        .update({ avatar_url: selectedAvatar.url })
         .eq('user_id', user.id);
 
       if (error) throw error;
       
-      setUserDetails(prev => prev ? { ...prev, avatarUrl: url } : null);
+      setUserDetails(prev => prev ? { ...prev, avatarUrl: selectedAvatar.url } : null);
+      
+      // Update auth metadata too
+      await supabase.auth.updateUser({
+        data: { avatar_url: selectedAvatar.url }
+      });
+
       toast.success("Avatar updated!");
+      setShowConfirmModal(false);
+      setSelectedAvatar(null);
     } catch (error: any) {
       toast.error("Failed to update avatar");
+      console.error(error);
+    }
+  };
+
+  const handleNameChange = async () => {
+    if (!userDetails) return;
+    const newName = prompt("Enter your new name:", userDetails.name);
+    if (!newName || newName === userDetails.name) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ name: newName })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      setUserDetails(prev => prev ? { ...prev, name: newName } : null);
+      
+      await supabase.auth.updateUser({
+        data: { name: newName }
+      });
+
+      toast.success("Name updated!");
+    } catch (error: any) {
+      toast.error("Failed to update name");
       console.error(error);
     }
   };
@@ -273,54 +328,67 @@ const Profile = () => {
                       <p className="text-sm text-muted-foreground">{userDetails.email}</p>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      const url = prompt("Enter Image URL for your avatar:");
-                      if (url) handleAvatarChange(url, false);
-                    }}
-                    className="gap-2"
-                  >
-                    Edit Profile
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleNameChange}
+                      className="gap-2"
+                    >
+                      <User className="h-4 w-4" />
+                      Edit Name
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowAvatarSelector(!showAvatarSelector)}
+                      className="gap-2"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {showAvatarSelector ? "Hide List" : "Change Avatar"}
+                    </Button>
+                  </div>
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 lg:p-6 pt-4">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-muted-foreground">Select Premium Avatar</p>
-                  {accessStatus?.type !== 'premium' && (
-                    <Button variant="link" size="sm" className="text-amber-600 h-auto p-0" onClick={() => navigate("/pricing")}>
-                      Buy Premium to unlock all
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3">
-                  {AVATARS.map((avatar) => (
-                    <div 
-                      key={avatar.id}
-                      onClick={() => handleAvatarChange(avatar.url, avatar.premium)}
-                      className={`relative cursor-pointer group rounded-full p-0.5 border-2 transition-all duration-300 ${
-                        userDetails.avatarUrl === avatar.url 
-                          ? 'border-primary shadow-lg shadow-primary/20 scale-105' 
-                          : 'border-transparent hover:border-primary/30'
-                      } ${avatar.premium && accessStatus?.type !== 'premium' ? 'opacity-50 grayscale hover:opacity-70' : ''}`}
-                    >
-                      <img 
-                        src={avatar.url} 
-                        alt="Avatar option" 
-                        className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover transition-transform group-hover:scale-105"
-                      />
-                      {avatar.premium && (
-                        <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-1 shadow-md">
-                          <Crown className="h-3 w-3 text-white" />
-                        </div>
+                {showAvatarSelector && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-muted-foreground">Select Avatar</p>
+                      {accessStatus?.type !== 'premium' && (
+                        <Button variant="link" size="sm" className="text-amber-600 h-auto p-0" onClick={() => navigate("/pricing")}>
+                          Buy Premium to unlock all
+                        </Button>
                       )}
                     </div>
-                  ))}
-                </div>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3">
+                      {AVATARS.map((avatar) => (
+                        <div 
+                          key={avatar.id}
+                          onClick={() => handleAvatarClick(avatar.url, avatar.premium)}
+                          className={`relative cursor-pointer group rounded-full p-0.5 border-2 transition-all duration-300 ${
+                            userDetails.avatarUrl === avatar.url 
+                              ? 'border-primary shadow-lg shadow-primary/20 scale-105' 
+                              : 'border-transparent hover:border-primary/30'
+                          } ${avatar.premium && accessStatus?.type !== 'premium' ? 'opacity-50 grayscale hover:opacity-70' : ''}`}
+                        >
+                          <img 
+                            src={avatar.url} 
+                            alt="Avatar option" 
+                            className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover transition-transform group-hover:scale-105"
+                          />
+                          {avatar.premium && (
+                            <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-1 shadow-md">
+                              <Crown className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-6 border-t border-primary/10">
@@ -539,6 +607,56 @@ const Profile = () => {
           </>
         )}
       </main>
+
+      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm New Avatar</DialogTitle>
+            <DialogDescription>
+              This is how your profile picture will appear on the leaderboard and header.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center justify-center py-6 gap-6">
+            <div className="relative">
+              <div className="h-32 w-32 rounded-full border-4 border-primary/20 p-1 shadow-2xl overflow-hidden">
+                <img 
+                  src={selectedAvatar?.url} 
+                  alt="Preview" 
+                  className="h-full w-full rounded-full object-cover"
+                />
+              </div>
+              {selectedAvatar?.premium && (
+                <div className="absolute -top-2 -right-2 bg-amber-500 rounded-full p-2 shadow-lg ring-2 ring-white">
+                  <Crown className="h-5 w-5 text-white" />
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm font-medium">Header Preview</p>
+              <div className="h-10 w-10 rounded-full border border-primary/20 overflow-hidden shadow-md">
+                <img 
+                  src={selectedAvatar?.url} 
+                  alt="Header Preview" 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-center gap-2">
+            <Button variant="outline" onClick={() => setShowConfirmModal(false)}>
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={confirmAvatarChange} className="bg-primary text-white shadow-lg hover:shadow-primary/30 transition-all">
+              <Check className="h-4 w-4 mr-2" />
+              Confirm & Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
