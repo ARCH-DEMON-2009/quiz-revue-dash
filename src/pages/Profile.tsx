@@ -373,7 +373,7 @@ const Profile = () => {
                         </div>
                       ) : accessStatus?.type === 'premium' ? (
                         <div className="absolute -top-4 -right-4 z-10">
-                          <img src="/badges/b1.png" alt="Premium Badge" className="w-10 h-10 object-contain" />
+                          <img src="/badges/b3.png" alt="Premium Badge" className="w-10 h-10 object-contain" />
                         </div>
                       ) : null}
                     </div>
