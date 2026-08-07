@@ -17,7 +17,33 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // ---- Authorization: this endpoint reads paying customers' PII and sends
+    // real emails/SMS, so it must only be callable by the scheduled/internal
+    // job (service-role key) or an authenticated admin.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    let authorized = false;
+    if (token && token === supabaseServiceKey) {
+      authorized = true;
+    } else if (token) {
+      const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) {
+        const { data: isAdmin } = await userClient.rpc('is_admin');
+        authorized = !!isAdmin;
+      }
+    }
+    if (!authorized) {
+      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     console.log('Starting premium expiry notification check...');
+
 
     // Find premium users expiring in exactly 3 days
     const threeDaysFromNow = new Date();
