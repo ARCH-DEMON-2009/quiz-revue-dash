@@ -255,7 +255,9 @@ const Leaderboard = () => {
                         {entry.is_admin ? (
                           <div className={getAdminFrameStyles(true) || ""} />
                         ) : entry.is_premium ? (
-                          <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
+                          <div className="absolute -inset-1 z-0">
+                            <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.3] pointer-events-none" />
+                          </div>
                         ) : null}
                         
                         <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${entry.is_admin ? getAdminAvatarBorder(true) : entry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
