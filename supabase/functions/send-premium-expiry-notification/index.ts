@@ -150,17 +150,18 @@ Deno.serve(async (req) => {
         const data = await response.json();
 
         if (!response.ok) {
-          console.error(`Failed to send email to ${user.email}:`, data);
-          results.push({ email: user.email, success: false, error: JSON.stringify(data) });
+          console.error(`Failed to send expiry email for user ${user.user_id}:`, data);
+          failedCount++;
         } else {
-          console.log(`Email sent successfully to ${user.email}`);
-          results.push({ email: user.email, success: true });
+          console.log(`Expiry email sent for user ${user.user_id}`);
+          sentCount++;
         }
       } catch (emailError: any) {
-        console.error(`Error sending email to ${user.email}:`, emailError);
-        results.push({ email: user.email, success: false, error: emailError.message });
+        console.error(`Error sending expiry email for user ${user.user_id}:`, emailError);
+        failedCount++;
       }
     }
+
 
     // Also trigger SMS notifications for expiring users
     let smsResult = null;
