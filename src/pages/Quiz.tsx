@@ -233,6 +233,13 @@ const Quiz = () => {
   const handleAnswer = (option: string) => {
     const question = questions[currentIndex];
     const existing = answers.get(question.id);
+    
+    // If user clicks the already selected option, clear it
+    if (existing?.selected === option) {
+      handleClear();
+      return;
+    }
+
     setAnswers(new Map(answers.set(question.id, {
       questionId: question.id,
       selected: option,
@@ -265,12 +272,15 @@ const Quiz = () => {
   const handleClear = () => {
     const question = questions[currentIndex];
     const newAnswers = new Map(answers);
+    
+    // Clear the answer for the current question
     newAnswers.delete(question.id);
     setAnswers(newAnswers);
     setTextAnswer("");
   };
 
   const handleSkip = () => {
+    // Optional: Clear selection on skip if preferred, but usually skip just moves next
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     }
