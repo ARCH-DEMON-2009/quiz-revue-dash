@@ -6,6 +6,7 @@ export interface AdminBadgeConfig {
   badge_icon: string;
   text_effect: string;
   glow_color: string;
+  anti_extraction?: boolean;
 }
 
 const DEFAULT_CONFIG: AdminBadgeConfig = {
