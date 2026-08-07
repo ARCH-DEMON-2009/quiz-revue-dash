@@ -252,16 +252,16 @@ const Leaderboard = () => {
                         )}
                       </div>
                       
-                      <div className="relative">
-                        <div className="absolute -inset-0 z-0 pointer-events-none">
+                      <div className="relative h-10 w-10 flex-shrink-0">
+                        <div className="absolute inset-0 z-10 pointer-events-none overflow-visible">
                           {entry.is_admin ? (
                             ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
                               <img 
                                 src={`/frames/${config.frame_type}.png`} 
                                 alt="Admin Frame" 
-                                className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" 
                                 onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/frames/f3.png"; // Fallback to f3 for admin
+                                  (e.target as HTMLImageElement).src = "/frames/f3.png";
                                 }}
                               />
                             ) : (
@@ -271,9 +271,9 @@ const Leaderboard = () => {
                             <img 
                               src="/frames/f1.png" 
                               alt="Premium Frame" 
-                              className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" 
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/frames/f1.png"; // Already pointing to f1 but just in case
+                                (e.target as HTMLImageElement).src = "/frames/f1.png";
                               }}
                             />
                           ) : null}

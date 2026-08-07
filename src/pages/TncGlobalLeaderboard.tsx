@@ -289,16 +289,16 @@ const TncGlobalLeaderboard = () => {
                   {r.rank <= 3 ? <Medal className="h-5 w-5" /> : r.rank}
                 </div>
                 
-                <div className="relative shrink-0">
-                  <div className="absolute -inset-0 z-0 pointer-events-none">
+                <div className="relative h-10 w-10 shrink-0">
+                  <div className="absolute inset-0 z-10 pointer-events-none overflow-visible">
                     {r.isAdmin ? (
                       ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
+                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" />
                       ) : (
                         <div className={getAdminFrameStyles(true) || ""} />
                       )
                     ) : r.isPremium ? (
-                      <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
+                      <img src="/frames/f1.png" alt="Premium Frame" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" />
                     ) : null}
                   </div>
                   <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden shrink-0 ${r.isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
