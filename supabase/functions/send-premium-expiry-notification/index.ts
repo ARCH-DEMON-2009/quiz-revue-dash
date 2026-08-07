@@ -67,7 +67,10 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${expiringUsers?.length || 0} premium users expiring in 3 days`);
 
-    const results: Array<{ email: string; success: boolean; error?: string }> = [];
+    // Aggregate counters only — never per-user contact details in the response.
+    let sentCount = 0;
+    let failedCount = 0;
+
 
     for (const user of expiringUsers || []) {
       const expiryDate = new Date(user.expiry_date);
