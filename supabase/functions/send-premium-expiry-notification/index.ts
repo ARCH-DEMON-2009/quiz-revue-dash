@@ -17,7 +17,33 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // ---- Authorization: this endpoint reads paying customers' PII and sends
+    // real emails/SMS, so it must only be callable by the scheduled/internal
+    // job (service-role key) or an authenticated admin.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    let authorized = false;
+    if (token && token === supabaseServiceKey) {
+      authorized = true;
+    } else if (token) {
+      const userClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) {
+        const { data: isAdmin } = await userClient.rpc('is_admin');
+        authorized = !!isAdmin;
+      }
+    }
+    if (!authorized) {
+      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     console.log('Starting premium expiry notification check...');
+
 
     // Find premium users expiring in exactly 3 days
     const threeDaysFromNow = new Date();
@@ -41,7 +67,10 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${expiringUsers?.length || 0} premium users expiring in 3 days`);
 
-    const results: Array<{ email: string; success: boolean; error?: string }> = [];
+    // Aggregate counters only — never per-user contact details in the response.
+    let sentCount = 0;
+    let failedCount = 0;
+
 
     for (const user of expiringUsers || []) {
       const expiryDate = new Date(user.expiry_date);
@@ -121,17 +150,18 @@ Deno.serve(async (req) => {
         const data = await response.json();
 
         if (!response.ok) {
-          console.error(`Failed to send email to ${user.email}:`, data);
-          results.push({ email: user.email, success: false, error: JSON.stringify(data) });
+          console.error(`Failed to send expiry email for user ${user.user_id}:`, data);
+          failedCount++;
         } else {
-          console.log(`Email sent successfully to ${user.email}`);
-          results.push({ email: user.email, success: true });
+          console.log(`Expiry email sent for user ${user.user_id}`);
+          sentCount++;
         }
       } catch (emailError: any) {
-        console.error(`Error sending email to ${user.email}:`, emailError);
-        results.push({ email: user.email, success: false, error: emailError.message });
+        console.error(`Error sending expiry email for user ${user.user_id}:`, emailError);
+        failedCount++;
       }
     }
+
 
     // Also trigger SMS notifications for expiring users
     let smsResult = null;
@@ -161,8 +191,10 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         count: expiringUsers?.length || 0,
-        results,
-        smsResult,
+        sent: sentCount,
+        failed: failedCount,
+        smsSuccess: !!smsResult?.success,
+
         message: `Processed ${expiringUsers?.length || 0} premium users expiring in 3 days`,
       }),
       {
