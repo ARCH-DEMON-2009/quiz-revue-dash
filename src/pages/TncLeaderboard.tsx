@@ -85,7 +85,7 @@ const TncLeaderboard = () => {
   };
 
   const getNameColor = (r: ExtendedTncRow) => {
-    if (r.isAdmin) return "text-red-600 font-extrabold drop-shadow-sm";
+    if (r.isAdmin) return "text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 font-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]";
     if (!r.isPremium) return "text-foreground";
     if (r.planType === 'yearly' || r.planType === '12_months' || r.planType === '2years') return "text-amber-500 font-bold";
     if (r.planType === '6_months') return "text-blue-500 font-bold";

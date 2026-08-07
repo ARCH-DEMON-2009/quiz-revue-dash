@@ -138,7 +138,7 @@ const Leaderboard = () => {
   const isCurrentUser = (userId: string) => currentUserId === userId;
 
   const getNameColor = (entry: LeaderboardEntry) => {
-    if (entry.is_admin) return "text-red-600 font-extrabold drop-shadow-sm";
+    if (entry.is_admin) return "text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 font-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]";
     if (!entry.is_premium) return "text-foreground";
     // Different colors based on plan
     if (entry.plan_duration_type === 'yearly' || entry.plan_duration_type === '12_months' || entry.plan_duration_type === '2years') return "text-amber-500 font-bold";
