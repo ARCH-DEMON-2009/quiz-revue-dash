@@ -2,14 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2 } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
-import NavigationHeader from "@/components/NavigationHeader";
-import Footer from "@/components/Footer";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
