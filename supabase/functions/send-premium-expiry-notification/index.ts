@@ -191,8 +191,10 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         count: expiringUsers?.length || 0,
-        results,
-        smsResult,
+        sent: sentCount,
+        failed: failedCount,
+        smsSuccess: !!smsResult?.success,
+
         message: `Processed ${expiringUsers?.length || 0} premium users expiring in 3 days`,
       }),
       {
