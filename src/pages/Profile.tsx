@@ -332,12 +332,12 @@ const Profile = () => {
                       <div className="absolute -inset-0 z-0 pointer-events-none">
                         {isAdmin ? (
                           ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                            <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.5]" />
+                            <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
                           ) : (
                             <div className={getAdminFrameStyles(true) || ""} />
                           )
                         ) : accessStatus?.type === 'premium' ? (
-                          <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.5]" />
+                          <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
                         ) : null}
                       </div>
                       <div className={`relative h-16 w-16 rounded-full border-4 ${isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'} overflow-hidden bg-background shadow-lg`}>
@@ -354,7 +354,7 @@ const Profile = () => {
                         )}
                       </div>
                       {isAdmin ? (
-                        <div className="absolute -top-2 -right-2 w-8 h-8 z-10 animate-pulse">
+                        <div className="absolute -top-4 -right-4 w-12 h-12 z-10 animate-pulse">
                           {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
                             <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
                           ) : getAdminBadgeIcon(true) === 'shield' ? (
@@ -372,8 +372,8 @@ const Profile = () => {
                           )}
                         </div>
                       ) : accessStatus?.type === 'premium' ? (
-                        <div className="absolute -top-1 -right-1 z-10">
-                          <img src="/badges/b3.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
+                        <div className="absolute -top-4 -right-4 z-10">
+                          <img src="/badges/b1.png" alt="Premium Badge" className="w-10 h-10 object-contain" />
                         </div>
                       ) : null}
                     </div>
