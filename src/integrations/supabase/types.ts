@@ -401,7 +401,7 @@ export type Database = {
           id: string
           score: number
           test_id: string
-          user_id: number
+          user_id: string
           wrong: number
         }
         Insert: {
@@ -411,7 +411,7 @@ export type Database = {
           id?: string
           score: number
           test_id: string
-          user_id: number
+          user_id: string
           wrong: number
         }
         Update: {
@@ -421,7 +421,7 @@ export type Database = {
           id?: string
           score?: number
           test_id?: string
-          user_id?: number
+          user_id?: string
           wrong?: number
         }
         Relationships: [
