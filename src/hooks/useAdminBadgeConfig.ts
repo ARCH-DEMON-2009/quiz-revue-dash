@@ -11,7 +11,7 @@ export interface AdminBadgeConfig {
 
 const DEFAULT_CONFIG: AdminBadgeConfig = {
   frame_type: "rainbow",
-  badge_icon: "star",
+  badge_icon: "b1",
   text_effect: "gradient_black",
   glow_color: "#9b87f5",
 };

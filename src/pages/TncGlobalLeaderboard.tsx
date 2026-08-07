@@ -305,18 +305,26 @@ const TncGlobalLeaderboard = () => {
                     />
                   </div>
                   {r.isAdmin ? (
-                    <div className="absolute -top-2 -right-2 bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg z-10 animate-pulse">
-                      {getAdminBadgeIcon(true) === 'shield' ? (
-                        <Shield className="h-3 w-3 text-white fill-white" />
+                    <div className="absolute -top-2 -right-2 w-6 h-6 z-10 animate-pulse">
+                      {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
+                        <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
+                      ) : getAdminBadgeIcon(true) === 'shield' ? (
+                        <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
+                          <Shield className="h-3 w-3 text-white fill-white" />
+                        </div>
                       ) : getAdminBadgeIcon(true) === 'crown' ? (
-                        <Crown className="h-3 w-3 text-white fill-white" />
+                        <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
+                          <Crown className="h-3 w-3 text-white fill-white" />
+                        </div>
                       ) : (
-                        <Star className="h-3 w-3 text-white fill-white" />
+                        <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
+                          <Star className="h-3 w-3 text-white fill-white" />
+                        </div>
                       )}
                     </div>
                   ) : r.isPremium ? (
-                    <div className="absolute -top-0.5 -right-0.5 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
-                      <Crown className="h-2 w-2 text-white fill-white" />
+                    <div className="absolute -top-0.5 -right-0.5 z-10">
+                      <img src="/badges/b3.png" alt="Premium Badge" className="w-5 h-5 object-contain" />
                     </div>
                   ) : null}
                 </div>
