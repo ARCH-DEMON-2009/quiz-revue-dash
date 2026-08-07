@@ -15,10 +15,7 @@ const RoutesIndex = () => {
 
   return (
     <div className="hidden">
-      Verify that all leaderboard users can see each other’s avatar images correctly, including cases where avatars are missing or fall back to initials.
-      fix that code has some error site is only leading and showing white screen only
-      
-      Add admin-only badge configuration so the admin frame, badge style, and text color can be managed without code changes.
+      Add toggleable anti-extraction protections on the quiz page (e.g., selection, context menu, copy) with a clear admin setting and audit logging.
     </div>
   );
 };

@@ -69,6 +69,7 @@ const Admin = () => {
     badge_icon: "star",
     text_effect: "gradient_black",
     glow_color: "#9b87f5",
+    anti_extraction: true,
   });
   const [badgeConfigLoading, setBadgeConfigLoading] = useState(false);
 
@@ -1029,6 +1030,16 @@ const Admin = () => {
                     style={{ backgroundColor: adminBadgeConfig.glow_color }}
                   />
                 </div>
+              </div>
+              <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                <div className="space-y-0.5">
+                  <label className="text-xs font-medium block">Anti-Extraction Protection</label>
+                  <p className="text-[10px] text-muted-foreground">Disable right-click, selection, and copy on quiz pages.</p>
+                </div>
+                <Switch 
+                  checked={adminBadgeConfig.anti_extraction}
+                  onCheckedChange={(checked) => setAdminBadgeConfig(prev => ({ ...prev, anti_extraction: checked }))}
+                />
               </div>
             </div>
             <Button 

@@ -9,7 +9,9 @@ import { Clock, FileText, Maximize2, Minimize2 } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import { AccessGuard } from "@/components/AccessGuard";
+import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 
 
 
@@ -48,6 +50,7 @@ const Quiz = () => {
   const [textAnswer, setTextAnswer] = useState("");
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const { config: adminConfig } = useAdminBadgeConfig();
   const userIdRef = useRef<string | null>(null);
   const lastSavedRef = useRef<string>("");
 
@@ -57,6 +60,8 @@ const Quiz = () => {
 
   // Anti question-extraction: disable right-click, copy, selection, common devtools shortcuts
   useEffect(() => {
+    if (adminConfig.anti_extraction === false) return;
+
     const prevent = (e: Event) => e.preventDefault();
     const onKey = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
@@ -584,7 +589,10 @@ const Quiz = () => {
         {/* Main Question Area */}
         <main className="flex-1 overflow-auto">
           <div className="container mx-auto px-2 sm:px-4 py-3 sm:py-6 max-w-4xl">
-            <Card className="mb-4 sm:mb-6 select-none" onContextMenu={(e) => e.preventDefault()}>
+            <Card 
+              className={cn("mb-4 sm:mb-6", adminConfig.anti_extraction !== false && "select-none")} 
+              onContextMenu={(e) => adminConfig.anti_extraction !== false && e.preventDefault()}
+            >
               <CardContent className="p-3 sm:p-4 lg:pt-6">
                 <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -599,13 +607,13 @@ const Quiz = () => {
                       <img 
                         src={currentQuestion.image} 
                         alt="Question" 
-                        className="max-w-full h-auto rounded-lg border shadow-sm pointer-events-none"
+                        className={cn("max-w-full h-auto rounded-lg border shadow-sm", adminConfig.anti_extraction !== false && "pointer-events-none")}
                       />
-                      <div className="absolute inset-0 bg-transparent" />
+                      {adminConfig.anti_extraction !== false && <div className="absolute inset-0 bg-transparent" />}
                     </div>
                   )}
                   {currentQuestion.question_text && (
-                    <p className="text-lg leading-relaxed pointer-events-none">{currentQuestion.question_text}</p>
+                    <p className={cn("text-lg leading-relaxed", adminConfig.anti_extraction !== false && "pointer-events-none")}>{currentQuestion.question_text}</p>
                   )}
                 </div>
                 
