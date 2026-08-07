@@ -116,7 +116,7 @@ const Leaderboard = () => {
           .eq('role', 'admin')
       ]);
 
-      const premiumMap = new Map(premiumResponse.data?.map(p => [p.user_id, p.plan_duration_type]) || []);
+      const premiumMap = new Map(premiumResponse.data?.map(p => [p.user_id, p.plan_duration_type || 'standard']) || []);
       const adminSet = new Set(adminResponse.data?.map(a => a.user_id) || []);
 
       const leaderboardData: LeaderboardEntry[] = (data || []).map((entry: any) => ({

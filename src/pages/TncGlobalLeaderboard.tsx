@@ -82,7 +82,7 @@ const TncGlobalLeaderboard = () => {
 
       const adminSet = new Set(adminRes.data?.map(a => a.user_id) || []);
       const profileMap = new Map(profileRes.data?.map(p => [p.user_id, p.avatar_url]) || []);
-      const premMap = new Map(premiumRes.data?.map(p => [p.user_id, p.plan_duration_type]) || []);
+      const premMap = new Map(premiumRes.data?.map(p => [p.user_id, p.plan_duration_type || 'standard']) || []);
 
       const enhancedRows = res.rows.map(r => ({
         ...r,
