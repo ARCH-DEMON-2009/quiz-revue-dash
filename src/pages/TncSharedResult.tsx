@@ -180,20 +180,51 @@ const TncSharedResult = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{`${stripHtml(examName)} Result — ${attempt.userName} | TNC Nursing Test`}</title>
+        <title>{`${stripHtml(examName)} Result — ${attempt.userName} | TNC Nursing Test | Test Sagar`}</title>
         <meta
           name="description"
-          content={`${attempt.userName} scored ${attempt.score.toFixed(2)}/${attempt.totalMarks} on ${stripHtml(examName)}.`}
+          content={`${attempt.userName} scored ${attempt.score.toFixed(2)}/${attempt.totalMarks} on ${stripHtml(examName)} at Test Sagar.`}
         />
         <link rel="canonical" href={canonical} />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content={`${stripHtml(examName)} Result — ${attempt.userName}`} />
+        <meta property="og:title" content={`${stripHtml(examName)} Result — ${attempt.userName} | Test Sagar`} />
         <meta
           property="og:description"
-          content={`Scored ${attempt.score.toFixed(2)}/${attempt.totalMarks}. View the full review.`}
+          content={`Scored ${attempt.score.toFixed(2)}/${attempt.totalMarks} on ${stripHtml(examName)}. View full review on the best test taking site.`}
         />
         <meta property="og:url" content={canonical} />
+        <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${stripHtml(examName)} Result — ${attempt.userName} | Test Sagar`} />
+        <meta name="twitter:description" content={`Scored ${attempt.score.toFixed(2)}/${attempt.totalMarks} on TNC Nursing Test.`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": `${stripHtml(examName)} Result — ${attempt.userName}`,
+            "description": `${attempt.userName}'s result on ${stripHtml(examName)}`,
+            "url": canonical,
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": SITE
+              }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "TNC Tests",
+                "item": `https://test.shashanksv.com/tnc-tests`
+              }, {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Result",
+                "item": canonical
+              }]
+            }
+          })}
+        </script>
       </Helmet>
       <NavigationHeader />
       <main className="container mx-auto max-w-3xl px-4 py-10">

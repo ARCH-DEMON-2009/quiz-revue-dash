@@ -41,12 +41,37 @@ const ContactUs = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex flex-col">
       <Helmet>
-        <title>Contact & Support | Test Sagar</title>
-        <meta name="description" content="Need help with Test Sagar? Reach our support team on WhatsApp for account, payment and test-related queries." />
+        <title>Contact & Support | Test Sagar — WhatsApp Assistance</title>
+        <meta name="description" content="Need help with Test Sagar? Reach our support team on WhatsApp for account, payment, and TNC/JEE/NEET test-related queries. We are here to help." />
         <link rel="canonical" href="https://test.shashanksv.com/contact" />
         <meta property="og:title" content="Contact & Support | Test Sagar" />
-        <meta property="og:description" content="Get help from the Test Sagar support team on WhatsApp." />
+        <meta property="og:description" content="Get instant help from the Test Sagar support team on WhatsApp for the best test taking experience." />
         <meta property="og:url" content="https://test.shashanksv.com/contact" />
+        <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ContactPage",
+            "name": "Contact Us",
+            "description": "Support page for Test Sagar.",
+            "url": "https://test.shashanksv.com/contact",
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://test.shashanksv.com/"
+              }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Contact",
+                "item": "https://test.shashanksv.com/contact"
+              }]
+            }
+          })}
+        </script>
       </Helmet>
       <nav className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">

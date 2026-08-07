@@ -396,8 +396,15 @@ const TncQuiz = () => {
     return (
       <div className="min-h-screen bg-background">
         <Helmet>
-          <title>{`Unlock ${stripHtml(exam?.name ?? "TNC Test")} | TNC Nursing Test`}</title>
+          <title>{`Unlock ${stripHtml(exam?.name ?? "TNC Test")} | TNC Nursing Test | Test Sagar`}</title>
+          <meta name="description" content={`Unlock access to the ${stripHtml(exam?.name ?? "TNC Nursing Test")} on Test Sagar. Complete verification to start your practice.`} />
           <meta name="robots" content="noindex" />
+          <link rel="canonical" href={canonical} />
+          <meta property="og:title" content={`Unlock ${stripHtml(exam?.name ?? "TNC Test")} | Test Sagar`} />
+          <meta property="og:description" content="Complete a quick verification to access this TNC Nursing mock test for 12 hours." />
+          <meta property="og:url" content={canonical} />
+          <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
+          <meta name="twitter:card" content="summary_large_image" />
         </Helmet>
         <NavigationHeader />
         <LinkShortenerGate returnTo={`/tnc-tests/${examId ?? ""}`}>
@@ -440,22 +447,50 @@ const TncQuiz = () => {
     return (
       <div className="min-h-screen bg-background">
         <Helmet>
-          <title>{`${stripHtml(exam.name)} — TNC Nursing Mock Test`}</title>
+          <title>{`${stripHtml(exam.name)} — TNC Nursing Mock Test | Test Sagar`}</title>
           <meta name="description" content={desc} />
           <link rel="canonical" href={canonical} />
           <meta property="og:type" content="article" />
-          <meta property="og:title" content={`${stripHtml(exam.name)} — TNC Nursing Mock Test`} />
+          <meta property="og:title" content={`${stripHtml(exam.name)} — TNC Nursing Mock Test | Test Sagar`} />
           <meta property="og:description" content={desc} />
           <meta property="og:url" content={canonical} />
+          <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
           <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${stripHtml(exam.name)} — TNC Nursing Mock Test | Test Sagar`} />
+          <meta name="twitter:description" content={desc} />
           <script type="application/ld+json">
             {JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Quiz",
-              name: stripHtml(exam.name),
-              educationalLevel: "Nursing",
-              url: canonical,
-              numberOfQuestions: questions.length,
+              "name": stripHtml(exam.name),
+              "educationalLevel": "Nursing",
+              "url": canonical,
+              "numberOfQuestions": questions.length,
+              "timeRequired": `PT${parseInt(exam.durationMinutes)}M`,
+              "publisher": {
+                "@type": "EducationalOrganization",
+                "name": "Test Sagar",
+                "url": SITE
+              },
+              "breadcrumb": {
+                "@type": "BreadcrumbList",
+                "itemListElement": [{
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": SITE
+                }, {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "TNC Tests",
+                  "item": `${SITE}/tnc-tests`
+                }, {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": stripHtml(exam.name),
+                  "item": canonical
+                }]
+              }
             })}
           </script>
         </Helmet>
