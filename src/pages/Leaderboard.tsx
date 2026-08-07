@@ -279,7 +279,7 @@ const Leaderboard = () => {
                           ) : null}
                         </div>
                         
-                        <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${entry.is_admin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
+                        <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden z-0 ${entry.is_admin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
                           {entry.user_id ? (
                             <AvatarImageWithProfile userId={entry.user_id} fallback={entry.name.charAt(0).toUpperCase()} />
                           ) : (
