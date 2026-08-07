@@ -5,12 +5,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut } from "lucide-react";
+import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 
 import { Link } from "react-router-dom";
+
+interface UserDetails {
+  email?: string;
+  name?: string;
+  whatsapp?: string;
+  createdAt?: string;
+}
 
 interface Stats {
   totalTests: number;
@@ -44,10 +51,12 @@ const Profile = () => {
   const [recentTests, setRecentTests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [accessStatus, setAccessStatus] = useState<AccessStatus | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
 
   useEffect(() => {
     fetchProfileData();
     checkAccessStatus();
+    fetchUserDetails();
   }, []);
 
   const checkAccessStatus = async () => {
@@ -81,6 +90,22 @@ const Profile = () => {
       });
     } catch (error) {
       console.error("Error checking access status:", error);
+    }
+  };
+
+  const fetchUserDetails = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserDetails({
+          email: user.email,
+          name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+          whatsapp: user.user_metadata?.whatsapp || user.user_metadata?.phone,
+          createdAt: user.created_at
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
     }
   };
 
@@ -173,6 +198,61 @@ const Profile = () => {
       </div>
 
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
+        {/* User Details Card */}
+        {userDetails && (
+          <Card className="mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-br from-card to-muted/30">
+            <CardHeader className="p-3 sm:p-4 lg:p-6 pb-0">
+              <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                Profile Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Name</p>
+                  <p className="text-sm font-medium truncate">{userDetails.name}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Mail className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Email</p>
+                  <p className="text-sm font-medium truncate">{userDetails.email}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Phone className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">WhatsApp</p>
+                  <p className="text-sm font-medium truncate">{userDetails.whatsapp || 'Not provided'}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <Calendar className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Joined</p>
+                  <p className="text-sm font-medium">
+                    {userDetails.createdAt ? new Date(userDetails.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Access Status Card */}
         {accessStatus && (
           <Card className={`mb-4 sm:mb-6 lg:mb-8 ${accessStatus.type === 'premium' ? 'border-primary' : 'border-muted-foreground/30'}`}>
