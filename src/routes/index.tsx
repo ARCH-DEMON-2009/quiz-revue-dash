@@ -15,7 +15,7 @@ const RoutesIndex = () => {
 
   return (
     <div className="hidden">
-      update all code to github
+      add avatar feature working user can add avatar and his avatar show on site,leader board and anywhere. also fix that make all things fully responsieve include leader board because in leader board in mobile name is cutted and not recoginiable and reset the stats every week of this leader board https://test.shashanksv.com/leaderboard
     </div>
   );
 };

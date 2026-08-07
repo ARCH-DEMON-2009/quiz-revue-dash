@@ -214,7 +214,7 @@ const Profile = () => {
                 ) : (
                   <User className="h-6 w-6 text-primary" />
                 )}
-                Profile Details (Add avatar coming soon)
+                Profile Details
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

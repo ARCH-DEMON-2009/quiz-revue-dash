@@ -176,9 +176,9 @@ const Leaderboard = () => {
                         </AvatarFallback>
                       </Avatar>
                       
-                      <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                          <p className="font-semibold text-sm sm:text-base truncate max-w-[80px] sm:max-w-[150px] md:max-w-none">{entry.name}</p>
+                          <p className="font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">{entry.name}</p>
                           {isCurrentUser(entry.user_id) && (
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
@@ -221,9 +221,9 @@ const Leaderboard = () => {
                           </AvatarFallback>
                         </Avatar>
                         
-                        <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                            <p className="font-semibold text-sm sm:text-base truncate max-w-[80px] sm:max-w-[150px] md:max-w-none">{currentUserEntry.name}</p>
+                            <p className="font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">{currentUserEntry.name}</p>
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                               You
