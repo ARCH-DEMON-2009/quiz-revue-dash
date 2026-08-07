@@ -322,6 +322,50 @@ const Profile = () => {
                   ))}
                 </div>
               </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-6 border-t border-primary/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Name</p>
+                    <p className="text-sm font-medium truncate">{userDetails.name}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Mail className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Email</p>
+                    <p className="text-sm font-medium truncate">{userDetails.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Phone className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">WhatsApp</p>
+                    <p className="text-sm font-medium truncate">{userDetails.whatsapp || 'Not provided'}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Calendar className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Joined</p>
+                    <p className="text-sm font-medium">
+                      {userDetails.createdAt ? new Date(userDetails.createdAt).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
