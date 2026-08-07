@@ -20,7 +20,7 @@ interface PdfArgs {
 }
 
 const OPTS = ["A", "B", "C", "D"] as const;
-const DEFAULT_SITE = "https://test-sagar-jet.vercel.app/";
+const DEFAULT_SITE = "https://test.shashanksv.com/";
 const DEFAULT_BRAND = "Test Sagar";
 const LOGO_PATH = "/logo.png";
 
