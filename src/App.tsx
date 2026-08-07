@@ -39,8 +39,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <FeatureAnnouncements />
       <BrowserRouter>
+        <FeatureAnnouncements />
         <MaintenanceModeGuard>
           <BypassBlockGuard />
           <BlockedUserGuard />
