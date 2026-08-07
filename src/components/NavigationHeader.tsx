@@ -136,15 +136,6 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
                       onLoad={() => setImgLoaded(true)}
                     />
                   </div>
-                    {!imgLoaded && <Skeleton className="absolute inset-0 h-full w-full rounded-full" />}
-                    <img 
-                      src={avatarUrl} 
-                      alt="User" 
-                      className={`h-full w-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-                      onLoad={() => setImgLoaded(true)}
-                    />
-                  </div>
-                  {/* Badges and frames removed from header icon per request */}
                   <span className="hidden sm:inline font-medium text-sm">Profile</span>
                 </div>
               ) : (
