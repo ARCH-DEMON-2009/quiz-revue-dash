@@ -17,7 +17,7 @@ import {
 } from "@/lib/tncApi";
 import { toast } from "sonner";
 
-const SITE = "https://quiz-revue-dash.lovable.app";
+const SITE = "https://test.shashanksv.com";
 const CACHE_KEY = "tnc_global_leaderboard_cache";
 
 const PERIODS: { value: TncLeaderboardPeriod; label: string }[] = [

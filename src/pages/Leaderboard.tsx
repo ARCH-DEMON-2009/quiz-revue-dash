@@ -101,10 +101,10 @@ const Leaderboard = () => {
       <Helmet>
         <title>All-India Leaderboard & Rankings | Test Sagar</title>
         <meta name="description" content="See where you rank on the Test Sagar all-India leaderboard. Live rankings by average score, accuracy and tests taken across all students." />
-        <link rel="canonical" href="https://quiz-revue-dash.lovable.app/leaderboard" />
+        <link rel="canonical" href="https://test.shashanksv.com/leaderboard" />
         <meta property="og:title" content="All-India Leaderboard & Rankings | Test Sagar" />
         <meta property="og:description" content="Live all-India rankings by average score and accuracy." />
-        <meta property="og:url" content="https://quiz-revue-dash.lovable.app/leaderboard" />
+        <meta property="og:url" content="https://test.shashanksv.com/leaderboard" />
       </Helmet>
       <NavigationHeader />
       <div className="p-4 md:p-8 flex-1">
