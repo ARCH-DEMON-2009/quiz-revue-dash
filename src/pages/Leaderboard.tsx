@@ -53,9 +53,11 @@ const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback
 
   return (
     <>
-      {avatarUrl ? (
-        <AvatarImage src={avatarUrl} className="object-cover" loading="lazy" />
-      ) : null}
+      <AvatarImage 
+        src={avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${fallback}`} 
+        className="object-cover" 
+        loading="lazy" 
+      />
       <AvatarFallback className="bg-primary/20 text-primary font-semibold">
         {fallback}
       </AvatarFallback>
@@ -346,6 +348,24 @@ const Leaderboard = () => {
                       </div>
                     </div>
                   ))}
+                  
+                  {import.meta.env.DEV && (
+                    <div className="mt-8 p-4 bg-black/80 text-green-400 font-mono text-xs rounded-lg border border-green-500/30 overflow-auto">
+                      <p className="font-bold mb-2 border-b border-green-500/30 pb-1 uppercase">Leaderboard Debug Panel</p>
+                      <div className="space-y-2">
+                        {top50.map(u => (
+                          <div key={u.user_id} className="flex gap-4">
+                            <span className="w-24 truncate">{u.name}:</span>
+                            <span className={u.is_admin ? "text-red-400" : u.is_premium ? "text-yellow-400" : "text-gray-400"}>
+                              {u.is_admin ? "ADMIN" : u.is_premium ? "PREMIUM" : "FREE"}
+                            </span>
+                            <span>Badge: {u.is_admin ? getAdminBadgeIcon(true) : (u.is_premium ? 'b1' : 'none')}</span>
+                            <span>Frame: {u.is_admin ? config.frame_type : (u.is_premium ? 'f3' : 'none')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Show current user's rank if outside top 50 */}
                   {currentUserEntry && (

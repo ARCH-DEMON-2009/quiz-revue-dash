@@ -162,7 +162,14 @@ const TncLeaderboard = () => {
                     ) : null}
                   </div>
                   <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden z-0 ${r.isAdmin ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
-                    <AvatarImage src={r.avatarUrl || (r.isAdmin ? "/admin-avatar.png" : undefined)} className="object-cover" loading="lazy" />
+                    <AvatarImage 
+                      src={r.avatarUrl || (r.isAdmin ? "/admin-avatar.png" : `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`)} 
+                      className="object-cover" 
+                      loading="lazy" 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`;
+                      }}
+                    />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
                       {r.userName.charAt(0).toUpperCase()}
                     </AvatarFallback>
