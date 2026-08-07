@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar, Check, X, Sparkles, Star } from "lucide-react";
+import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar, Check, X, Sparkles, Star, Shield } from "lucide-react";
+import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
@@ -83,6 +84,12 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [accessStatus, setAccessStatus] = useState<AccessStatus | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const { 
+    getAdminFrameStyles, 
+    getAdminAvatarBorder, 
+    getAdminBadgeIcon, 
+    getAdminNameColor 
+  } = useAdminBadgeConfig();
 
   useEffect(() => {
     fetchProfileData();
@@ -322,11 +329,11 @@ const Profile = () => {
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       {isAdmin ? (
-                        <div className="absolute -inset-2 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                        <div className={getAdminFrameStyles(true) || ""} />
                       ) : accessStatus?.type === 'premium' ? (
                         <div className="absolute -inset-1.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                       ) : null}
-                      <div className={`relative h-16 w-16 rounded-full border-4 ${isAdmin ? 'border-purple-500' : accessStatus?.type === 'premium' ? 'border-amber-400' : 'border-primary/20'} overflow-hidden bg-background shadow-lg`}>
+                      <div className={`relative h-16 w-16 rounded-full border-4 ${isAdmin ? getAdminAvatarBorder(true) : accessStatus?.type === 'premium' ? 'border-amber-400' : 'border-primary/20'} overflow-hidden bg-background shadow-lg`}>
                         {userDetails.avatarUrl ? (
                           <img 
                             src={userDetails.avatarUrl} 
@@ -341,7 +348,13 @@ const Profile = () => {
                       </div>
                       {isAdmin ? (
                         <div className="absolute -top-2 -right-2 bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg z-10 animate-pulse">
-                          <Star className="h-3 w-3 text-white fill-white" />
+                          {getAdminBadgeIcon(true) === 'shield' ? (
+                            <Shield className="h-4 w-4 text-white fill-white" />
+                          ) : getAdminBadgeIcon(true) === 'crown' ? (
+                            <Crown className="h-4 w-4 text-white fill-white" />
+                          ) : (
+                            <Star className="h-4 w-4 text-white fill-white" />
+                          )}
                         </div>
                       ) : accessStatus?.type === 'premium' ? (
                         <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
@@ -350,7 +363,7 @@ const Profile = () => {
                       ) : null}
                     </div>
                     <div>
-                      <h2 className={`text-xl font-bold ${isAdmin ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 font-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]' : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
+                      <h2 className={`text-xl font-bold ${isAdmin ? getAdminNameColor(true) : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
                       <p className="text-sm text-muted-foreground">{userDetails.email}</p>
                     </div>
                   </div>

@@ -64,6 +64,13 @@ const Admin = () => {
   const [shortenerLoading, setShortenerLoading] = useState(false);
   const [verificationEnabled, setVerificationEnabled] = useState(true);
   const [verificationLoading, setVerificationLoading] = useState(false);
+  const [adminBadgeConfig, setAdminBadgeConfig] = useState({
+    frame_type: "rainbow",
+    badge_icon: "star",
+    text_effect: "gradient_black",
+    glow_color: "#9b87f5",
+  });
+  const [badgeConfigLoading, setBadgeConfigLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAuth();
@@ -99,6 +106,7 @@ const Admin = () => {
       fetchMaintenanceMode();
       fetchShortenerLink();
       fetchVerificationEnabled();
+      fetchAdminBadgeConfig();
     } catch (error) {
       console.error("Auth error:", error);
       navigate("/");
@@ -192,6 +200,60 @@ const Admin = () => {
       setVerificationEnabled(data ? data.config_value !== "false" : true);
     } catch (error) {
       console.error("Error fetching verification toggle:", error);
+    }
+  };
+
+  const fetchAdminBadgeConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("system_config")
+        .select("config_value")
+        .eq("config_key", "admin_badge_config")
+        .maybeSingle();
+      if (error) throw error;
+      if (data?.config_value) {
+        setAdminBadgeConfig(JSON.parse(data.config_value));
+      }
+    } catch (error) {
+      console.error("Error fetching admin badge config:", error);
+    }
+  };
+
+  const saveAdminBadgeConfig = async (newConfig: any) => {
+    setBadgeConfigLoading(true);
+    try {
+      const { data: existing } = await supabase
+        .from("system_config")
+        .select("id")
+        .eq("config_key", "admin_badge_config")
+        .maybeSingle();
+
+      const configStr = JSON.stringify(newConfig);
+
+      if (existing) {
+        const { error } = await supabase
+          .from("system_config")
+          .update({
+            config_value: configStr,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("config_key", "admin_badge_config");
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("system_config").insert({
+          config_key: "admin_badge_config",
+          config_value: configStr,
+          description: "JSON configuration for admin visual appearance",
+        });
+        if (error) throw error;
+      }
+      setAdminBadgeConfig(newConfig);
+      toast.success("Admin badge configuration updated");
+    } catch (error) {
+      console.error("Error saving admin badge config:", error);
+      toast.error("Failed to update admin badge config");
+    } finally {
+      setBadgeConfigLoading(false);
     }
   };
 
@@ -891,6 +953,91 @@ const Admin = () => {
                 {shortenerLoading ? "Saving..." : "Save"}
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-3 sm:mb-4">
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              Admin Identity Configuration
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <p className="text-xs text-muted-foreground mb-3">
+              Configure how Administrators appear on leaderboards and profiles.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Avatar Frame</label>
+                <Select 
+                  value={adminBadgeConfig.frame_type} 
+                  onValueChange={(v) => setAdminBadgeConfig(prev => ({ ...prev, frame_type: v }))}
+                >
+                  <SelectTrigger className="text-xs sm:text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    <SelectItem value="rainbow">Rainbow Spin</SelectItem>
+                    <SelectItem value="gold">Golden Glow</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Badge Icon</label>
+                <Select 
+                  value={adminBadgeConfig.badge_icon} 
+                  onValueChange={(v) => setAdminBadgeConfig(prev => ({ ...prev, badge_icon: v }))}
+                >
+                  <SelectTrigger className="text-xs sm:text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    <SelectItem value="star">Star</SelectItem>
+                    <SelectItem value="shield">Shield</SelectItem>
+                    <SelectItem value="crown">Crown</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Name Text Effect</label>
+                <Select 
+                  value={adminBadgeConfig.text_effect} 
+                  onValueChange={(v) => setAdminBadgeConfig(prev => ({ ...prev, text_effect: v }))}
+                >
+                  <SelectTrigger className="text-xs sm:text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    <SelectItem value="gradient_black">Heavy Gradient (Black Weight)</SelectItem>
+                    <SelectItem value="solid_red">Solid Red</SelectItem>
+                    <SelectItem value="glow_purple">Glowing Purple</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium">Glow Color (Hex)</label>
+                <div className="flex gap-2">
+                  <Input 
+                    value={adminBadgeConfig.glow_color} 
+                    onChange={(e) => setAdminBadgeConfig(prev => ({ ...prev, glow_color: e.target.value }))}
+                    className="text-xs sm:text-sm"
+                  />
+                  <div 
+                    className="w-10 h-10 rounded border" 
+                    style={{ backgroundColor: adminBadgeConfig.glow_color }}
+                  />
+                </div>
+              </div>
+            </div>
+            <Button 
+              className="mt-4 w-full sm:w-auto" 
+              onClick={() => saveAdminBadgeConfig(adminBadgeConfig)}
+              disabled={badgeConfigLoading}
+            >
+              {badgeConfigLoading ? "Saving..." : "Save Identity Config"}
+            </Button>
           </CardContent>
         </Card>
 

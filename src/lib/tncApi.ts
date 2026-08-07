@@ -248,6 +248,9 @@ export interface TncGlobalLeaderboardRow {
   timeTakenSeconds: number;
   lastAttemptAt: string | null;
   isPremium: boolean;
+  isAdmin?: boolean;
+  avatarUrl?: string | null;
+  planType?: string;
 }
 
 export interface TncGlobalLeaderboardResponse {

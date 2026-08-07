@@ -21,6 +21,24 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('avatar_url')
+        .eq('user_id', user.id)
+        .maybeSingle();
+        
+      if (profile?.avatar_url) {
+        setAvatarUrl(profile.avatar_url);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
     const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;

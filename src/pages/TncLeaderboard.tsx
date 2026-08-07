@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Trophy, Medal, AlertCircle, RefreshCw, Crown, Star } from "lucide-react";
+import { ArrowLeft, Trophy, Medal, AlertCircle, RefreshCw, Crown, Star, Shield } from "lucide-react";
+import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import { fetchTncLeaderboard, type TncLeaderboardRow } from "@/lib/tncApi";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -34,6 +35,12 @@ const TncLeaderboard = () => {
   const [examName, setExamName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { 
+    getAdminFrameStyles, 
+    getAdminAvatarBorder, 
+    getAdminBadgeIcon, 
+    getAdminNameColor 
+  } = useAdminBadgeConfig();
 
   const load = () => {
     if (!examId) return;
@@ -85,7 +92,7 @@ const TncLeaderboard = () => {
   };
 
   const getNameColor = (r: ExtendedTncRow) => {
-    if (r.isAdmin) return "text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 font-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]";
+    if (r.isAdmin) return getAdminNameColor(true);
     if (!r.isPremium) return "text-foreground";
     if (r.planType === 'yearly' || r.planType === '12_months' || r.planType === '2years') return "text-amber-500 font-bold";
     if (r.planType === '6_months') return "text-blue-500 font-bold";
@@ -143,11 +150,11 @@ const TncLeaderboard = () => {
                 
                 <div className="relative shrink-0">
                   {r.isAdmin ? (
-                    <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                    <div className={getAdminFrameStyles(true) || ""} />
                   ) : r.isPremium ? (
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                   ) : null}
-                  <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                  <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${r.isAdmin ? getAdminAvatarBorder(true) : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
                     <AvatarImage src={r.avatarUrl || undefined} className="object-cover" />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
                       {r.userName.charAt(0).toUpperCase()}
@@ -155,7 +162,13 @@ const TncLeaderboard = () => {
                   </Avatar>
                   {r.isAdmin ? (
                     <div className="absolute -top-2 -right-2 bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg z-10 animate-pulse">
-                      <Star className="h-3 w-3 text-white fill-white" />
+                      {getAdminBadgeIcon(true) === 'shield' ? (
+                        <Shield className="h-3 w-3 text-white fill-white" />
+                      ) : getAdminBadgeIcon(true) === 'crown' ? (
+                        <Crown className="h-3 w-3 text-white fill-white" />
+                      ) : (
+                        <Star className="h-3 w-3 text-white fill-white" />
+                      )}
                     </div>
                   ) : r.isPremium ? (
                     <div className="absolute -top-0.5 -right-0.5 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
