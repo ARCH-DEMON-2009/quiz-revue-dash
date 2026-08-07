@@ -47,7 +47,7 @@ const TncLeaderboard = () => {
         const [premiumRes, adminRes, profileRes] = await Promise.all([
           supabase.from('premium_users').select('user_id, plan_duration_type').in('user_id', userIds).eq('status', 'active').gt('expiry_date', new Date().toISOString()),
           supabase.from('user_roles').select('user_id').in('user_id', userIds).eq('role', 'admin'),
-          supabase.from('user_profiles').select('user_id, avatar_url').in('user_id', userIds)
+          supabase.from('user_profiles').select('user_id, avatar_url, name').in('user_id', userIds)
         ]);
 
         const premMap = new Map(premiumRes.data?.map(p => [p.user_id, p.plan_duration_type]) || []);
@@ -85,7 +85,7 @@ const TncLeaderboard = () => {
   };
 
   const getNameColor = (r: ExtendedTncRow) => {
-    if (r.isAdmin) return "text-red-600 font-extrabold drop-shadow-sm";
+    if (r.isAdmin) return "text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 font-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]";
     if (!r.isPremium) return "text-foreground";
     if (r.planType === 'yearly' || r.planType === '12_months' || r.planType === '2years') return "text-amber-500 font-bold";
     if (r.planType === '6_months') return "text-blue-500 font-bold";
@@ -147,7 +147,7 @@ const TncLeaderboard = () => {
                   ) : r.isPremium ? (
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                   ) : null}
-                  <Avatar className={`h-10 w-10 relative bg-background border-2 ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                  <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
                     <AvatarImage src={r.avatarUrl || undefined} className="object-cover" />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
                       {r.userName.charAt(0).toUpperCase()}

@@ -28,12 +28,24 @@ const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback
 
   useEffect(() => {
     const fetchAvatar = async () => {
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('avatar_url')
-        .eq('user_id', userId)
-        .maybeSingle();
-      if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('avatar_url')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (error) {
+          console.error("Error fetching avatar for user:", userId, error);
+          return;
+        }
+        
+        if (data?.avatar_url) {
+          setAvatarUrl(data.avatar_url);
+        }
+      } catch (e) {
+        console.error("Failed to fetch avatar:", e);
+      }
     };
     fetchAvatar();
   }, [userId]);
@@ -138,7 +150,7 @@ const Leaderboard = () => {
   const isCurrentUser = (userId: string) => currentUserId === userId;
 
   const getNameColor = (entry: LeaderboardEntry) => {
-    if (entry.is_admin) return "text-red-600 font-extrabold drop-shadow-sm";
+    if (entry.is_admin) return "text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 font-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]";
     if (!entry.is_premium) return "text-foreground";
     // Different colors based on plan
     if (entry.plan_duration_type === 'yearly' || entry.plan_duration_type === '12_months' || entry.plan_duration_type === '2years') return "text-amber-500 font-bold";
@@ -239,7 +251,7 @@ const Leaderboard = () => {
                           <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                         ) : null}
                         
-                        <Avatar className={`h-10 w-10 relative bg-background border-2 ${entry.is_admin ? 'border-purple-500' : entry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
+                        <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${entry.is_admin ? 'border-purple-500' : entry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
                           {entry.user_id ? (
                             <AvatarImageWithProfile userId={entry.user_id} fallback={entry.name.charAt(0).toUpperCase()} />
                           ) : (
@@ -311,7 +323,7 @@ const Leaderboard = () => {
                             <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                           ) : null}
 
-                          <Avatar className={`h-10 w-10 relative bg-background border-2 ${currentUserEntry.is_admin ? 'border-purple-500' : currentUserEntry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
+                          <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${currentUserEntry.is_admin ? 'border-purple-500' : currentUserEntry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
                             {currentUserEntry.user_id ? (
                               <AvatarImageWithProfile userId={currentUserEntry.user_id} fallback={currentUserEntry.name.charAt(0).toUpperCase()} />
                             ) : (

@@ -68,7 +68,7 @@ const TncGlobalLeaderboard = () => {
       
       const [adminRes, profileRes, premiumRes] = await Promise.all([
         supabase.from('user_roles').select('user_id').in('user_id', userIds).eq('role', 'admin'),
-        supabase.from('user_profiles').select('user_id, avatar_url').in('user_id', userIds),
+        supabase.from('user_profiles').select('user_id, avatar_url, name').in('user_id', userIds),
         supabase.from('premium_users').select('user_id, plan_duration_type').in('user_id', userIds).eq('status', 'active').gt('expiry_date', new Date().toISOString())
       ]);
 
@@ -117,7 +117,7 @@ const TncGlobalLeaderboard = () => {
   };
 
   const getNameColor = (r: any) => {
-    if (r.isAdmin) return "text-red-600 font-extrabold drop-shadow-sm";
+    if (r.isAdmin) return "text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 font-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]";
     if (!r.isPremium) return "text-foreground";
     if (r.planType === 'yearly' || r.planType === '12_months' || r.planType === '2years') return "text-amber-500 font-bold";
     if (r.planType === '6_months') return "text-blue-500 font-bold";
@@ -287,11 +287,14 @@ const TncGlobalLeaderboard = () => {
                   ) : r.isPremium ? (
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                   ) : null}
-                  <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                  <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden shrink-0 ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
                     <img 
                       src={r.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`} 
                       className="h-full w-full object-cover"
                       alt=""
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`;
+                      }}
                     />
                   </div>
                   {r.isAdmin ? (

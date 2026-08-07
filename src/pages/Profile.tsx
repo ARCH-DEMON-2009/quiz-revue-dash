@@ -350,7 +350,7 @@ const Profile = () => {
                       ) : null}
                     </div>
                     <div>
-                      <h2 className={`text-xl font-bold ${isAdmin ? 'text-red-600' : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
+                      <h2 className={`text-xl font-bold ${isAdmin ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 font-black drop-shadow-[0_1.2px_1.2px_rgba(0,0,0,0.8)]' : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
                       <p className="text-sm text-muted-foreground">{userDetails.email}</p>
                     </div>
                   </div>
