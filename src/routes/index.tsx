@@ -15,9 +15,7 @@ const RoutesIndex = () => {
 
   return (
     <div className="hidden">
-      Add a premium upgrade/checkout flow when I try to select a locked premium avatar, including a clear button to upgrade and return back to the avatar picker after success.
-in all leaderboard also add premium frame outerside of avatar and for admin the frame has a special type of frame .
-make all these chnages and update code to github
+      update code to github and also add that for next two dats show a popup to show and know users what whats features added to site
     </div>
   );
 };
