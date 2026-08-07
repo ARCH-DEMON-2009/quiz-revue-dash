@@ -372,12 +372,27 @@ const Leaderboard = () => {
                           <div className="absolute -inset-0 z-0 pointer-events-none">
                             {currentUserEntry.is_admin ? (
                               ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                                <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
+                                <img 
+                                  src={`/frames/${config.frame_type}.png`} 
+                                  alt="Admin Frame" 
+                                  className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/frames/f3.png";
+                                  }}
+                                />
                               ) : (
                                 <div className={getAdminFrameStyles(true) || ""} />
                               )
                             ) : currentUserEntry.is_premium ? (
-                              <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
+                              <img 
+                                src="/frames/f1.png" 
+                                alt="Premium Frame" 
+                                className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = "/frames/f1.png";
+                                }}
+                              />
+                            ) : null}
                             ) : null}
                           </div>
 
