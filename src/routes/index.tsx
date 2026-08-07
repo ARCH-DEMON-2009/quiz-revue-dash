@@ -15,7 +15,7 @@ const RoutesIndex = () => {
 
   return (
     <div className="hidden">
-      update code to github and also add that for next two dats show a popup to show and know users what whats features added to site
+      fix that avatar and name color and frame not showing in tnc leaderboard fix it and make it working and fix
     </div>
   );
 };
