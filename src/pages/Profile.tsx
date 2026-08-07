@@ -261,86 +261,109 @@ const Profile = () => {
                       <img 
                         src={userDetails.avatarUrl} 
                         alt={userDetails.name} 
-                        className="h-10 w-10 rounded-full border-2 border-primary/20 object-cover"
+                        className="h-16 w-16 rounded-full border-4 border-primary/20 object-cover shadow-lg"
                       />
                     ) : (
-                      <User className="h-6 w-6 text-primary" />
-                    )}
-                    <span>Profile Details</span>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    Select Avatar {accessStatus?.type !== 'premium' && <span className="text-xs font-normal">(Premium avatars locked)</span>}
-                  </p>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-                    {AVATARS.map((avatar) => (
-                      <div 
-                        key={avatar.id}
-                        onClick={() => handleAvatarChange(avatar.url, avatar.premium)}
-                        className={`relative cursor-pointer group rounded-full p-0.5 border-2 transition-all ${
-                          userDetails.avatarUrl === avatar.url 
-                            ? 'border-primary scale-105' 
-                            : 'border-transparent hover:border-primary/50'
-                        } ${avatar.premium && accessStatus?.type !== 'premium' ? 'opacity-50 grayscale' : ''}`}
-                      >
-                        <img 
-                          src={avatar.url} 
-                          alt="Avatar option" 
-                          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover"
-                        />
-                        {avatar.premium && (
-                          <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 shadow-sm">
-                            <Crown className="h-2 w-2 text-white" />
-                          </div>
-                        )}
+                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center border-4 border-primary/20">
+                        <User className="h-8 w-8 text-primary" />
                       </div>
-                    ))}
+                    )}
+                    <div>
+                      <h2 className="text-xl font-bold">{userDetails.name}</h2>
+                      <p className="text-sm text-muted-foreground">{userDetails.email}</p>
+                    </div>
                   </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      const url = prompt("Enter Image URL for your avatar:");
+                      if (url) handleAvatarChange(url, false);
+                    }}
+                    className="gap-2"
+                  >
+                    Edit Profile
+                  </Button>
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <User className="h-4 w-4 text-primary" />
+            <CardContent className="p-3 sm:p-4 lg:p-6 pt-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-muted-foreground">Select Premium Avatar</p>
+                  {accessStatus?.type !== 'premium' && (
+                    <Button variant="link" size="sm" className="text-amber-600 h-auto p-0" onClick={() => navigate("/pricing")}>
+                      Buy Premium to unlock all
+                    </Button>
+                  )}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Name</p>
-                  <p className="text-sm font-medium truncate">{userDetails.name}</p>
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3">
+                  {AVATARS.map((avatar) => (
+                    <div 
+                      key={avatar.id}
+                      onClick={() => handleAvatarChange(avatar.url, avatar.premium)}
+                      className={`relative cursor-pointer group rounded-full p-0.5 border-2 transition-all duration-300 ${
+                        userDetails.avatarUrl === avatar.url 
+                          ? 'border-primary shadow-lg shadow-primary/20 scale-105' 
+                          : 'border-transparent hover:border-primary/30'
+                      } ${avatar.premium && accessStatus?.type !== 'premium' ? 'opacity-50 grayscale hover:opacity-70' : ''}`}
+                    >
+                      <img 
+                        src={avatar.url} 
+                        alt="Avatar option" 
+                        className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover transition-transform group-hover:scale-105"
+                      />
+                      {avatar.premium && (
+                        <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-1 shadow-md">
+                          <Crown className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Mail className="h-4 w-4 text-primary" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-6 border-t border-primary/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <User className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Name</p>
+                    <p className="text-sm font-medium truncate">{userDetails.name}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Email</p>
-                  <p className="text-sm font-medium truncate">{userDetails.email}</p>
+                
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Mail className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Email</p>
+                    <p className="text-sm font-medium truncate">{userDetails.email}</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Phone className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Phone className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">WhatsApp</p>
+                    <p className="text-sm font-medium truncate">{userDetails.whatsapp || 'Not provided'}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">WhatsApp</p>
-                  <p className="text-sm font-medium truncate">{userDetails.whatsapp || 'Not provided'}</p>
-                </div>
-              </div>
 
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Calendar className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Joined</p>
-                  <p className="text-sm font-medium">
-                    {userDetails.createdAt ? new Date(userDetails.createdAt).toLocaleDateString() : 'N/A'}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Calendar className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Joined</p>
+                    <p className="text-sm font-medium">
+                      {userDetails.createdAt ? new Date(userDetails.createdAt).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
