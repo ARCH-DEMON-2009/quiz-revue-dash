@@ -337,7 +337,7 @@ const Profile = () => {
                             <div className={getAdminFrameStyles(true) || ""} />
                           )
                         ) : accessStatus?.type === 'premium' ? (
-                          <img src="/frames/f1.png" alt="Premium Frame" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" />
+                          <img src="/frames/f3.png" alt="Premium Frame" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" />
                         ) : null}
                       </div>
                       <div className={`relative h-16 w-16 rounded-full border-4 ${isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'} overflow-hidden bg-background shadow-lg z-0`}>
