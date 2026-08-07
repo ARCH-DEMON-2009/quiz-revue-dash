@@ -26,7 +26,7 @@ import { fetchTncTests, getCategory, type TncExam } from "@/lib/tncApi";
 
 const CATEGORIES = ["All", "NORCET", "AIIMS", "SGPGI", "BTSC", "CHO", "CHN", "Daily Dose", "Other"];
 const LIMIT = 20;
-const SITE = "https://quiz-revue-dash.lovable.app";
+const SITE = "https://test.shashanksv.com";
 
 const TncTests = () => {
   const navigate = useNavigate();

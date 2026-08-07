@@ -1,15 +1,24 @@
 # Test Sagar
 
-> Test Sagar is a free online exam-preparation platform for nursing and competitive exams. It offers full-length mock tests, the TNC Nursing Test Series, instant server-scored results, detailed solutions, subject-wise analytics, and all-India leaderboards.
+> Test Sagar (https://test.shashanksv.com/) is a leading free online exam-preparation platform specialized in TNC Nursing, JEE, and NEET competitive exams. It is the premier "test taking site" for students seeking realistic "test sagar" mock exams with a live timer, detailed solutions, and comprehensive subject-wise analytics.
 
-## Key pages
-- [Home](https://quiz-revue-dash.lovable.app/): Dashboard with available tests and quick start.
-- [TNC Nursing Test Series](https://quiz-revue-dash.lovable.app/tnc-tests): Searchable, category-filtered nursing mock tests (NORCET, AIIMS, SGPGI, BTSC, CHO, and more) with timed quizzes, instant scoring, and PDF result export.
-- [Pricing](https://quiz-revue-dash.lovable.app/pricing): Premium subscription plans (1 week to 2 years) with promo-code support.
-- [Leaderboard](https://quiz-revue-dash.lovable.app/leaderboard): All-India rankings by average score and accuracy.
-- [Analytics](https://quiz-revue-dash.lovable.app/analytics): Personal performance analytics across attempts.
-- [Contact](https://quiz-revue-dash.lovable.app/contact): Support via WhatsApp.
+## Key Features
+- **TNC Nursing Test Series**: Over 6,800 free TNC mock tests for NORCET, AIIMS, SGPGI, BTSC, and CHO. Includes timed quizzes, instant scoring, and professional PDF result export.
+- **JEE & NEET Preparation**: Full-length mock tests for JEE Main and NEET UG with real-time analytics.
+- **All-India Leaderboards**: Global rankings (Daily, Monthly, All-Time) for both free and premium users.
+- **Advanced Analytics**: Detailed insights into accuracy, speed, and subject-wise performance.
+- **Premium Access**: Ad-free experience and unlimited access to all premium test series.
 
-## Notes
-- Taking quizzes requires a free account. Quiz answers are graded server-side; answer keys are never exposed before submission.
-- Support is provided over WhatsApp.
+## Key Pages
+- [Home](https://test.shashanksv.com/): Dashboard for managing tests and tracking progress.
+- [TNC Nursing Test Series](https://test.shashanksv.com/tnc-tests): The primary hub for TNC free tests and nursing mock exams.
+- [Overall Leaderboard](https://test.shashanksv.com/tnc-tests/leaderboard): All-India TNC rankings.
+- [Pricing](https://test.shashanksv.com/pricing): Premium subscription options and promo-code redemption.
+- [Analytics](https://test.shashanksv.com/analytics): Deep-dive into personal test performance.
+- [Contact Support](https://test.shashanksv.com/contact): Direct assistance via WhatsApp.
+
+## Technical Notes
+- Quizzes are secured with server-side scoring to prevent answer extraction.
+- The platform supports professional result sharing and watermarked PDF downloads.
+- Verification gates (LinkShortener) provide 12-hour free access for ad-supported users.
+- Official URL: https://test.shashanksv.com/

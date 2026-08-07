@@ -147,10 +147,10 @@ const Analytics = () => {
       <Helmet>
         <title>My Performance Analytics | Test Sagar</title>
         <meta name="description" content="Track your Test Sagar performance with subject-wise accuracy, score trends and attempt history to focus your exam preparation." />
-        <link rel="canonical" href="https://quiz-revue-dash.lovable.app/analytics" />
+        <link rel="canonical" href="https://test.shashanksv.com/analytics" />
         <meta property="og:title" content="My Performance Analytics | Test Sagar" />
         <meta property="og:description" content="Subject-wise accuracy, score trends and attempt history." />
-        <meta property="og:url" content="https://quiz-revue-dash.lovable.app/analytics" />
+        <meta property="og:url" content="https://test.shashanksv.com/analytics" />
       </Helmet>
       <NavigationHeader />
       <div className="p-4 md:p-8 flex-1">

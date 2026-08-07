@@ -53,7 +53,7 @@ import { downloadTncResultPdf } from "@/lib/tncPdf";
 type Phase = "instructions" | "quiz" | "results";
 
 const OPTS = ["A", "B", "C", "D"] as const;
-const SITE = "https://quiz-revue-dash.lovable.app";
+const SITE = "https://test.shashanksv.com";
 
 const storageKey = (id: string) => `tnc-attempt-${id}`;
 
