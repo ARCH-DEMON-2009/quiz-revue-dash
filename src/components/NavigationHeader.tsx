@@ -120,18 +120,24 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <Trophy className="h-4 w-4 mr-2" />
               <span className="hidden md:inline">Leaderboard</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Profile" className="gap-2 relative min-w-[40px]">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Profile" className="gap-2 relative min-w-[40px] px-2">
               {loading ? (
                 <Skeleton className="h-6 w-6 rounded-full" />
               ) : avatarUrl ? (
-                <div className="relative h-6 w-6 rounded-full border border-primary/20 overflow-hidden bg-muted aspect-square">
-                  {!imgLoaded && <Skeleton className="absolute inset-0 h-full w-full rounded-full" />}
-                  <img 
-                    src={avatarUrl} 
-                    alt="User" 
-                    className={`h-full w-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
-                    onLoad={() => setImgLoaded(true)}
-                  />
+                <div className="relative flex items-center gap-2">
+                  <div className="relative h-7 w-7 rounded-full border border-primary/20 overflow-hidden bg-muted aspect-square shadow-sm">
+                    {!imgLoaded && <Skeleton className="absolute inset-0 h-full w-full rounded-full" />}
+                    <img 
+                      src={avatarUrl} 
+                      alt="User" 
+                      className={`h-full w-full object-cover transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      onLoad={() => setImgLoaded(true)}
+                    />
+                  </div>
+                  {isPremium && !isAdmin && (
+                    <img src="/badges/b3.png" alt="Premium" className="absolute -top-1.5 -right-1.5 w-4 h-4 object-contain drop-shadow-sm z-10" />
+                  )}
+                  <span className="hidden sm:inline font-medium text-sm">Profile</span>
                 </div>
               ) : (
                 <>
