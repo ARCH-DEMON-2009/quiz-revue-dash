@@ -435,6 +435,9 @@ const Profile = () => {
                             src={avatar.url} 
                             alt="Avatar option" 
                             className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover transition-transform group-hover:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${avatar.id}`;
+                            }}
                           />
                           {avatar.premium && (
                             <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-1 shadow-md">

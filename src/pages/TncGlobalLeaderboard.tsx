@@ -344,7 +344,7 @@ const TncGlobalLeaderboard = () => {
                         Admin
                       </Badge>
                     )}
-                    {r.is_premium && !r.isAdmin && (
+                    {r.isPremium && !r.isAdmin && (
                       <Badge className="shrink-0 gap-1 bg-amber-500 px-1.5 text-[10px] text-white hover:bg-amber-500">
                         <Crown className="h-2.5 w-2.5" /> Premium
                       </Badge>
