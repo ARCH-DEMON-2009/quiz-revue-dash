@@ -14,16 +14,22 @@ interface NavigationHeaderProps {
 const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { isPremium } = usePremiumStatus();
 
   useEffect(() => {
-    const checkAdmin = async () => {
+    const fetchUserData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      
       const { data: adminData } = await supabase.rpc('is_admin');
       setIsAdmin(adminData === true);
+      
+      if (user.user_metadata?.avatar_url) {
+        setAvatarUrl(user.user_metadata.avatar_url);
+      }
     };
-    checkAdmin();
+    fetchUserData();
   }, []);
 
   const handleAIQuiz = () => {
@@ -92,8 +98,12 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <Trophy className="h-4 w-4 mr-2" />
               <span className="hidden md:inline">Leaderboard</span>
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Profile">
-              <User className="h-4 w-4 sm:mr-2" />
+            <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Profile" className="gap-2">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="User" className="h-5 w-5 rounded-full" />
+              ) : (
+                <User className="h-4 w-4" />
+              )}
               <span className="hidden sm:inline">Profile</span>
             </Button>
           </div>
@@ -126,7 +136,11 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
             <span className="text-xs">Ranks</span>
           </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} className="flex-col h-auto py-1">
-            <User className="h-4 w-4" />
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="User" className="h-4 w-4 rounded-full" />
+            ) : (
+              <User className="h-4 w-4" />
+            )}
             <span className="text-xs">Profile</span>
           </Button>
         </div>
