@@ -138,9 +138,10 @@ const Leaderboard = () => {
   const isCurrentUser = (userId: string) => currentUserId === userId;
 
   const getNameColor = (entry: LeaderboardEntry) => {
+    if (entry.is_admin) return "text-red-600 font-extrabold drop-shadow-sm";
     if (!entry.is_premium) return "text-foreground";
     // Different colors based on plan
-    if (entry.plan_duration_type === 'yearly' || entry.plan_duration_type === '12_months') return "text-amber-500 font-bold";
+    if (entry.plan_duration_type === 'yearly' || entry.plan_duration_type === '12_months' || entry.plan_duration_type === '2years') return "text-amber-500 font-bold";
     if (entry.plan_duration_type === '6_months') return "text-blue-500 font-bold";
     return "text-emerald-500 font-bold";
   };
@@ -249,8 +250,8 @@ const Leaderboard = () => {
                         </Avatar>
                         
                         {entry.is_admin ? (
-                          <div className="absolute -top-1.5 -right-1.5 bg-red-600 rounded-full p-0.5 border border-white shadow-sm z-10">
-                            <Star className="h-2.5 w-2.5 text-white fill-white" />
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg z-10 animate-pulse">
+                            <Star className="h-3 w-3 text-white fill-white" />
                           </div>
                         ) : entry.is_premium ? (
                           <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
@@ -321,8 +322,8 @@ const Leaderboard = () => {
                           </Avatar>
                           
                           {currentUserEntry.is_admin ? (
-                            <div className="absolute -top-1.5 -right-1.5 bg-red-600 rounded-full p-0.5 border border-white shadow-sm z-10">
-                              <Star className="h-2.5 w-2.5 text-white fill-white" />
+                            <div className="absolute -top-2 -right-2 bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg z-10 animate-pulse">
+                              <Star className="h-3 w-3 text-white fill-white" />
                             </div>
                           ) : currentUserEntry.is_premium ? (
                             <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
