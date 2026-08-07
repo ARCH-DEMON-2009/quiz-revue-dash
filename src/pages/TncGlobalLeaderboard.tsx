@@ -64,10 +64,29 @@ const TncGlobalLeaderboard = () => {
 
     try {
       const res = await fetchTncGlobalLeaderboard(p);
-      setRows(res.rows);
+      const userIds = res.rows.map(r => r.userId);
+      
+      const [adminRes, profileRes, premiumRes] = await Promise.all([
+        supabase.from('user_roles').select('user_id').in('user_id', userIds).eq('role', 'admin'),
+        supabase.from('user_profiles').select('user_id, avatar_url').in('user_id', userIds),
+        supabase.from('premium_users').select('user_id, plan_duration_type').in('user_id', userIds).eq('status', 'active').gt('expiry_date', new Date().toISOString())
+      ]);
+
+      const adminSet = new Set(adminRes.data?.map(a => a.user_id) || []);
+      const profileMap = new Map(profileRes.data?.map(p => [p.user_id, p.avatar_url]) || []);
+      const premMap = new Map(premiumRes.data?.map(p => [p.user_id, p.plan_duration_type]) || []);
+
+      const enhancedRows = res.rows.map(r => ({
+        ...r,
+        isAdmin: adminSet.has(r.userId),
+        avatarUrl: profileMap.get(r.userId),
+        planType: premMap.get(r.userId)
+      }));
+
+      setRows(enhancedRows);
       const now = Date.now();
       setLastUpdated(now);
-      localStorage.setItem(`${CACHE_KEY}_${p}`, JSON.stringify({ data: res.rows, timestamp: now }));
+      localStorage.setItem(`${CACHE_KEY}_${p}`, JSON.stringify({ data: enhancedRows, timestamp: now }));
     } catch (e) {
       console.error(e);
       // Exponential backoff retries (limit to 3)
