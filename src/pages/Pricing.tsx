@@ -18,15 +18,69 @@ interface PricingPlan {
   originalPrice?: number;
   perMonth: number;
   popular?: boolean;
+  features: string[];
 }
 
 const plans: PricingPlan[] = [
-  { id: "1week", name: "1 Week", duration: "7 days", durationDays: 7, price: 20, perMonth: 80 },
-  { id: "1month", name: "1 Month", duration: "30 days", durationDays: 30, price: 60, perMonth: 60 },
-  { id: "3months", name: "3 Months", duration: "90 days", durationDays: 90, price: 90, originalPrice: 180, perMonth: 30, popular: true },
-  { id: "6months", name: "6 Months", duration: "180 days", durationDays: 180, price: 120, originalPrice: 360, perMonth: 20 },
-  { id: "1year", name: "1 Year", duration: "365 days", durationDays: 365, price: 160, originalPrice: 720, perMonth: 13 },
-  { id: "2years", name: "2 Years", duration: "730 days", durationDays: 730, price: 230, originalPrice: 1440, perMonth: 10 },
+  { 
+    id: "1week", 
+    name: "1 Week", 
+    duration: "7 days", 
+    durationDays: 7, 
+    price: 20, 
+    perMonth: 80,
+    features: ["Standard Badge", "Basic Analytics", "Unlimited Mock Tests"]
+  },
+  { 
+    id: "1month", 
+    name: "1 Month", 
+    duration: "30 days", 
+    durationDays: 30, 
+    price: 60, 
+    perMonth: 60,
+    features: ["Emerald Name Color", "Premium Badge", "TNC Mock Tests"]
+  },
+  { 
+    id: "3months", 
+    name: "3 Months", 
+    duration: "90 days", 
+    durationDays: 90, 
+    price: 90, 
+    originalPrice: 180, 
+    perMonth: 30, 
+    popular: true,
+    features: ["Emerald Name Color", "Premium Badge", "Detailed Analytics", "Priority Support"]
+  },
+  { 
+    id: "6months", 
+    name: "6 Months", 
+    duration: "180 days", 
+    durationDays: 180, 
+    price: 120, 
+    originalPrice: 360, 
+    perMonth: 20,
+    features: ["Blue Name Color", "Premium Badge", "Premium Avatar Frame", "Detailed Analytics"]
+  },
+  { 
+    id: "1year", 
+    name: "1 Year", 
+    duration: "365 days", 
+    durationDays: 365, 
+    price: 160, 
+    originalPrice: 720, 
+    perMonth: 13,
+    features: ["Golden Name Color", "VIP Badge", "Animated Avatar Frame", "Full Access to All Tests"]
+  },
+  { 
+    id: "2years", 
+    name: "2 Years", 
+    duration: "730 days", 
+    durationDays: 730, 
+    price: 230, 
+    originalPrice: 1440, 
+    perMonth: 10,
+    features: ["Golden Name Color", "VIP Badge", "Exclusive Avatars", "Personal Mentor Support"]
+  },
 ];
 
 declare global {
@@ -410,6 +464,18 @@ const Pricing = () => {
                 <p className="text-sm text-muted-foreground">
                   ₹{Math.round(calculateFinalPrice(plan) / (plan.durationDays / 30))}/month
                 </p>
+                
+                <div className="space-y-2 py-4 border-t border-b border-border/50 my-4 text-left">
+                  {plan.features.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                      <div className="h-4 w-4 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <Check className="h-2.5 w-2.5 text-primary" />
+                      </div>
+                      <span className="text-muted-foreground">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+
                 {plan.originalPrice && !appliedPromo && (
                   <Badge variant="secondary" className="bg-green-500/10 text-green-600">
                     Save {Math.round((1 - plan.price / plan.originalPrice) * 100)}%
