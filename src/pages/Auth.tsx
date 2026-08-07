@@ -264,7 +264,7 @@ const Auth = () => {
                 <span className="w-full border-t"></span>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Google login coming soon</span>
+                <span className="bg-background px-2 text-muted-foreground">Google login or signup</span>
               </div>
             </div>
 
@@ -272,7 +272,7 @@ const Auth = () => {
               type="button"
               variant="outline"
               className="w-full flex items-center justify-center gap-2"
-              onClick={() => toast.info("Google login will be available soon!")}
+              onClick={handleGoogleLogin}
               disabled={loading}
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24">

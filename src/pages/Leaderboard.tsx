@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Award, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -19,6 +19,33 @@ interface LeaderboardEntry {
   rank_percentile: number;
   global_rank: number;
 }
+
+const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback: string }) => {
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('avatar_url')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+    };
+    fetchAvatar();
+  }, [userId]);
+
+  return (
+    <>
+      {avatarUrl ? (
+        <AvatarImage src={avatarUrl} className="object-cover" />
+      ) : null}
+      <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+        {fallback}
+      </AvatarFallback>
+    </>
+  );
+};
 
 const Leaderboard = () => {
   const navigate = useNavigate();
@@ -171,14 +198,18 @@ const Leaderboard = () => {
                       </div>
                       
                       <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                          {entry.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
+                        {entry.user_id ? (
+                          <AvatarImageWithProfile userId={entry.user_id} fallback={entry.name.charAt(0).toUpperCase()} />
+                        ) : (
+                          <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                            {entry.name.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        )}
                       </Avatar>
                       
-                      <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                          <p className="font-semibold text-sm sm:text-base truncate max-w-[80px] sm:max-w-[150px] md:max-w-none">{entry.name}</p>
+                          <p className="font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">{entry.name}</p>
                           {isCurrentUser(entry.user_id) && (
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
@@ -216,14 +247,18 @@ const Leaderboard = () => {
                         </div>
                         
                         <Avatar className="h-10 w-10">
-                          <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                            {currentUserEntry.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
+                          {currentUserEntry.user_id ? (
+                            <AvatarImageWithProfile userId={currentUserEntry.user_id} fallback={currentUserEntry.name.charAt(0).toUpperCase()} />
+                          ) : (
+                            <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                              {currentUserEntry.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          )}
                         </Avatar>
                         
-                        <div className="flex-1 min-w-0 overflow-hidden">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                            <p className="font-semibold text-sm sm:text-base truncate max-w-[80px] sm:max-w-[150px] md:max-w-none">{currentUserEntry.name}</p>
+                            <p className="font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">{currentUserEntry.name}</p>
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                               You
