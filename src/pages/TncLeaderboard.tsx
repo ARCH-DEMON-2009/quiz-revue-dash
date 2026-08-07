@@ -6,8 +6,18 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Trophy, Medal, AlertCircle, RefreshCw } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Trophy, Medal, AlertCircle, RefreshCw, Crown, Star } from "lucide-react";
 import { fetchTncLeaderboard, type TncLeaderboardRow } from "@/lib/tncApi";
+import { supabase } from "@/integrations/supabase/client";
+
+interface ExtendedTncRow extends TncLeaderboardRow {
+  isPremium?: boolean;
+  isAdmin?: boolean;
+  avatarUrl?: string | null;
+  planType?: string;
+}
 
 const SITE = "https://quiz-revue-dash.lovable.app";
 
@@ -20,7 +30,7 @@ function fmtTime(sec: number) {
 const TncLeaderboard = () => {
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
-  const [rows, setRows] = useState<TncLeaderboardRow[]>([]);
+  const [rows, setRows] = useState<ExtendedTncRow[]>([]);
   const [examName, setExamName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -30,8 +40,29 @@ const TncLeaderboard = () => {
     setLoading(true);
     setError(false);
     fetchTncLeaderboard(examId)
-      .then((res) => {
-        setRows(res.rows);
+      .then(async (res) => {
+        const userIds = res.rows.map(r => r.userId);
+        
+        // Fetch premium & admin status
+        const [premiumRes, adminRes, profileRes] = await Promise.all([
+          supabase.from('premium_users').select('user_id, plan_duration_type').in('user_id', userIds).eq('status', 'active').gt('expiry_date', new Date().toISOString()),
+          supabase.from('user_roles').select('user_id').in('user_id', userIds).eq('role', 'admin'),
+          supabase.from('user_profiles').select('user_id, avatar_url').in('user_id', userIds)
+        ]);
+
+        const premMap = new Map(premiumRes.data?.map(p => [p.user_id, p.plan_duration_type]) || []);
+        const adminSet = new Set(adminRes.data?.map(a => a.user_id) || []);
+        const profileMap = new Map(profileRes.data?.map(p => [p.user_id, p.avatar_url]) || []);
+
+        const extendedRows: ExtendedTncRow[] = res.rows.map(r => ({
+          ...r,
+          isPremium: premMap.has(r.userId),
+          isAdmin: adminSet.has(r.userId),
+          avatarUrl: profileMap.get(r.userId),
+          planType: premMap.get(r.userId)
+        }));
+
+        setRows(extendedRows);
         setExamName(res.examName);
       })
       .catch((e) => {
@@ -51,6 +82,14 @@ const TncLeaderboard = () => {
     if (rank === 2) return "text-slate-400";
     if (rank === 3) return "text-orange-600";
     return "text-muted-foreground";
+  };
+
+  const getNameColor = (r: ExtendedTncRow) => {
+    if (r.isAdmin) return "text-red-600 font-bold";
+    if (!r.isPremium) return "text-foreground";
+    if (r.planType === 'yearly' || r.planType === '12_months') return "text-amber-500 font-bold";
+    if (r.planType === '6_months') return "text-blue-500 font-bold";
+    return "text-emerald-500 font-bold";
   };
 
   return (
@@ -101,8 +140,37 @@ const TncLeaderboard = () => {
                 <div className={`flex w-8 shrink-0 items-center justify-center font-bold ${medal(r.rank)}`}>
                   {r.rank <= 3 ? <Medal className="h-5 w-5" /> : r.rank}
                 </div>
+                
+                <div className="relative shrink-0">
+                  {r.isAdmin ? (
+                    <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                  ) : r.isPremium ? (
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
+                  ) : null}
+                  <Avatar className={`h-10 w-10 relative bg-background border-2 ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                    <AvatarImage src={r.avatarUrl || undefined} className="object-cover" />
+                    <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                      {r.userName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {r.isAdmin ? (
+                    <div className="absolute -top-1 -right-1 bg-red-600 rounded-full p-0.5 border border-white shadow-sm z-10">
+                      <Star className="h-2 w-2 text-white fill-white" />
+                    </div>
+                  ) : r.isPremium ? (
+                    <div className="absolute -top-0.5 -right-0.5 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
+                      <Crown className="h-2 w-2 text-white fill-white" />
+                    </div>
+                  ) : null}
+                </div>
+
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-foreground">{r.userName}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className={`truncate font-semibold ${getNameColor(r)}`}>{r.userName}</p>
+                    {r.isAdmin && (
+                      <Badge className="bg-red-600 text-[10px] text-white hover:bg-red-600">Admin</Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     <span className="text-green-600">{r.correctCount} correct</span> ·{" "}
                     <span className="text-red-600">{r.wrongCount} wrong</span> ·{" "}

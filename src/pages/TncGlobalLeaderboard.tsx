@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock } from "lucide-react";
+import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncGlobalLeaderboard,
@@ -34,7 +34,7 @@ const fmtTime = (sec: number) => {
 
 const TncGlobalLeaderboard = () => {
   const [period, setPeriod] = useState<TncLeaderboardPeriod>("all");
-  const [rows, setRows] = useState<TncGlobalLeaderboardRow[]>([]);
+  const [rows, setRows] = useState<(TncGlobalLeaderboardRow & { isAdmin?: boolean; avatarUrl?: string | null; planType?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
@@ -64,10 +64,29 @@ const TncGlobalLeaderboard = () => {
 
     try {
       const res = await fetchTncGlobalLeaderboard(p);
-      setRows(res.rows);
+      const userIds = res.rows.map(r => r.userId);
+      
+      const [adminRes, profileRes, premiumRes] = await Promise.all([
+        supabase.from('user_roles').select('user_id').in('user_id', userIds).eq('role', 'admin'),
+        supabase.from('user_profiles').select('user_id, avatar_url').in('user_id', userIds),
+        supabase.from('premium_users').select('user_id, plan_duration_type').in('user_id', userIds).eq('status', 'active').gt('expiry_date', new Date().toISOString())
+      ]);
+
+      const adminSet = new Set(adminRes.data?.map(a => a.user_id) || []);
+      const profileMap = new Map(profileRes.data?.map(p => [p.user_id, p.avatar_url]) || []);
+      const premMap = new Map(premiumRes.data?.map(p => [p.user_id, p.plan_duration_type]) || []);
+
+      const enhancedRows = res.rows.map(r => ({
+        ...r,
+        isAdmin: adminSet.has(r.userId),
+        avatarUrl: profileMap.get(r.userId),
+        planType: premMap.get(r.userId)
+      }));
+
+      setRows(enhancedRows);
       const now = Date.now();
       setLastUpdated(now);
-      localStorage.setItem(`${CACHE_KEY}_${p}`, JSON.stringify({ data: res.rows, timestamp: now }));
+      localStorage.setItem(`${CACHE_KEY}_${p}`, JSON.stringify({ data: enhancedRows, timestamp: now }));
     } catch (e) {
       console.error(e);
       // Exponential backoff retries (limit to 3)
@@ -95,6 +114,14 @@ const TncGlobalLeaderboard = () => {
     if (rank === 2) return "text-slate-400";
     if (rank === 3) return "text-orange-600";
     return "text-muted-foreground";
+  };
+
+  const getNameColor = (r: any) => {
+    if (r.isAdmin) return "text-red-600 font-bold";
+    if (!r.isPremium) return "text-foreground";
+    if (r.planType === 'yearly' || r.planType === '12_months') return "text-amber-500 font-bold";
+    if (r.planType === '6_months') return "text-blue-500 font-bold";
+    return "text-emerald-500 font-bold";
   };
 
   const title = "TNC Test Series Leaderboard — All-India Rankings";
@@ -253,14 +280,45 @@ const TncGlobalLeaderboard = () => {
                 <div className={`flex w-8 shrink-0 items-center justify-center font-bold ${medal(r.rank)}`}>
                   {r.rank <= 3 ? <Medal className="h-5 w-5" /> : r.rank}
                 </div>
+                
+                <div className="relative shrink-0">
+                  {r.isAdmin ? (
+                    <div className="absolute -inset-1 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                  ) : r.isPremium ? (
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
+                  ) : null}
+                  <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                    <img 
+                      src={r.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`} 
+                      className="h-full w-full object-cover"
+                      alt=""
+                    />
+                  </div>
+                  {r.isAdmin ? (
+                    <div className="absolute -top-1 -right-1 bg-red-600 rounded-full p-0.5 border border-white shadow-sm z-10">
+                      <Star className="h-2 w-2 text-white fill-white" />
+                    </div>
+                  ) : r.isPremium ? (
+                    <div className="absolute -top-0.5 -right-0.5 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
+                      <Crown className="h-2 w-2 text-white fill-white" />
+                    </div>
+                  ) : null}
+                </div>
+
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className="truncate font-semibold text-foreground">{r.userName}</p>
-                    {r.isPremium ? (
+                    <p className={`truncate font-semibold ${getNameColor(r)}`}>{r.userName}</p>
+                    {r.isAdmin && (
+                      <Badge className="shrink-0 bg-red-600 text-[10px] text-white hover:bg-red-600">
+                        Admin
+                      </Badge>
+                    )}
+                    {r.isPremium && !r.isAdmin && (
                       <Badge className="shrink-0 gap-1 bg-amber-500 px-1.5 text-[10px] text-white hover:bg-amber-500">
                         <Crown className="h-2.5 w-2.5" /> Premium
                       </Badge>
-                    ) : (
+                    )}
+                    {!r.isPremium && !r.isAdmin && (
                       <Badge variant="secondary" className="shrink-0 px-1.5 text-[10px]">
                         Free
                       </Badge>
