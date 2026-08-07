@@ -349,7 +349,7 @@ const Leaderboard = () => {
                     </div>
                   ))}
                   
-                  {process.env.NODE_ENV === 'development' && (
+                  {import.meta.env.DEV && (
                     <div className="mt-8 p-4 bg-black/80 text-green-400 font-mono text-xs rounded-lg border border-green-500/30 overflow-auto">
                       <p className="font-bold mb-2 border-b border-green-500/30 pb-1 uppercase">Leaderboard Debug Panel</p>
                       <div className="space-y-2">
