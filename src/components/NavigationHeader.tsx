@@ -188,11 +188,9 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
                 />
               </div>
             ) : (
-              <>
-                <User className="h-4 w-4" />
-                <span className="text-xs">Profile</span>
-              </>
+              <User className="h-4 w-4" />
             )}
+            <span className="text-xs">Profile</span>
           </Button>
         </div>
       )}
