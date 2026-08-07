@@ -605,7 +605,7 @@ const Quiz = () => {
                     </div>
                   )}
                   {currentQuestion.question_text && (
-                    <p className="text-lg leading-relaxed">{currentQuestion.question_text}</p>
+                    <p className="text-lg leading-relaxed pointer-events-none">{currentQuestion.question_text}</p>
                   )}
                 </div>
                 
