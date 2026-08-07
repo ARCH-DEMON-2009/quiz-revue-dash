@@ -147,7 +147,7 @@ const TncLeaderboard = () => {
                   ) : r.isPremium ? (
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                   ) : null}
-                  <Avatar className={`h-10 w-10 relative bg-background border-2 ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                  <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
                     <AvatarImage src={r.avatarUrl || undefined} className="object-cover" />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
                       {r.userName.charAt(0).toUpperCase()}

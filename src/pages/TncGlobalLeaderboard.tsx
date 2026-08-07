@@ -287,11 +287,14 @@ const TncGlobalLeaderboard = () => {
                   ) : r.isPremium ? (
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                   ) : null}
-                  <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                  <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden shrink-0 ${r.isAdmin ? 'border-purple-500' : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
                     <img 
                       src={r.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`} 
                       className="h-full w-full object-cover"
                       alt=""
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`;
+                      }}
                     />
                   </div>
                   {r.isAdmin ? (

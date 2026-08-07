@@ -239,7 +239,7 @@ const Leaderboard = () => {
                           <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                         ) : null}
                         
-                        <Avatar className={`h-10 w-10 relative bg-background border-2 ${entry.is_admin ? 'border-purple-500' : entry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
+                        <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${entry.is_admin ? 'border-purple-500' : entry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
                           {entry.user_id ? (
                             <AvatarImageWithProfile userId={entry.user_id} fallback={entry.name.charAt(0).toUpperCase()} />
                           ) : (
@@ -311,7 +311,7 @@ const Leaderboard = () => {
                             <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
                           ) : null}
 
-                          <Avatar className={`h-10 w-10 relative bg-background border-2 ${currentUserEntry.is_admin ? 'border-purple-500' : currentUserEntry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
+                          <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${currentUserEntry.is_admin ? 'border-purple-500' : currentUserEntry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
                             {currentUserEntry.user_id ? (
                               <AvatarImageWithProfile userId={currentUserEntry.user_id} fallback={currentUserEntry.name.charAt(0).toUpperCase()} />
                             ) : (
