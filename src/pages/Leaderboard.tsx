@@ -397,7 +397,7 @@ const Leaderboard = () => {
                               ) : (
                                 <div className={getAdminFrameStyles(true) || ""} />
                               )
-                            ) : currentUserEntry.is_premium ? (
+                            ) : currentUserEntry.is_premium && !currentUserEntry.is_admin ? (
                               <img 
                                 src="/frames/f3.png" 
                                 alt="Premium Frame" 
@@ -409,7 +409,7 @@ const Leaderboard = () => {
                             ) : null}
                           </div>
 
-                          <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${currentUserEntry.is_admin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
+                          <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden z-0 ${currentUserEntry.is_admin ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
                             {currentUserEntry.user_id ? (
                               <AvatarImageWithProfile userId={currentUserEntry.user_id} fallback={currentUserEntry.name.charAt(0).toUpperCase()} />
                             ) : (
@@ -435,13 +435,13 @@ const Leaderboard = () => {
                                 <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
                                   <Star className="h-4 w-4 text-white fill-white" />
                                 </div>
-                              )}
-                            </div>
-                          ) : currentUserEntry.is_premium ? (
-                            <div className="absolute -top-3 -right-3 z-10">
-                              <img src="/badges/b1.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
-                            </div>
-                          ) : null}
+                            )}
+                          </div>
+                        ) : currentUserEntry.is_premium && !currentUserEntry.is_admin ? (
+                          <div className="absolute -top-3 -right-3 z-10">
+                            <img src="/badges/b1.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
+                          </div>
+                        ) : null}
                         </div>
                         
                         <div className="flex-1 min-w-0">
