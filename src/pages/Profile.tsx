@@ -67,6 +67,7 @@ const Profile = () => {
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<{url: string, premium: boolean} | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [stats, setStats] = useState<Stats>({
     totalTests: 0,
     averageScore: 0,
@@ -149,8 +150,8 @@ const Profile = () => {
 
   const handleAvatarClick = (url: string, isPremiumAvatar: boolean) => {
     if (isPremiumAvatar && accessStatus?.type !== 'premium') {
-      toast.error("This avatar is for premium users only! Upgrade to unlock.");
-      navigate("/pricing");
+      setSelectedAvatar({ url, premium: isPremiumAvatar });
+      setShowUpgradeModal(true);
       return;
     }
     setSelectedAvatar({ url, premium: isPremiumAvatar });
@@ -653,6 +654,51 @@ const Profile = () => {
             <Button onClick={confirmAvatarChange} className="bg-primary text-white shadow-lg hover:shadow-primary/30 transition-all">
               <Check className="h-4 w-4 mr-2" />
               Confirm & Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Premium Upgrade Modal */}
+      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="h-5 w-5 text-amber-500" />
+              Premium Avatar Locked
+            </DialogTitle>
+            <DialogDescription>
+              This is a premium avatar. Upgrade your account to unlock all premium avatars and exclusive profile frames!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center py-6 space-y-4">
+            {selectedAvatar && (
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-600 rounded-full animate-pulse blur-md opacity-50" />
+                <img 
+                  src={selectedAvatar.url} 
+                  alt="Premium Preview" 
+                  className="relative h-32 w-32 rounded-full border-4 border-amber-500 object-cover shadow-2xl"
+                />
+                <div className="absolute -bottom-2 -right-2 bg-amber-500 rounded-full p-2 border-2 border-background shadow-lg">
+                  <Crown className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            )}
+            <p className="text-center text-sm font-medium text-amber-600 px-4">
+              Unlock professional looks and stand out on the leaderboard with golden names and special frames!
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowUpgradeModal(false)} className="sm:flex-1">
+              Maybe Later
+            </Button>
+            <Button 
+              onClick={() => navigate("/pricing")} 
+              className="sm:flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white gap-2 shadow-lg shadow-amber-500/20"
+            >
+              <Crown className="h-4 w-4" />
+              Upgrade Now
             </Button>
           </DialogFooter>
         </DialogContent>
