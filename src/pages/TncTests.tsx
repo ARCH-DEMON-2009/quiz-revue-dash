@@ -99,24 +99,41 @@ const TncTests = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>TNC Nursing Test Series — Free Mock Tests</title>
+        <title>TNC Nursing Test Series — Free Mock Tests | Test Sagar</title>
         <meta
           name="description"
-          content="Practice 6,800+ free TNC nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO. Timed exams, instant scoring, detailed solutions and leaderboards."
+          content="Practice 6,800+ free TNC nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO. Timed exams, instant scoring, detailed solutions and leaderboards on Test Sagar."
         />
         <link rel="canonical" href={`${SITE}/tnc-tests`} />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="TNC Test Series — Free Nursing Mock Tests" />
-        <meta property="og:description" content="6,800+ free nursing mock tests with timer, scoring and solutions." />
+        <meta property="og:title" content="TNC Nursing Test Series — Free Mock Tests | Test Sagar" />
+        <meta property="og:description" content="6,800+ free nursing mock tests with timer, scoring and solutions. Best test taking site for TNC Nursing preparation." />
         <meta property="og:url" content={`${SITE}/tnc-tests`} />
+        <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="TNC Nursing Test Series — Free Mock Tests | Test Sagar" />
+        <meta name="twitter:description" content="6,800+ free nursing mock tests with timer, scoring and solutions." />
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "CollectionPage",
-            name: "TNC Test Series",
-            description: "Free nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO.",
-            url: `${SITE}/tnc-tests`,
+            "name": "TNC Nursing Test Series",
+            "description": "Free nursing mock tests for NORCET, AIIMS, SGPGI, BTSC and CHO.",
+            "url": `${SITE}/tnc-tests`,
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": SITE
+              }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "TNC Tests",
+                "item": `${SITE}/tnc-tests`
+              }]
+            }
           })}
         </script>
       </Helmet>
