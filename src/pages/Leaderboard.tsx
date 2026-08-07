@@ -265,7 +265,7 @@ const Leaderboard = () => {
                           ) : null}
                         </div>
                         
-                        <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${entry.is_admin ? getAdminAvatarBorder(true) : entry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
+                        <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${entry.is_admin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
                           {entry.user_id ? (
                             <AvatarImageWithProfile userId={entry.user_id} fallback={entry.name.charAt(0).toUpperCase()} />
                           ) : (
@@ -345,13 +345,19 @@ const Leaderboard = () => {
                         </div>
                         
                         <div className="relative">
-                          {currentUserEntry.is_admin ? (
-                            <div className={getAdminFrameStyles(true) || ""} />
-                          ) : currentUserEntry.is_premium ? (
-                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
-                          ) : null}
+                          <div className="absolute -inset-0 z-0 pointer-events-none">
+                            {currentUserEntry.is_admin ? (
+                              ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
+                                <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.5]" />
+                              ) : (
+                                <div className={getAdminFrameStyles(true) || ""} />
+                              )
+                            ) : currentUserEntry.is_premium ? (
+                              <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.5]" />
+                            ) : null}
+                          </div>
 
-                          <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${currentUserEntry.is_admin ? getAdminAvatarBorder(true) : currentUserEntry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
+                          <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${currentUserEntry.is_admin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
                             {currentUserEntry.user_id ? (
                               <AvatarImageWithProfile userId={currentUserEntry.user_id} fallback={currentUserEntry.name.charAt(0).toUpperCase()} />
                             ) : (
@@ -362,26 +368,26 @@ const Leaderboard = () => {
                           </Avatar>
                           
                           {currentUserEntry.is_admin ? (
-                            <div className="absolute -top-2 -right-2 w-6 h-6 z-10 animate-pulse">
+                            <div className="absolute -top-3 -right-3 w-8 h-8 z-10 animate-pulse">
                               {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
                                 <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
                               ) : getAdminBadgeIcon(true) === 'shield' ? (
                                 <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                  <Shield className="h-3 w-3 text-white fill-white" />
+                                  <Shield className="h-4 w-4 text-white fill-white" />
                                 </div>
                               ) : getAdminBadgeIcon(true) === 'crown' ? (
                                 <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                  <Crown className="h-3 w-3 text-white fill-white" />
+                                  <Crown className="h-4 w-4 text-white fill-white" />
                                 </div>
                               ) : (
                                 <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                  <Star className="h-3 w-3 text-white fill-white" />
+                                  <Star className="h-4 w-4 text-white fill-white" />
                                 </div>
                               )}
                             </div>
                           ) : currentUserEntry.is_premium ? (
-                            <div className="absolute -top-1 -right-1 z-10">
-                              <img src="/badges/b3.png" alt="Premium Badge" className="w-5 h-5 object-contain" />
+                            <div className="absolute -top-2 -right-2 z-10">
+                              <img src="/badges/b3.png" alt="Premium Badge" className="w-6 h-6 object-contain" />
                             </div>
                           ) : null}
                         </div>
