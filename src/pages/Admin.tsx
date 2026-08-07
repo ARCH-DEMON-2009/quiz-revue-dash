@@ -955,7 +955,6 @@ const Admin = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
 
         <Card className="mb-3 sm:mb-4">
           <CardHeader className="p-3 sm:p-4">
