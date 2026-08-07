@@ -54,7 +54,7 @@ const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback
   return (
     <>
       {avatarUrl ? (
-        <AvatarImage src={avatarUrl} className="object-cover" />
+        <AvatarImage src={avatarUrl} className="object-cover" loading="lazy" />
       ) : null}
       <AvatarFallback className="bg-primary/20 text-primary font-semibold">
         {fallback}

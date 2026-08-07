@@ -162,7 +162,7 @@ const TncLeaderboard = () => {
                     ) : null}
                   </div>
                   <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${r.isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
-                    <AvatarImage src={r.avatarUrl || (r.isAdmin ? "/admin-avatar.png" : undefined)} className="object-cover" />
+                    <AvatarImage src={r.avatarUrl || (r.isAdmin ? "/admin-avatar.png" : undefined)} className="object-cover" loading="lazy" />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
                       {r.userName.charAt(0).toUpperCase()}
                     </AvatarFallback>

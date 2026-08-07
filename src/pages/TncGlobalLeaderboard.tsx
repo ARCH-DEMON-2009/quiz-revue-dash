@@ -304,7 +304,7 @@ const TncGlobalLeaderboard = () => {
                   <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden shrink-0 ${r.isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
                     <img 
                       src={r.avatarUrl || (r.isAdmin ? "/admin-avatar.png" : `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`)} 
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover" loading="lazy"
                       alt=""
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`;
