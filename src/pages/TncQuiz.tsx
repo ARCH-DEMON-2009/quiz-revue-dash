@@ -173,20 +173,40 @@ const TncQuiz = () => {
   // ---- Require login to take TNC quizzes ----
   useEffect(() => {
     let active = true;
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!active) return;
-      setIsAuthed(!!user);
+      
+      // If no user is logged in, immediately redirect to /auth
+      if (!user) {
+        const redirect = `/tnc-tests/${examId ?? ""}`;
+        navigate(`/auth?redirect=${encodeURIComponent(redirect)}`, { replace: true });
+        return;
+      }
+      
+      setIsAuthed(true);
       setAuthChecked(true);
-    });
+    };
+
+    checkAuth();
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setIsAuthed(!!session?.user);
-      setAuthChecked(true);
+      if (!active) return;
+      if (session?.user) {
+        setIsAuthed(true);
+        setAuthChecked(true);
+      } else {
+        // If user signs out during quiz, redirect to auth
+        const redirect = `/tnc-tests/${examId ?? ""}`;
+        navigate(`/auth?redirect=${encodeURIComponent(redirect)}`, { replace: true });
+      }
     });
+
     return () => {
       active = false;
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [examId, navigate]);
 
   // ---- Resume an in-progress attempt from localStorage ----
   useEffect(() => {
@@ -360,32 +380,14 @@ const TncQuiz = () => {
   }
 
   // ---- Login required to access TNC quizzes ----
-  if (!isAuthed) {
-    const redirect = `/tnc-tests/${examId ?? ""}`;
+  if (!isAuthed || !authChecked) {
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
-        <main className="container mx-auto max-w-md px-4 py-20">
-          <Card className="p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <FileText className="h-7 w-7" />
-            </div>
-            <h1 className="text-xl font-bold text-foreground">Login required</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Please log in to take this TNC nursing test, save your score, and download your result PDF.
-            </p>
-            <Button
-              size="lg"
-              className="mt-6 w-full"
-              onClick={() => navigate(`/auth?redirect=${encodeURIComponent(redirect)}`)}
-            >
-              Login to continue
-            </Button>
-            <Button variant="outline" className="mt-3 w-full" onClick={() => navigate("/tnc-tests")}>
-              Back to Test Series
-            </Button>
-          </Card>
-        </main>
+        <div className="container mx-auto max-w-3xl space-y-4 px-4 py-10">
+          <Skeleton className="h-10 w-2/3" />
+          <Skeleton className="h-40 w-full" />
+        </div>
       </div>
     );
   }
