@@ -70,8 +70,8 @@ const Dashboard = () => {
   }
   return <LinkShortenerGate>
     <Helmet>
-      <title>My Dashboard — Test Sagar Mock Tests</title>
-      <meta name="description" content="Manage your mock tests, track your JEE, NEET, and TNC nursing exam progress on your personal Test Sagar dashboard." />
+      <title>Dashboard — Test Sagar: The Best Test Taking Site</title>
+      <meta name="description" content="Manage your mock tests and track your JEE, NEET, and TNC nursing exam progress on the best test taking site, Test Sagar." />
       <link rel="canonical" href="https://test.shashanksv.com/" />
       <meta property="og:title" content="My Dashboard — Test Sagar Mock Tests" />
       <meta property="og:description" content="Manage your mock tests and track your competitive exam progress." />
