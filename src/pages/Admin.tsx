@@ -979,6 +979,9 @@ const Admin = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-card">
+                    <SelectItem value="f3">Admin Frame (f3)</SelectItem>
+                    <SelectItem value="f1">Frame (f1)</SelectItem>
+                    <SelectItem value="f2">Frame (f2)</SelectItem>
                     <SelectItem value="rainbow">Rainbow Spin</SelectItem>
                     <SelectItem value="gold">Golden Glow</SelectItem>
                     <SelectItem value="none">None</SelectItem>
@@ -987,6 +990,12 @@ const Admin = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-medium">Badge Icon</label>
+                <div className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg border mb-2">
+                  <div className="text-[10px] text-muted-foreground">Live Preview:</div>
+                  {['b1', 'b2', 'b3'].includes(adminBadgeConfig.badge_icon) && (
+                    <img src={`/badges/${adminBadgeConfig.badge_icon}.png`} alt="Preview" className="w-8 h-8 object-contain" />
+                  )}
+                </div>
                 <Select 
                   value={adminBadgeConfig.badge_icon} 
                   onValueChange={(v) => setAdminBadgeConfig(prev => ({ ...prev, badge_icon: v }))}

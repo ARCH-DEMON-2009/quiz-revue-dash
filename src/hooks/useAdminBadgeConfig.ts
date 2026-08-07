@@ -10,10 +10,11 @@ export interface AdminBadgeConfig {
 }
 
 const DEFAULT_CONFIG: AdminBadgeConfig = {
-  frame_type: "rainbow",
+  frame_type: "f3",
   badge_icon: "b1",
   text_effect: "gradient_black",
   glow_color: "#9b87f5",
+  anti_extraction: true,
 };
 
 export const useAdminBadgeConfig = () => {
@@ -45,16 +46,21 @@ export const useAdminBadgeConfig = () => {
   const getAdminFrameStyles = (isAdmin: boolean) => {
     if (!isAdmin) return null;
     
+    if (['f1', 'f2', 'f3'].includes(config.frame_type)) {
+      return "absolute -inset-2.5 z-0 pointer-events-none";
+    }
+    
     if (config.frame_type === 'rainbow') {
       return "absolute -inset-1.5 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]";
     } else if (config.frame_type === 'gold') {
-      return `absolute -inset-1.5 rounded-full blur-[2px] animate-pulse`;
+      return `absolute -inset-1.5 rounded-full blur-[2px] animate-pulse bg-amber-500/20 border border-amber-500`;
     }
     return null;
   };
 
   const getAdminAvatarBorder = (isAdmin: boolean) => {
     if (!isAdmin) return "";
+    if (['f1', 'f2', 'f3'].includes(config.frame_type)) return "border-transparent";
     return config.frame_type === 'gold' ? 'border-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'border-purple-500';
   };
 
