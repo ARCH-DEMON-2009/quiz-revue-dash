@@ -338,6 +338,11 @@ const TncQuiz = () => {
   };
 
   const attemptSubmit = () => {
+    // Analytics: track attempt to submit (gate entry)
+    try {
+      (window as any).posthog?.capture('tnc_quiz_submit_clicked', { examId, answeredCount });
+    } catch (e) { /* ignore */ }
+
     if (answeredCount < questions.length) setConfirmOpen(true);
     else handleSubmit();
   };

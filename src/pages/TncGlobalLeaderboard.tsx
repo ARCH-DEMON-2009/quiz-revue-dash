@@ -70,6 +70,7 @@ const TncGlobalLeaderboard = () => {
       localStorage.setItem(`${CACHE_KEY}_${p}`, JSON.stringify({ data: res.rows, timestamp: now }));
     } catch (e) {
       console.error(e);
+      // Exponential backoff retries (limit to 3)
       if (attempt < 3) {
         const delay = Math.pow(2, attempt) * 1000;
         setTimeout(() => load(p, true, attempt + 1), delay);
@@ -150,8 +151,11 @@ const TncGlobalLeaderboard = () => {
           onValueChange={(v) => {
             const p = v as TncLeaderboardPeriod;
             setPeriod(p);
-            // Analytics event for tab change (Mock example)
-            console.log(`Leaderboard tab changed to: ${p}`);
+            // Track analytics event for leaderboard tab change
+            try {
+              (window as any).posthog?.capture('leaderboard_tab_changed', { period: p });
+              console.log(`Leaderboard tab changed to: ${p}`);
+            } catch (e) { /* ignore analytics errors */ }
           }} 
           className="mb-5"
         >
@@ -168,7 +172,10 @@ const TncGlobalLeaderboard = () => {
           <Card 
             className="mb-4 cursor-pointer border-primary/40 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
             onClick={() => {
-              console.log("Clicked on own rank card");
+              // Track analytics event for clicking on personal rank card
+              try {
+                (window as any).posthog?.capture('leaderboard_me_card_clicked');
+              } catch (e) { /* ignore analytics errors */ }
               toast.info("This is your current ranking based on your best performance.");
             }}
           >
@@ -243,5 +250,6 @@ const TncGlobalLeaderboard = () => {
     </div>
   );
 };
+
 
 export default TncGlobalLeaderboard;

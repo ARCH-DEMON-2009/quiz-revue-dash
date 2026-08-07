@@ -30,7 +30,13 @@ const Verify = () => {
     } catch {
       /* ignore */
     }
-    return safeReturnPath(fromQuery ?? stored);
+    const path = fromQuery ?? stored;
+    
+    // Safety check for expiration or invalid state: if the path is stale or non-existent,
+    // send them to the main TNC tests listing as a safe landing page.
+    if (!path || path === "/verify") return "/tnc-tests";
+    
+    return safeReturnPath(path);
   };
 
   /** Clear any saved redirect so a stale path can never be reused later. */
