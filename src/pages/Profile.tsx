@@ -17,6 +17,7 @@ interface UserDetails {
   name?: string;
   whatsapp?: string;
   createdAt?: string;
+  avatarUrl?: string;
 }
 
 interface Stats {
@@ -100,8 +101,9 @@ const Profile = () => {
         setUserDetails({
           email: user.email,
           name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
-          whatsapp: user.user_metadata?.whatsapp || user.user_metadata?.phone,
-          createdAt: user.created_at
+          whatsapp: user.user_metadata?.whatsapp_number || user.user_metadata?.whatsapp || user.user_metadata?.phone,
+          createdAt: user.created_at,
+          avatarUrl: user.user_metadata?.avatar_url
         });
       }
     } catch (error) {
@@ -202,8 +204,16 @@ const Profile = () => {
         {userDetails && (
           <Card className="mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-br from-card to-muted/30">
             <CardHeader className="p-3 sm:p-4 lg:p-6 pb-0">
-              <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
+              <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center gap-3">
+                {userDetails.avatarUrl ? (
+                  <img 
+                    src={userDetails.avatarUrl} 
+                    alt={userDetails.name} 
+                    className="h-10 w-10 rounded-full border-2 border-primary/20"
+                  />
+                ) : (
+                  <User className="h-6 w-6 text-primary" />
+                )}
                 Profile Details
               </CardTitle>
             </CardHeader>
