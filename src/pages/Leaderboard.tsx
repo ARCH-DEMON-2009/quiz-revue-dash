@@ -20,6 +20,7 @@ interface LeaderboardEntry {
   global_rank: number;
   is_premium?: boolean;
   plan_duration_type?: string;
+  is_admin?: boolean;
 }
 
 const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback: string }) => {
@@ -78,16 +79,25 @@ const Leaderboard = () => {
 
       if (error) throw error;
 
-      // Fetch premium status for these users
+      // Fetch premium status and admin status for these users
       const userIds = (data || []).map((e: any) => e.user_id);
-      const { data: premiumData } = await supabase
-        .from('premium_users')
-        .select('user_id, plan_duration_type')
-        .in('user_id', userIds)
-        .eq('status', 'active')
-        .gt('expiry_date', new Date().toISOString());
+      
+      const [premiumResponse, adminResponse] = await Promise.all([
+        supabase
+          .from('premium_users')
+          .select('user_id, plan_duration_type')
+          .in('user_id', userIds)
+          .eq('status', 'active')
+          .gt('expiry_date', new Date().toISOString()),
+        supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('user_id', userIds)
+          .eq('role', 'admin')
+      ]);
 
-      const premiumMap = new Map(premiumData?.map(p => [p.user_id, p.plan_duration_type]) || []);
+      const premiumMap = new Map(premiumResponse.data?.map(p => [p.user_id, p.plan_duration_type]) || []);
+      const adminSet = new Set(adminResponse.data?.map(a => a.user_id) || []);
 
       const leaderboardData: LeaderboardEntry[] = (data || []).map((entry: any) => ({
         user_id: entry.user_id,
@@ -98,7 +108,8 @@ const Leaderboard = () => {
         rank_percentile: Number(entry.rank_percentile) || 0,
         global_rank: Number(entry.global_rank) || 0,
         is_premium: premiumMap.has(entry.user_id),
-        plan_duration_type: premiumMap.get(entry.user_id)
+        plan_duration_type: premiumMap.get(entry.user_id),
+        is_admin: adminSet.has(entry.user_id)
       }));
 
       setLeaderboard(leaderboardData);
@@ -220,15 +231,33 @@ const Leaderboard = () => {
                         )}
                       </div>
                       
-                      <Avatar className="h-10 w-10">
-                        {entry.user_id ? (
-                          <AvatarImageWithProfile userId={entry.user_id} fallback={entry.name.charAt(0).toUpperCase()} />
-                        ) : (
-                          <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                            {entry.name.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
+                      <div className="relative">
+                        {entry.is_admin ? (
+                          <div className="absolute -inset-1.5 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                        ) : entry.is_premium ? (
+                          <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
+                        ) : null}
+                        
+                        <Avatar className={`h-10 w-10 relative bg-background border-2 ${entry.is_admin ? 'border-purple-500' : entry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
+                          {entry.user_id ? (
+                            <AvatarImageWithProfile userId={entry.user_id} fallback={entry.name.charAt(0).toUpperCase()} />
+                          ) : (
+                            <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                              {entry.name.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        
+                        {entry.is_admin ? (
+                          <div className="absolute -top-1.5 -right-1.5 bg-red-600 rounded-full p-0.5 border border-white shadow-sm z-10">
+                            <Star className="h-2.5 w-2.5 text-white fill-white" />
+                          </div>
+                        ) : entry.is_premium ? (
+                          <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
+                            <Crown className="h-2.5 w-2.5 text-white fill-white" />
+                          </div>
+                        ) : null}
+                      </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
@@ -274,15 +303,33 @@ const Leaderboard = () => {
                           <span className="font-bold text-lg">{currentUserEntry.global_rank}</span>
                         </div>
                         
-                        <Avatar className="h-10 w-10">
-                          {currentUserEntry.user_id ? (
-                            <AvatarImageWithProfile userId={currentUserEntry.user_id} fallback={currentUserEntry.name.charAt(0).toUpperCase()} />
-                          ) : (
-                            <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                              {currentUserEntry.name.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          )}
-                        </Avatar>
+                        <div className="relative">
+                          {currentUserEntry.is_admin ? (
+                            <div className="absolute -inset-1.5 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                          ) : currentUserEntry.is_premium ? (
+                            <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
+                          ) : null}
+
+                          <Avatar className={`h-10 w-10 relative bg-background border-2 ${currentUserEntry.is_admin ? 'border-purple-500' : currentUserEntry.is_premium ? 'border-amber-400' : 'border-transparent'}`}>
+                            {currentUserEntry.user_id ? (
+                              <AvatarImageWithProfile userId={currentUserEntry.user_id} fallback={currentUserEntry.name.charAt(0).toUpperCase()} />
+                            ) : (
+                              <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                                {currentUserEntry.name.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            )}
+                          </Avatar>
+                          
+                          {currentUserEntry.is_admin ? (
+                            <div className="absolute -top-1.5 -right-1.5 bg-red-600 rounded-full p-0.5 border border-white shadow-sm z-10">
+                              <Star className="h-2.5 w-2.5 text-white fill-white" />
+                            </div>
+                          ) : currentUserEntry.is_premium ? (
+                            <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
+                              <Crown className="h-2.5 w-2.5 text-white fill-white" />
+                            </div>
+                          ) : null}
+                        </div>
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
