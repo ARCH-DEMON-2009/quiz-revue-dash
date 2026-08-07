@@ -1,40 +1,40 @@
 project_id = "gaqyuylvawgoxuaevhsi"
 
 [functions.send-trial-expiry-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.validate-quiz-answers]
-verify_jwt = false
+verify_jwt = true
 
 [functions.verify-razorpay-payment]
-verify_jwt = false
+verify_jwt = true
 
 [functions.validate-promo-code]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-razorpay-order]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-premium-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-verification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-premium-expiry-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-sms]
-verify_jwt = false
+verify_jwt = true
 
 [functions.razorpay-webhook]
-verify_jwt = false
+verify_jwt = false # Webhooks are called by Razorpay, not with Supabase JWT
 
 [functions.check-premium]
-verify_jwt = false
+verify_jwt = true
 
 [functions.tnc]
-verify_jwt = false
+verify_jwt = true
 
 [functions.complete-verification]
-verify_jwt = false
+verify_jwt = true
