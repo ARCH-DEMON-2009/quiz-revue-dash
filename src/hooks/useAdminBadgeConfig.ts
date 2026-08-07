@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface AdminBadgeConfig {
@@ -46,8 +46,9 @@ export const useAdminBadgeConfig = () => {
   const getAdminFrameStyles = (isAdmin: boolean) => {
     if (!isAdmin) return null;
     
+    // For f1, f2, f3, we use an absolute positioned img with specific scale/size adjustments
     if (['f1', 'f2', 'f3'].includes(config.frame_type)) {
-      return "absolute -inset-2.5 z-0 pointer-events-none";
+      return "absolute -inset-[15%] z-0 pointer-events-none w-[130%] h-[130%] object-contain";
     }
     
     if (config.frame_type === 'rainbow') {
