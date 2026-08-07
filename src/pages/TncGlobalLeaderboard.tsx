@@ -127,9 +127,9 @@ const TncGlobalLeaderboard = () => {
   const getNameColor = (r: any) => {
     if (r.isAdmin) return getAdminNameColor(true);
     if (!r.isPremium) return "text-foreground";
-    if (r.planType === 'yearly' || r.planType === '12_months' || r.planType === '2years') return "text-amber-500 font-bold";
-    if (r.planType === '6_months') return "text-blue-500 font-bold";
-    return "text-emerald-500 font-bold";
+    if (r.planType === 'yearly' || r.planType === '12_months' || r.planType === '2years') return "text-amber-500 font-bold drop-shadow-sm";
+    if (r.planType === '6_months') return "text-blue-500 font-bold drop-shadow-sm";
+    return "text-emerald-500 font-bold drop-shadow-sm";
   };
 
   const title = "TNC Test Series Leaderboard — All-India Rankings";
@@ -293,12 +293,12 @@ const TncGlobalLeaderboard = () => {
                   <div className="absolute -inset-0 z-0 pointer-events-none">
                     {r.isAdmin ? (
                       ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.5]" />
+                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
                       ) : (
                         <div className={getAdminFrameStyles(true) || ""} />
                       )
                     ) : r.isPremium ? (
-                      <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.5]" />
+                      <img src="/frames/f1.png" alt="Premium Frame" className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" />
                     ) : null}
                   </div>
                   <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden shrink-0 ${r.isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
@@ -312,7 +312,7 @@ const TncGlobalLeaderboard = () => {
                     />
                   </div>
                   {r.isAdmin ? (
-                    <div className="absolute -top-2 -right-2 w-6 h-6 z-10 animate-pulse">
+                    <div className="absolute -top-3.5 -right-3.5 w-10 h-10 z-10 animate-pulse">
                       {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
                         <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
                       ) : getAdminBadgeIcon(true) === 'shield' ? (
@@ -330,8 +330,8 @@ const TncGlobalLeaderboard = () => {
                       )}
                     </div>
                   ) : r.isPremium ? (
-                    <div className="absolute -top-0.5 -right-0.5 z-10">
-                      <img src="/badges/b3.png" alt="Premium Badge" className="w-5 h-5 object-contain" />
+                    <div className="absolute -top-3 -right-3 z-10">
+                      <img src="/badges/b1.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
                     </div>
                   ) : null}
                 </div>
