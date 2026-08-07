@@ -20,7 +20,16 @@ interface UserDetails {
 }
 
 interface Stats {
-...
+  totalTests: number;
+  averageScore: number;
+  overallAccuracy: number;
+  totalQuestions: number;
+  correctAnswers: number;
+  physicsAccuracy: number;
+  chemistryAccuracy: number;
+  mathsAccuracy: number;
+}
+
 interface AccessStatus {
   type: 'premium' | 'free';
   daysLeft: number;
