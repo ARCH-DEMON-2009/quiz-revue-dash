@@ -15,7 +15,7 @@ const RoutesIndex = () => {
 
   return (
     <div className="hidden">
-      still this error {"code":400,"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}
+      still this error {'{"code":400,"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}'}
 
       Test Google sign-in end to end and confirm the exact error is resolved without any unsupported provider message.
 
