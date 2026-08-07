@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,6 +69,14 @@ const Dashboard = () => {
     return null;
   }
   return <LinkShortenerGate>
+    <Helmet>
+      <title>My Dashboard — Test Sagar Mock Tests</title>
+      <meta name="description" content="Manage your mock tests, track your JEE, NEET, and TNC nursing exam progress on your personal Test Sagar dashboard." />
+      <link rel="canonical" href="https://test.shashanksv.com/" />
+      <meta property="og:title" content="My Dashboard — Test Sagar Mock Tests" />
+      <meta property="og:description" content="Manage your mock tests and track your competitive exam progress." />
+      <meta property="og:url" content="https://test.shashanksv.com/" />
+    </Helmet>
     <div className="min-h-screen bg-background relative flex flex-col">
       <FloatingBackground />
       <NavigationHeader showFullNav />
