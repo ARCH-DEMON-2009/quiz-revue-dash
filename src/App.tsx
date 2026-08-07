@@ -30,6 +30,7 @@ import RoutesIndex from "./routes/index";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { BypassBlockGuard } from "./components/BypassBlockGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
+import FeatureAnnouncements from "./components/FeatureAnnouncements";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <FeatureAnnouncements />
       <BrowserRouter>
         <MaintenanceModeGuard>
           <BypassBlockGuard />
