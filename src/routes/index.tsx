@@ -15,7 +15,7 @@ const RoutesIndex = () => {
 
   return (
     <div className="hidden">
-      Add toggleable anti-extraction protections on the quiz page (e.g., selection, context menu, copy) with a clear admin setting and audit logging.
+      Test Sagar — Free JEE, NEET & TNC Mock Tests + Rankings
     </div>
   );
 };
