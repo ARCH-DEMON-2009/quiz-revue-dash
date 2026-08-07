@@ -187,7 +187,7 @@ const TncLeaderboard = () => {
                     </div>
                   ) : r.isPremium ? (
                     <div className="absolute -top-3 -right-3 z-10">
-                      <img src="/badges/b3.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
+                      <img src="/badges/b1.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
                     </div>
                   ) : null}
                 </div>
