@@ -56,6 +56,7 @@ interface AccessStatus {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [stats, setStats] = useState<Stats>({
     totalTests: 0,
     averageScore: 0,
@@ -273,54 +274,68 @@ const Profile = () => {
                       <p className="text-sm text-muted-foreground">{userDetails.email}</p>
                     </div>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      const url = prompt("Enter Image URL for your avatar:");
-                      if (url) handleAvatarChange(url, false);
-                    }}
-                    className="gap-2"
-                  >
-                    Edit Profile
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        const newName = prompt("Enter your new name:", userDetails.name);
+                        if (newName && newName !== userDetails.name) {
+                          // TODO: Implement name update logic
+                        }
+                      }}
+                    >
+                      Edit Name
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowAvatarSelector(!showAvatarSelector)}
+                    >
+                      {showAvatarSelector ? "Hide Avatars" : "Edit Avatar"}
+                    </Button>
+                  </div>
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 lg:p-6 pt-4">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-muted-foreground">Select Premium Avatar</p>
-                  {accessStatus?.type !== 'premium' && (
-                    <Button variant="link" size="sm" className="text-amber-600 h-auto p-0" onClick={() => navigate("/pricing")}>
-                      Buy Premium to unlock all
-                    </Button>
-                  )}
-                </div>
-                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3">
-                  {AVATARS.map((avatar) => (
-                    <div 
-                      key={avatar.id}
-                      onClick={() => handleAvatarChange(avatar.url, avatar.premium)}
-                      className={`relative cursor-pointer group rounded-full p-0.5 border-2 transition-all duration-300 ${
-                        userDetails.avatarUrl === avatar.url 
-                          ? 'border-primary shadow-lg shadow-primary/20 scale-105' 
-                          : 'border-transparent hover:border-primary/30'
-                      } ${avatar.premium && accessStatus?.type !== 'premium' ? 'opacity-50 grayscale hover:opacity-70' : ''}`}
-                    >
-                      <img 
-                        src={avatar.url} 
-                        alt="Avatar option" 
-                        className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover transition-transform group-hover:scale-105"
-                      />
-                      {avatar.premium && (
-                        <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-1 shadow-md">
-                          <Crown className="h-3 w-3 text-white" />
-                        </div>
+                {showAvatarSelector && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-muted-foreground">Select Avatar</p>
+                      {accessStatus?.type !== 'premium' && (
+                        <Button variant="link" size="sm" className="text-amber-600 h-auto p-0" onClick={() => navigate("/pricing")}>
+                          Buy Premium to unlock all
+                        </Button>
                       )}
                     </div>
-                  ))}
-                </div>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3">
+                      {AVATARS.map((avatar) => (
+                        <div 
+                          key={avatar.id}
+                          onClick={() => handleAvatarChange(avatar.url, avatar.premium)}
+                          className={`relative cursor-pointer group rounded-full p-0.5 border-2 transition-all duration-300 ${
+                            userDetails.avatarUrl === avatar.url 
+                              ? 'border-primary shadow-lg shadow-primary/20 scale-105' 
+                              : 'border-transparent hover:border-primary/30'
+                          } ${avatar.premium && accessStatus?.type !== 'premium' ? 'opacity-50 grayscale hover:opacity-70' : ''}`}
+                        >
+                          <img 
+                            src={avatar.url} 
+                            alt="Avatar option" 
+                            className="h-12 w-12 sm:h-14 sm:w-14 rounded-full object-cover transition-transform group-hover:scale-105"
+                          />
+                          {avatar.premium && (
+                            <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-1 shadow-md">
+                              <Crown className="h-3 w-3 text-white" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8 pt-6 border-t border-primary/10">
