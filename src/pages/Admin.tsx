@@ -995,9 +995,12 @@ const Admin = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-card">
-                    <SelectItem value="star">Star</SelectItem>
-                    <SelectItem value="shield">Shield</SelectItem>
-                    <SelectItem value="crown">Crown</SelectItem>
+                    <SelectItem value="b1">Admin Badge (b1)</SelectItem>
+                    <SelectItem value="b2">Admin Badge (b2)</SelectItem>
+                    <SelectItem value="b3">Premium Badge (b3)</SelectItem>
+                    <SelectItem value="star">Star Icon</SelectItem>
+                    <SelectItem value="shield">Shield Icon</SelectItem>
+                    <SelectItem value="crown">Crown Icon</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
