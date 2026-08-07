@@ -99,12 +99,37 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/30 to-background flex flex-col">
       <Helmet>
-        <title>All-India Leaderboard & Rankings | Test Sagar</title>
-        <meta name="description" content="See where you rank on the Test Sagar all-India leaderboard. Live rankings by average score, accuracy and tests taken across all students." />
+        <title>All-India Leaderboard & Rankings | Test Sagar — JEE, NEET & TNC</title>
+        <meta name="description" content="See where you rank on the Test Sagar all-India leaderboard. Live rankings by average score, accuracy and tests taken for JEE, NEET, and TNC nursing exams." />
         <link rel="canonical" href="https://test.shashanksv.com/leaderboard" />
         <meta property="og:title" content="All-India Leaderboard & Rankings | Test Sagar" />
-        <meta property="og:description" content="Live all-India rankings by average score and accuracy." />
+        <meta property="og:description" content="Live all-India rankings by average score and accuracy. Compete with students across India on the best test taking site." />
         <meta property="og:url" content="https://test.shashanksv.com/leaderboard" />
+        <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "All-India Leaderboard",
+            "description": "Rankings of students on Test Sagar.",
+            "url": "https://test.shashanksv.com/leaderboard",
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://test.shashanksv.com/"
+              }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Leaderboard",
+                "item": "https://test.shashanksv.com/leaderboard"
+              }]
+            }
+          })}
+        </script>
       </Helmet>
       <NavigationHeader />
       <div className="p-4 md:p-8 flex-1">

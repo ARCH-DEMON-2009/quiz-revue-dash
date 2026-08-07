@@ -107,12 +107,45 @@ const TncGlobalLeaderboard = () => {
         <title>{title}</title>
         <meta
           name="description"
-          content="Overall TNC nursing test series rankings across all mock tests. Daily, monthly and all-time leaderboards for free and premium students."
+          content="Overall TNC nursing test series rankings across all mock tests. Daily, monthly and all-time leaderboards for free and premium students on Test Sagar."
         />
         <link rel="canonical" href={canonical} />
+        <meta property="og:type" content="website" />
         <meta property="og:title" content={title} />
-        <meta property="og:description" content="Daily, monthly and all-time TNC test series rankings across every mock test." />
+        <meta property="og:description" content="Daily, monthly and all-time TNC test series rankings across every mock test. See where you rank in the Test Sagar community." />
         <meta property="og:url" content={canonical} />
+        <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content="Daily, monthly and all-time TNC test series rankings across every mock test." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": title,
+            "description": "Overall TNC nursing test series rankings across all mock tests.",
+            "url": canonical,
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": SITE
+              }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "TNC Tests",
+                "item": `${SITE}/tnc-tests`
+              }, {
+                "@type": "ListItem",
+                "position": 3,
+                "name": "Global Leaderboard",
+                "item": canonical
+              }]
+            }
+          })}
+        </script>
       </Helmet>
       <NavigationHeader />
       <main className="container mx-auto max-w-3xl px-4 py-6 sm:py-8">

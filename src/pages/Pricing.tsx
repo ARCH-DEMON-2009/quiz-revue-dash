@@ -312,12 +312,37 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background">
       <Helmet>
-        <title>Premium Plans & Pricing | Test Sagar</title>
-        <meta name="description" content="Upgrade to Test Sagar Premium for unlimited mock tests, detailed solutions and analytics. Flexible plans from 1 week to 2 years with promo-code discounts." />
+        <title>Premium Plans & Pricing | Test Sagar — Ad-Free Mock Tests</title>
+        <meta name="description" content="Upgrade to Test Sagar Premium for unlimited ad-free mock tests, detailed solutions, and analytics for JEE, NEET, and TNC. Best test taking site for competitive exams." />
         <link rel="canonical" href="https://test.shashanksv.com/pricing" />
         <meta property="og:title" content="Premium Plans & Pricing | Test Sagar" />
-        <meta property="og:description" content="Flexible premium plans from 1 week to 2 years for unlimited mock tests and analytics." />
+        <meta property="og:description" content="Flexible premium plans from 1 week to 2 years for unlimited ad-free mock tests and analytics. Use promo codes for extra discounts." />
         <meta property="og:url" content="https://test.shashanksv.com/pricing" />
+        <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Premium Plans & Pricing",
+            "description": "Subscription plans for Test Sagar Premium.",
+            "url": "https://test.shashanksv.com/pricing",
+            "breadcrumb": {
+              "@type": "BreadcrumbList",
+              "itemListElement": [{
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://test.shashanksv.com/"
+              }, {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Pricing",
+                "item": "https://test.shashanksv.com/pricing"
+              }]
+            }
+          })}
+        </script>
       </Helmet>
       <nav className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
