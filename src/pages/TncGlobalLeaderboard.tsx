@@ -41,6 +41,7 @@ const TncGlobalLeaderboard = () => {
   const [meId, setMeId] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const { 
+    config,
     getAdminFrameStyles, 
     getAdminAvatarBorder, 
     getAdminBadgeIcon, 
@@ -289,12 +290,18 @@ const TncGlobalLeaderboard = () => {
                 </div>
                 
                 <div className="relative shrink-0">
-                  {r.isAdmin ? (
-                    <div className={getAdminFrameStyles(true) || ""} />
-                  ) : r.isPremium ? (
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
-                  ) : null}
-                  <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden shrink-0 ${r.isAdmin ? getAdminAvatarBorder(true) : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                  <div className="absolute -inset-0 z-0 pointer-events-none">
+                    {r.isAdmin ? (
+                      ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
+                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.5]" />
+                      ) : (
+                        <div className={getAdminFrameStyles(true) || ""} />
+                      )
+                    ) : r.isPremium ? (
+                      <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.5]" />
+                    ) : null}
+                  </div>
+                  <div className={`h-10 w-10 relative bg-background border-2 rounded-full overflow-hidden shrink-0 ${r.isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
                     <img 
                       src={r.avatarUrl || (r.isAdmin ? "/admin-avatar.png" : `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`)} 
                       className="h-full w-full object-cover"

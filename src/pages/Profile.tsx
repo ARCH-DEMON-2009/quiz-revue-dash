@@ -85,6 +85,7 @@ const Profile = () => {
   const [accessStatus, setAccessStatus] = useState<AccessStatus | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const { 
+    config,
     getAdminFrameStyles, 
     getAdminAvatarBorder, 
     getAdminBadgeIcon, 
@@ -328,12 +329,18 @@ const Profile = () => {
                 <div className="flex items-center justify-between gap-3 w-full">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      {isAdmin ? (
-                        <div className={getAdminFrameStyles(true) || ""} />
-                      ) : accessStatus?.type === 'premium' ? (
-                        <div className="absolute -inset-1.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
-                      ) : null}
-                      <div className={`relative h-16 w-16 rounded-full border-4 ${isAdmin ? getAdminAvatarBorder(true) : accessStatus?.type === 'premium' ? 'border-amber-400' : 'border-primary/20'} overflow-hidden bg-background shadow-lg`}>
+                      <div className="absolute -inset-0 z-0 pointer-events-none">
+                        {isAdmin ? (
+                          ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
+                            <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.5]" />
+                          ) : (
+                            <div className={getAdminFrameStyles(true) || ""} />
+                          )
+                        ) : accessStatus?.type === 'premium' ? (
+                          <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.5]" />
+                        ) : null}
+                      </div>
+                      <div className={`relative h-16 w-16 rounded-full border-4 ${isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'} overflow-hidden bg-background shadow-lg`}>
                         {userDetails.avatarUrl ? (
                           <img 
                             src={userDetails.avatarUrl} 
@@ -366,7 +373,7 @@ const Profile = () => {
                         </div>
                       ) : accessStatus?.type === 'premium' ? (
                         <div className="absolute -top-1 -right-1 z-10">
-                          <img src="/badges/b3.png" alt="Premium Badge" className="w-6 h-6 object-contain" />
+                          <img src="/badges/b3.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
                         </div>
                       ) : null}
                     </div>

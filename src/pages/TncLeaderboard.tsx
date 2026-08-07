@@ -36,6 +36,7 @@ const TncLeaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const { 
+    config,
     getAdminFrameStyles, 
     getAdminAvatarBorder, 
     getAdminBadgeIcon, 
@@ -149,12 +150,18 @@ const TncLeaderboard = () => {
                 </div>
                 
                 <div className="relative shrink-0">
-                  {r.isAdmin ? (
-                    <div className={getAdminFrameStyles(true) || ""} />
-                  ) : r.isPremium ? (
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
-                  ) : null}
-                  <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${r.isAdmin ? getAdminAvatarBorder(true) : r.isPremium ? 'border-amber-400' : 'border-transparent'}`}>
+                  <div className="absolute -inset-0 z-0 pointer-events-none">
+                    {r.isAdmin ? (
+                      ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
+                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.5]" />
+                      ) : (
+                        <div className={getAdminFrameStyles(true) || ""} />
+                      )
+                    ) : r.isPremium ? (
+                      <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.5]" />
+                    ) : null}
+                  </div>
+                  <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden ${r.isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
                     <AvatarImage src={r.avatarUrl || (r.isAdmin ? "/admin-avatar.png" : undefined)} className="object-cover" />
                     <AvatarFallback className="bg-primary/20 text-primary font-semibold">
                       {r.userName.charAt(0).toUpperCase()}

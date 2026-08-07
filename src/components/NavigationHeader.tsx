@@ -2,11 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2 } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
@@ -19,6 +20,7 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const { isPremium } = usePremiumStatus();
   const [loading, setLoading] = useState(true);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const { config, getAdminFrameStyles, getAdminAvatarBorder, getAdminBadgeIcon } = useAdminBadgeConfig();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -125,7 +127,18 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
                 <Skeleton className="h-6 w-6 rounded-full" />
               ) : avatarUrl ? (
                 <div className="relative flex items-center gap-2">
-                  <div className="relative h-7 w-7 rounded-full border border-primary/20 overflow-hidden bg-muted aspect-square shadow-sm">
+                  <div className="absolute -inset-0 z-0 pointer-events-none">
+                    {isAdmin ? (
+                      ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
+                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="w-full h-full object-contain scale-[1.6]" />
+                      ) : (
+                        <div className={getAdminFrameStyles(true) || ""} />
+                      )
+                    ) : isPremium ? (
+                      <img src="/frames/f1.png" alt="Premium Frame" className="w-full h-full object-contain scale-[1.6]" />
+                    ) : null}
+                  </div>
+                  <div className={`relative h-7 w-7 rounded-full border ${isAdmin && !['f1', 'f2', 'f3'].includes(config.frame_type) ? getAdminAvatarBorder(true) : 'border-transparent'} overflow-hidden bg-muted aspect-square shadow-sm`}>
                     {!imgLoaded && <Skeleton className="absolute inset-0 h-full w-full rounded-full" />}
                     <img 
                       src={avatarUrl} 
@@ -134,7 +147,15 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
                       onLoad={() => setImgLoaded(true)}
                     />
                   </div>
-                  {isPremium && !isAdmin && (
+                  {isAdmin ? (
+                    <div className="absolute -top-1.5 -right-1.5 w-4 h-4 z-10 animate-pulse">
+                      {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
+                        <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
+                      ) : (
+                        <Star className="h-3 w-3 text-white fill-white" />
+                      )}
+                    </div>
+                  ) : isPremium && (
                     <img src="/badges/b3.png" alt="Premium" className="absolute -top-1.5 -right-1.5 w-4 h-4 object-contain drop-shadow-sm z-10" />
                   )}
                   <span className="hidden sm:inline font-medium text-sm">Profile</span>
