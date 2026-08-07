@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import { Link } from "react-router-dom";
 
 interface UserDetails {
+  id?: string;
   email?: string;
   name?: string;
   whatsapp?: string;
@@ -98,16 +99,44 @@ const Profile = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Fetch from profile table for persistent avatar_url
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('avatar_url, name')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
         setUserDetails({
+          id: user.id,
           email: user.email,
-          name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+          name: profile?.name || user.user_metadata?.full_name || user.user_metadata?.name || 'User',
           whatsapp: user.user_metadata?.whatsapp_number || user.user_metadata?.whatsapp || user.user_metadata?.phone,
           createdAt: user.created_at,
-          avatarUrl: user.user_metadata?.avatar_url
+          avatarUrl: profile?.avatar_url || user.user_metadata?.avatar_url
         });
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
+    }
+  };
+
+  const handleAvatarChange = async (url: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ avatar_url: url })
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      
+      setUserDetails(prev => prev ? { ...prev, avatarUrl: url } : null);
+      toast.success("Avatar updated!");
+    } catch (error: any) {
+      toast.error("Failed to update avatar");
+      console.error(error);
     }
   };
 
@@ -204,17 +233,30 @@ const Profile = () => {
         {userDetails && (
           <Card className="mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-br from-card to-muted/30">
             <CardHeader className="p-3 sm:p-4 lg:p-6 pb-0">
-              <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center gap-3">
-                {userDetails.avatarUrl ? (
-                  <img 
-                    src={userDetails.avatarUrl} 
-                    alt={userDetails.name} 
-                    className="h-10 w-10 rounded-full border-2 border-primary/20"
-                  />
-                ) : (
-                  <User className="h-6 w-6 text-primary" />
-                )}
-                Profile Details
+              <CardTitle className="text-base sm:text-lg lg:text-xl flex items-center justify-between gap-3 w-full">
+                <div className="flex items-center gap-3">
+                  {userDetails.avatarUrl ? (
+                    <img 
+                      src={userDetails.avatarUrl} 
+                      alt={userDetails.name} 
+                      className="h-10 w-10 rounded-full border-2 border-primary/20 object-cover"
+                    />
+                  ) : (
+                    <User className="h-6 w-6 text-primary" />
+                  )}
+                  <span>Profile Details</span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    const url = prompt("Enter Image URL for your avatar:");
+                    if (url) handleAvatarChange(url);
+                  }}
+                  className="text-xs h-8"
+                >
+                  Change Avatar
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 lg:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
