@@ -85,9 +85,9 @@ const TncLeaderboard = () => {
   };
 
   const getNameColor = (r: ExtendedTncRow) => {
-    if (r.isAdmin) return "text-red-600 font-bold";
+    if (r.isAdmin) return "text-red-600 font-extrabold drop-shadow-sm";
     if (!r.isPremium) return "text-foreground";
-    if (r.planType === 'yearly' || r.planType === '12_months') return "text-amber-500 font-bold";
+    if (r.planType === 'yearly' || r.planType === '12_months' || r.planType === '2years') return "text-amber-500 font-bold";
     if (r.planType === '6_months') return "text-blue-500 font-bold";
     return "text-emerald-500 font-bold";
   };
@@ -154,8 +154,8 @@ const TncLeaderboard = () => {
                     </AvatarFallback>
                   </Avatar>
                   {r.isAdmin ? (
-                    <div className="absolute -top-1 -right-1 bg-red-600 rounded-full p-0.5 border border-white shadow-sm z-10">
-                      <Star className="h-2 w-2 text-white fill-white" />
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg z-10 animate-pulse">
+                      <Star className="h-3 w-3 text-white fill-white" />
                     </div>
                   ) : r.isPremium ? (
                     <div className="absolute -top-0.5 -right-0.5 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">

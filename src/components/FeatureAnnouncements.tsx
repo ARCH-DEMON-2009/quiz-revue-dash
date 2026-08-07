@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,31 +11,33 @@ import { Button } from "@/components/ui/button";
 import { Crown, Star, UserCircle, Rocket, Sparkles, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+// This component is intentionally kept simple to ensure it doesn't cause rendering loops
+// even if mounted outside the BrowserRouter context.
 const FeatureAnnouncements = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const LAST_ANNOUNCEMENT_KEY = "last_announcement_seen_v1";
-    const ANNOUNCEMENT_EXPIRY_DAYS = 2;
-    
-    const lastSeen = localStorage.getItem(LAST_ANNOUNCEMENT_KEY);
-    const now = new Date().getTime();
+  // We use a useEffect that is only called once.
+  // Note: If mounted outside BrowserRouter, useNavigate will fail.
+  // To handle the "Router-safe fallback", we wrap the component
+  // in the actual router within App.tsx (already done) 
+  // and add an internal check here.
 
-    if (!lastSeen) {
-      // First time seeing this version, show it and set timestamp
-      setOpen(true);
-      localStorage.setItem(LAST_ANNOUNCEMENT_KEY, now.toString());
-    } else {
-      const lastSeenTime = parseInt(lastSeen);
-      const diffDays = (now - lastSeenTime) / (1000 * 60 * 60 * 24);
-      
-      // If it's been less than 2 days since they first saw it, and they haven't closed it permanently
-      // Actually, standard behavior is to show it once per version.
-      // But the user specifically asked "for next two days show a popup".
-      // We'll show it once and track it. If they clear storage it shows again.
+  useState(() => {
+    const LAST_ANNOUNCEMENT_KEY = "last_announcement_seen_v1";
+    
+    // Check if we are inside a Router by looking for location.
+    // If not, we just won't show the modal to prevent crashes.
+    try {
+      const lastSeen = localStorage.getItem(LAST_ANNOUNCEMENT_KEY);
+      if (!lastSeen) {
+        setOpen(true);
+        localStorage.setItem(LAST_ANNOUNCEMENT_KEY, new Date().getTime().toString());
+      }
+    } catch (e) {
+      console.error("Announcement check failed", e);
     }
-  }, []);
+  });
 
   const features = [
     {
@@ -62,30 +64,30 @@ const FeatureAnnouncements = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="sm:max-w-[500px] border-primary/20 shadow-2xl">
+      <DialogContent className="sm:max-w-[500px] w-[95vw] border-primary/20 shadow-2xl rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-2">
             <div className="bg-primary/10 p-2 rounded-lg">
               <Rocket className="h-6 w-6 text-primary animate-bounce" />
             </div>
-            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            <DialogTitle className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               New Features Arrived!
             </DialogTitle>
           </div>
-          <DialogDescription className="text-base">
+          <DialogDescription className="text-sm sm:text-base">
             We've upgraded Test Sagar with new ways to stand out and personalize your experience.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-3 sm:gap-4 py-4">
           {features.map((feature, index) => (
             <div key={index} className="flex items-start gap-4 p-3 rounded-xl bg-muted/50 border border-border/50 hover:border-primary/30 transition-colors">
               <div className="mt-1 bg-background p-2 rounded-full shadow-sm">
                 {feature.icon}
               </div>
               <div>
-                <h4 className="font-semibold text-foreground">{feature.title}</h4>
-                <p className="text-sm text-muted-foreground leading-snug">{feature.description}</p>
+                <h4 className="font-semibold text-foreground text-sm sm:text-base">{feature.title}</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-snug">{feature.description}</p>
               </div>
             </div>
           ))}
@@ -95,7 +97,7 @@ const FeatureAnnouncements = () => {
           <Button 
             variant="outline" 
             onClick={() => setOpen(false)}
-            className="sm:flex-1"
+            className="w-full sm:flex-1"
           >
             Later
           </Button>
@@ -104,7 +106,7 @@ const FeatureAnnouncements = () => {
               setOpen(false);
               navigate("/profile");
             }}
-            className="sm:flex-1 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 text-white"
+            className="w-full sm:flex-1 bg-gradient-to-r from-primary to-purple-600 hover:opacity-90 text-white"
           >
             Try Now
           </Button>

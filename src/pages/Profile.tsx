@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar, Check, X, Sparkles } from "lucide-react";
+import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar, Check, X, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
@@ -66,6 +66,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<{url: string, premium: boolean} | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [stats, setStats] = useState<Stats>({
@@ -87,7 +88,13 @@ const Profile = () => {
     fetchProfileData();
     checkAccessStatus();
     fetchUserDetails();
+    checkAdmin();
   }, []);
+
+  const checkAdmin = async () => {
+    const { data } = await supabase.rpc('is_admin');
+    setIsAdmin(data === true);
+  };
 
   const checkAccessStatus = async () => {
     try {
@@ -313,19 +320,37 @@ const Profile = () => {
               <CardTitle className="text-base sm:text-lg lg:text-xl flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3 w-full">
                   <div className="flex items-center gap-3">
-                    {userDetails.avatarUrl ? (
-                      <img 
-                        src={userDetails.avatarUrl} 
-                        alt={userDetails.name} 
-                        className="h-16 w-16 rounded-full border-4 border-primary/20 object-cover shadow-lg"
-                      />
-                    ) : (
-                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center border-4 border-primary/20">
-                        <User className="h-8 w-8 text-primary" />
+                    <div className="relative">
+                      {isAdmin ? (
+                        <div className="absolute -inset-2 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
+                      ) : accessStatus?.type === 'premium' ? (
+                        <div className="absolute -inset-1.5 bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 rounded-full blur-[1px]" />
+                      ) : null}
+                      <div className={`relative h-16 w-16 rounded-full border-4 ${isAdmin ? 'border-purple-500' : accessStatus?.type === 'premium' ? 'border-amber-400' : 'border-primary/20'} overflow-hidden bg-background shadow-lg`}>
+                        {userDetails.avatarUrl ? (
+                          <img 
+                            src={userDetails.avatarUrl} 
+                            alt={userDetails.name} 
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <User className="h-8 w-8 text-primary" />
+                          </div>
+                        )}
                       </div>
-                    )}
+                      {isAdmin ? (
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg z-10 animate-pulse">
+                          <Star className="h-3 w-3 text-white fill-white" />
+                        </div>
+                      ) : accessStatus?.type === 'premium' ? (
+                        <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5 border border-white shadow-sm z-10">
+                          <Crown className="h-3 w-3 text-white fill-white" />
+                        </div>
+                      ) : null}
+                    </div>
                     <div>
-                      <h2 className="text-xl font-bold">{userDetails.name}</h2>
+                      <h2 className={`text-xl font-bold ${isAdmin ? 'text-red-600' : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
                       <p className="text-sm text-muted-foreground">{userDetails.email}</p>
                     </div>
                   </div>
@@ -363,6 +388,9 @@ const Profile = () => {
                           Buy Premium to unlock all
                         </Button>
                       )}
+                      <Button variant="link" size="sm" className="text-primary h-auto p-0" onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}>
+                        Demand Custom Avatar
+                      </Button>
                     </div>
                     <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3">
                       {AVATARS.map((avatar) => (
