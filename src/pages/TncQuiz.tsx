@@ -336,6 +336,13 @@ const TncQuiz = () => {
       return { ...p, [rowId]: opt };
     });
 
+  const clearOption = (rowId: string) => {
+    setAnswers((p) => {
+      const { [rowId]: _omit, ...rest } = p;
+      return rest;
+    });
+  };
+
   const shareResult = async () => {
     if (!attemptId) {
       toast.error("Result link not ready yet. Please try again in a moment.");
@@ -664,7 +671,7 @@ const TncQuiz = () => {
 
               {answers[q.rowId] && (
                 <button
-                  onClick={() => selectOption(q.rowId, answers[q.rowId])}
+                  onClick={() => clearOption(q.rowId)}
                   className="mt-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                 >
                   <Eraser className="h-3.5 w-3.5" /> Clear selection (skip this question)
