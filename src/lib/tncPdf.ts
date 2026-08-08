@@ -539,6 +539,23 @@ export async function downloadTncResultPdf(args: PdfArgs) {
     void cardTop;
   });
 
+  // Stamp a giant diagonal watermark "Test Sagar" across each page
+  const pageCount = doc.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    doc.saveGraphicsState();
+    const GState = (doc as any).GState;
+    if (GState) (doc as any).setGState(new GState({ opacity: 0.1 }));
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(100);
+    doc.setTextColor(200, 200, 200);
+    doc.text("Test Sagar", pageW / 2, pageH / 2, {
+      align: "center",
+      angle: 45
+    });
+    doc.restoreGraphicsState();
+  }
+
   // Overlay watermark + footer last so it covers every generated page.
   stampOverlay(doc, brand, site, logo, logoRatio);
   onProgress?.(1);
