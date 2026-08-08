@@ -55,7 +55,7 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
     let code: string | undefined;
     let status: number | undefined;
     try {
-      const ctx = (error as any).context;
+      const ctx = (error as any).context as { status?: number; json?: () => Promise<any> };
       status = ctx?.status;
       if (ctx && typeof ctx.json === "function") {
         const parsed = await ctx.json();

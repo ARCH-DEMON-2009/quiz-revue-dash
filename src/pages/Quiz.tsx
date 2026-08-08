@@ -50,7 +50,7 @@ const Quiz = () => {
   const [textAnswer, setTextAnswer] = useState("");
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [duration, setDuration] = useState(180);
+  const [durationMinutes, setDurationMinutes] = useState(180);
   const { config: adminConfig } = useAdminBadgeConfig();
   const userIdRef = useRef<string | null>(null);
   const lastSavedRef = useRef<string>("");
@@ -108,7 +108,7 @@ const Quiz = () => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, durationMinutes, testName, testId]);
 
   useEffect(() => {
     const currentQuestion = questions[currentIndex];
@@ -172,7 +172,7 @@ const Quiz = () => {
       }
 
       const durationMin = testRes.data.duration_minutes || 180;
-      setDuration(durationMin);
+      setDurationMinutes(durationMin);
       setQuestions(questionsRes.data || []);
       setTestName(testRes.data.name);
 
@@ -315,7 +315,7 @@ const Quiz = () => {
         selected: ans.selected
       }));
 
-      const timeTaken = (duration * 60) - timeLeft;
+      const timeTaken = (durationMinutes * 60) - timeLeft;
 
       // Submit to Edge Function for secure validation
       const { data, error } = await supabase.functions.invoke('validate-quiz-answers', {
