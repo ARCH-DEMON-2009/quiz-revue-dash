@@ -410,6 +410,11 @@ const Quiz = () => {
   const options = parseOptions(currentQuestion.options);
   const isTextQuestion = Object.keys(options).length === 0 || currentQuestion.type === 'text';
 
+  const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => {
+    const { cleanHtml } = require("@/lib/sanitizeHtml");
+    return <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />;
+  };
+
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
