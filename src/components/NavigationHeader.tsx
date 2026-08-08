@@ -108,6 +108,15 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
             <Button 
               variant="outline" 
               size="sm" 
+              onClick={() => navigate("/rwa-study")} 
+              className="bg-gradient-to-r from-blue-500/15 to-primary/15 border-blue-500/40 hover:border-blue-500 hover:bg-blue-500/20 transition-all font-semibold"
+            >
+              <BookOpen className="h-4 w-4 mr-1 sm:mr-2 text-blue-600" />
+              <span className="hidden xs:inline sm:inline">Study Vault</span>
+
+            <Button 
+              variant="outline" 
+              size="sm" 
               onClick={handleAIQuiz} 
               className="hidden sm:flex bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/30 hover:border-primary hover:bg-primary/20 transition-all"
             >
