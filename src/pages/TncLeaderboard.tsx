@@ -20,7 +20,7 @@ interface ExtendedTncRow extends TncLeaderboardRow {
   planType?: string;
 }
 
-const SITE = "https://quiz-revue-dash.lovable.app";
+const SITE = "https://test.shashanksv.com";
 
 function fmtTime(sec: number) {
   const m = Math.floor(sec / 60);

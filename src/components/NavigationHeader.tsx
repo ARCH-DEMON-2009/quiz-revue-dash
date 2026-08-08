@@ -23,35 +23,37 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
   const { config, getAdminFrameStyles, getAdminAvatarBorder, getAdminBadgeIcon } = useAdminBadgeConfig();
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('avatar_url')
-        .eq('user_id', user.id)
-        .maybeSingle();
-        
-      if (profile?.avatar_url) {
-        setAvatarUrl(profile.avatar_url);
-      }
-    };
-    fetchProfile();
-  }, []);
-
-  useEffect(() => {
     const fetchUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const { data: adminData } = await supabase.rpc('is_admin');
-      setIsAdmin(adminData === true);
-      
-      if (user.user_metadata?.avatar_url) {
-        setAvatarUrl(user.user_metadata.avatar_url);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch both admin status and profile data in parallel
+        const [{ data: adminData }, { data: profile }] = await Promise.all([
+          supabase.rpc('is_admin'),
+          supabase
+            .from('user_profiles')
+            .select('avatar_url')
+            .eq('user_id', user.id)
+            .maybeSingle()
+        ]);
+
+        setIsAdmin(adminData === true);
+        
+        // Priority: profile table avatar_url > user metadata avatar_url
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url);
+        } else if (user.user_metadata?.avatar_url) {
+          setAvatarUrl(user.user_metadata.avatar_url);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchUserData();
   }, []);
