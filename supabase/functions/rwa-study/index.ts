@@ -5,24 +5,40 @@ import { corsHeaders } from "../_shared/cors.ts";
 const UPSTREAM_BASE = "https://spidyrwa.vercel.app/api/proxy";
 // These should be set via secrets: rwa-study-auth, rwa-study-aes-key, rwa-study-aes-iv
 const AUTH_TOKEN = Deno.env.get("RWA_STUDY_AUTH_TOKEN");
-const AES_KEY = Deno.env.get("RWA_STUDY_AES_KEY"); // Hex or base64
-const AES_IV = Deno.env.get("RWA_STUDY_AES_IV");   // Hex or base64
+const AES_KEY_STR = Deno.env.get("RWA_STUDY_AES_KEY") || "80RPMPTEC80RPMPTEC80RPMPTEC80RPM"; // 32 chars
+const AES_IV_STR = Deno.env.get("RWA_STUDY_AES_IV") || "80RPMPTEC80RPMPT"; // 16 chars
 
 async function decryptVaultData(encryptedData: string): Promise<any> {
-  if (!AES_KEY || !AES_IV) {
-    console.warn("AES_KEY or AES_IV not set, returning raw encrypted data");
-    return { vaultData: encryptedData, decrypted: false };
-  }
-  
   try {
-    // Implement AES decryption here once the algorithm and key are confirmed.
-    // For now, we'll return a helpful error if keys are missing.
-    return { error: "Decryption implementation pending key confirmation", vaultData: encryptedData };
+    const key = new TextEncoder().encode(AES_KEY_STR);
+    const iv = new TextEncoder().encode(AES_IV_STR);
+    
+    // Decode base64
+    const encryptedBuffer = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+    
+    const cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      key,
+      { name: "AES-CBC" },
+      false,
+      ["decrypt"]
+    );
+
+    const decryptedBuffer = await crypto.subtle.decrypt(
+      { name: "AES-CBC", iv },
+      cryptoKey,
+      encryptedBuffer
+    );
+
+    const decryptedText = new TextDecoder().decode(decryptedBuffer);
+    return JSON.parse(decryptedText);
   } catch (err) {
-    console.error("Decryption failed", err);
-    throw new Error("Failed to decrypt upstream data");
+    console.error("Decryption failed:", err);
+    // Return original data if decryption fails so frontend can show helpful error
+    return { error: "Decryption failed. Check RWA_STUDY_AES_KEY and IV.", raw: encryptedData };
   }
 }
+
 
 async function fetchUpstream(endpoint: string) {
   const url = `${UPSTREAM_BASE}?endpoint=${encodeURIComponent(endpoint)}`;
