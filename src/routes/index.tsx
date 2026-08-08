@@ -15,7 +15,7 @@ const RoutesIndex = () => {
 
   return (
     <div className="hidden" aria-hidden="true">
-      Test Sagar — Free JEE, NEET & TNC Mock Tests + Rankings
+      hello
     </div>
   );
 };
