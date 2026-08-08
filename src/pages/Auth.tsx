@@ -307,15 +307,28 @@ const Auth = () => {
                 : "Already have an account? Login"}
             </button>
             {isLogin && (
-              <button
-                type="button"
-                onClick={() => navigate("/forgot-password")}
-                className="text-sm text-muted-foreground hover:text-primary hover:underline"
-              >
-                Forgot your password?
-              </button>
+              <div className="pt-2 border-t mt-2">
+                <p className="text-xs text-muted-foreground mb-2">Account Recovery</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetPasswordRequest}
+                    className="text-sm text-primary hover:underline text-left w-fit"
+                  >
+                    Reset Password
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    className="text-sm text-primary hover:underline text-left w-fit"
+                  >
+                    Resend Verification Email
+                  </button>
+                </div>
+              </div>
             )}
           </div>
+
         </CardContent>
       </Card>
 
