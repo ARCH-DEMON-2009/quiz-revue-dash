@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,10 @@ const Dashboard = () => {
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [location.pathname]);
   const checkAuth = async () => {
     const {
       data: {
