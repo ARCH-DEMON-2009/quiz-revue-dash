@@ -51,7 +51,16 @@ const RwaStudy = () => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   
   const [loading, setLoading] = useState(false);
+  const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!premiumLoading && !isPremium) {
+      toast.error("Study Vault is a premium feature.");
+      navigate("/pricing");
+    }
+  }, [isPremium, premiumLoading, navigate]);
+
 
   const callApi = async (action: string, params: Record<string, string> = {}) => {
     setLoading(true);
