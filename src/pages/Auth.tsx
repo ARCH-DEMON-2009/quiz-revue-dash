@@ -163,7 +163,8 @@ const Auth = () => {
   const handlePasskeyLogin = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.passkey.signIn();
+      // Using type assertion to bypass temporary TS issues with Passkey API
+      const { error } = await (supabase.auth as any).signInWithPasskey();
       if (error) throw error;
       toast.success("Signed in with Passkey!");
     } catch (error: any) {
