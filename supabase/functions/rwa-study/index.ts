@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
+
 const UPSTREAM_BASE = "https://spidyrwa.vercel.app/api/proxy";
 // These should be set via secrets: rwa-study-auth, rwa-study-aes-key, rwa-study-aes-iv
 const AUTH_TOKEN = Deno.env.get("RWA_STUDY_AUTH_TOKEN");
