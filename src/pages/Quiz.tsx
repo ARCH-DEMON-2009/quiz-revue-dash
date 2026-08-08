@@ -150,7 +150,8 @@ const Quiz = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please login to take the test");
-        navigate("/auth");
+        const redirect = `/quiz/${testId}`;
+        navigate(`/auth?redirect=${encodeURIComponent(redirect)}`, { replace: true });
         return;
       }
       userIdRef.current = user.id;
@@ -312,7 +313,7 @@ const Quiz = () => {
         selected: ans.selected
       }));
 
-      const timeTaken = ((questions[0] ? 180 : 0) * 60) - timeLeft;
+      const timeTaken = (testRes.data?.duration_minutes ? testRes.data.duration_minutes * 60 : 180 * 60) - timeLeft;
 
       // Submit to Edge Function for secure validation
       const { data, error } = await supabase.functions.invoke('validate-quiz-answers', {

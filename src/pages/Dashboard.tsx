@@ -72,10 +72,10 @@ const Dashboard = () => {
     <Helmet>
       <title>Dashboard — Test Sagar: The Best Test Taking Site</title>
       <meta name="description" content="Manage your mock tests and track your JEE, NEET, and TNC nursing exam progress on the best test taking site, Test Sagar." />
-      <link rel="canonical" href="https://test.shashanksv.com/" />
+      <link rel="canonical" href="https://test.shashanksv.com" />
       <meta property="og:title" content="My Dashboard — Test Sagar Mock Tests" />
       <meta property="og:description" content="Manage your mock tests and track your competitive exam progress." />
-      <meta property="og:url" content="https://test.shashanksv.com/" />
+      <meta property="og:url" content="https://test.shashanksv.com" />
     </Helmet>
     <div className="min-h-screen bg-background relative flex flex-col">
       <FloatingBackground />
