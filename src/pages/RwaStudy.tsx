@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Play, FileText, ChevronRight, Loader2, AlertCircle, RefreshCw, BookOpen } from "lucide-react";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
+import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
+
 
 interface Batch {
   id: string;
@@ -51,9 +53,45 @@ const RwaStudy = () => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   
   const [loading, setLoading] = useState(false);
+  const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!premiumLoading && !isPremium) {
+      toast.error("Study Vault is a premium feature.");
+      navigate("/pricing");
+    }
+  }, [isPremium, premiumLoading, navigate]);
+
+
+  // Anti question-extraction: disable right-click, copy, selection
+  useEffect(() => {
+    const prevent = (e: Event) => e.preventDefault();
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (e.key === "F12") e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && ["c", "x", "s", "p", "u"].includes(k)) e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && ["i", "j", "c"].includes(k)) e.preventDefault();
+    };
+    document.addEventListener("contextmenu", prevent);
+    document.addEventListener("copy", prevent);
+    document.addEventListener("cut", prevent);
+    document.addEventListener("selectstart", prevent);
+    document.addEventListener("keydown", onKey);
+    const prevUserSelect = document.body.style.userSelect;
+    document.body.style.userSelect = "none";
+    return () => {
+      document.removeEventListener("contextmenu", prevent);
+      document.removeEventListener("copy", prevent);
+      document.removeEventListener("cut", prevent);
+      document.removeEventListener("selectstart", prevent);
+      document.removeEventListener("keydown", onKey);
+      document.body.style.userSelect = prevUserSelect;
+    };
+  }, []);
+
   const callApi = async (action: string, params: Record<string, string> = {}) => {
+
     setLoading(true);
     try {
       const query = new URLSearchParams({ action, ...params }).toString();
