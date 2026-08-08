@@ -73,15 +73,11 @@ const Admin = () => {
   });
   const [badgeConfigLoading, setBadgeConfigLoading] = useState(false);
 
-  useEffect(() => {
-    checkAdminAuth();
-  }, []);
-
   const checkAdminAuth = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/auth");
+        navigate("/auth?redirect=/admin", { replace: true });
         return;
       }
 
@@ -91,13 +87,13 @@ const Admin = () => {
       if (error) {
         console.error("Error checking admin status:", error);
         toast.error("Failed to verify admin access");
-        navigate("/");
+        navigate("/", { replace: true });
         return;
       }
 
       if (!isAdmin) {
         toast.error("Access denied. Admin privileges required.");
-        navigate("/");
+        navigate("/", { replace: true });
         return;
       }
 
@@ -110,7 +106,7 @@ const Admin = () => {
       fetchAdminBadgeConfig();
     } catch (error) {
       console.error("Auth error:", error);
-      navigate("/");
+      navigate("/", { replace: true });
     } finally {
       setIsLoading(false);
     }
@@ -461,7 +457,7 @@ const Admin = () => {
       };
 
       // Fetch ALL premium users (active and inactive) to track expired ones too
-      const premiumUsers = await fetchAll("premium_users", "user_id, email, expiry_date, status");
+      const premiumUsers = await fetchAll("premium_users", "user_id, email, expiry_date, status, plan_duration_type");
 
       // Fetch all trial users
       const trialUsers = await fetchAll("user_trials", "user_id, start_date, email");
