@@ -209,7 +209,7 @@ const TncTests = () => {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((q) => (
-              <Card key={q.examId} className="flex flex-col p-5">
+              <Card key={q.examId} className="flex flex-col p-5 card-hover group">
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <Badge variant="secondary">{getCategory(q.name)}</Badge>
                   {q.allowForPremium && (
@@ -218,7 +218,7 @@ const TncTests = () => {
                     </Badge>
                   )}
                 </div>
-                <h3 className="mb-4 line-clamp-2 min-h-[3rem] font-semibold text-foreground">
+                <h3 className="mb-4 line-clamp-2 min-h-[3rem] font-semibold text-foreground group-hover:text-primary transition-colors">
                   {q.name}
                 </h3>
                 <div className="mb-5 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
@@ -236,7 +236,7 @@ const TncTests = () => {
                   </span>
                 </div>
                 <Button
-                  className="mt-auto w-full gap-2"
+                  className="mt-auto w-full gap-2 btn-glow shadow-sm"
                   onClick={() => navigate(`/tnc-tests/${q.examId}`)}
                 >
                   Attempt Now <ArrowRight className="h-4 w-4" />
