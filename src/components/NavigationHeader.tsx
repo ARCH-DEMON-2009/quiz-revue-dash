@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2, Star } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2, Star, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
@@ -105,6 +105,17 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <Target className="h-4 w-4 mr-1 sm:mr-2 text-emerald-600" />
               <span className="hidden xs:inline sm:inline">TNC Tests</span>
             </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate("/rwa-study")} 
+              className="bg-gradient-to-r from-blue-500/15 to-primary/15 border-blue-500/40 hover:border-blue-500 hover:bg-blue-500/20 transition-all font-semibold"
+            >
+              <BookOpen className="h-4 w-4 mr-1 sm:mr-2 text-blue-600" />
+              <span className="hidden xs:inline sm:inline">Study Vault</span>
+            </Button>
+
+
             <Button 
               variant="outline" 
               size="sm" 

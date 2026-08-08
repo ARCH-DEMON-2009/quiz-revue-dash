@@ -27,6 +27,8 @@ import TncLeaderboard from "./pages/TncLeaderboard";
 import TncGlobalLeaderboard from "./pages/TncGlobalLeaderboard";
 import TncSharedResult from "./pages/TncSharedResult";
 import RoutesIndex from "./routes/index";
+import RwaStudy from "./pages/RwaStudy";
+
 
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { BypassBlockGuard } from "./components/BypassBlockGuard";
@@ -70,7 +72,9 @@ const App = () => (
             <Route path="/tnc-tests/:examId/result/:attemptId" element={<TncSharedResult />} />
             <Route path="/tnc-tests/:examId/leaderboard" element={<TncLeaderboard />} />
             
+            <Route path="/rwa-study" element={<RwaStudy />} />
             <Route path="/src/routes/index.tsx" element={<RoutesIndex />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
