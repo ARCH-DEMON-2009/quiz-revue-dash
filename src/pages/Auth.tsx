@@ -228,7 +228,20 @@ const Auth = () => {
         <div className="bg-circle bg-circle-2 opacity-20" />
       </div>
       <Card className="w-full max-w-md glass shadow-glow animate-in fade-in zoom-in duration-500 relative z-10">
-        <CardHeader className="space-y-2 text-center">
+        <CardHeader className="space-y-4 text-center">
+          <div 
+            className="flex flex-col items-center gap-3 cursor-pointer group" 
+            onClick={() => navigate("/")}
+          >
+            <img 
+              src="/logo.png" 
+              alt="Test Sagar Logo" 
+              className="h-16 w-16 object-contain rounded-2xl shadow-lg group-hover:scale-105 transition-transform duration-300"
+            />
+            <div className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Test Sagar
+            </div>
+          </div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             {isLogin ? "Welcome Back" : "Get Started"}
           </CardTitle>
