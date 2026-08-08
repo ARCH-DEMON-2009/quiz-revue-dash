@@ -72,7 +72,7 @@ const App = () => (
             <Route path="/tnc-tests/:examId/result/:attemptId" element={<TncSharedResult />} />
             <Route path="/tnc-tests/:examId/leaderboard" element={<TncLeaderboard />} />
             
-            <Route path="/rwa-study" element={<RwaStudy />} />
+            
             <Route path="/src/routes/index.tsx" element={<RoutesIndex />} />
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
