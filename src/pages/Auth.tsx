@@ -147,7 +147,50 @@ const Auth = () => {
   };
 
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+      if (error) throw error;
+      toast.success("Verification email resent! Please check your inbox.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend verification email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPasswordRequest = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/forgot-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent! Check your email.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset link");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUpdateWhatsapp = async (e: React.FormEvent) => {
+
     e.preventDefault();
     if (!whatsappNumber.trim()) {
       toast.error("Please enter your WhatsApp number");
