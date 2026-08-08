@@ -49,7 +49,7 @@ const TncLeaderboard = () => {
     setError(false);
     fetchTncLeaderboard(examId)
       .then(async (res) => {
-        const userIds = res.rows.map(r => r.userId);
+        const userIds = res.rows.map(r => r.userId).filter(Boolean);
         
         // Fetch premium & admin status
         const [premiumRes, adminRes, profileRes] = await Promise.all([

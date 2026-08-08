@@ -191,7 +191,7 @@ const Results = () => {
                 <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                 <span className="text-xs sm:text-sm text-muted-foreground">Attempted</span>
               </div>
-              <p className="text-base sm:text-xl lg:text-2xl font-bold">{result.correct + result.incorrect} / {result.total}</p>
+              <p className="text-base sm:text-xl lg:text-2xl font-bold">{(result.correct || 0) + (result.incorrect || 0)} / {result.total}</p>
             </CardContent>
           </Card>
         </div>

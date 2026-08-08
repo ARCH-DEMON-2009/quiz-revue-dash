@@ -109,12 +109,12 @@ const Dashboard = () => {
             return <Card key={className} className="card-hover group cursor-pointer" onClick={() => setSelectedClass(className)}>
                       <CardHeader className="pb-2 sm:pb-4 p-3 sm:p-4 lg:p-6">
                         <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold group-hover:text-primary transition-colors">{className}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">Click to view tests</CardDescription>
+                        <CardDescription className="text-xs sm:text-sm">{classTests.length} Mock Tests Available</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0 p-3 sm:p-4 lg:p-6">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
-                          <span className="text-sm sm:text-base lg:text-lg font-semibold">{classTests.length} Tests</span>
+                          <span className="text-sm sm:text-base lg:text-lg font-semibold">{classTests.length} Tests Series</span>
                         </div>
                       </CardContent>
                     </Card>;

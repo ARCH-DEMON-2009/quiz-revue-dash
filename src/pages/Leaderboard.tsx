@@ -102,7 +102,7 @@ const Leaderboard = () => {
       if (error) throw error;
 
       // Fetch premium status and admin status for these users
-      const userIds = (data || []).map((e: any) => e.user_id);
+      const userIds = (data || []).map((e: any) => e.user_id).filter(Boolean);
       
       const [premiumResponse, adminResponse] = await Promise.all([
         supabase
