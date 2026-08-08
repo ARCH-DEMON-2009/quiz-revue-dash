@@ -151,7 +151,7 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + "/auth"
+          redirectTo: "https://id-preview--8a84b3c7-2ef2-4ad5-9a41-a97192648479.lovable.app/auth"
         }
       });
       if (error) throw error;
