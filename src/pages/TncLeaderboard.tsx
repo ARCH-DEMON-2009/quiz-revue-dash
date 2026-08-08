@@ -20,7 +20,7 @@ interface ExtendedTncRow extends TncLeaderboardRow {
   planType?: string;
 }
 
-const SITE = "https://quiz-revue-dash.lovable.app";
+const SITE = "https://test.shashanksv.com";
 
 function fmtTime(sec: number) {
   const m = Math.floor(sec / 60);
@@ -49,7 +49,7 @@ const TncLeaderboard = () => {
     setError(false);
     fetchTncLeaderboard(examId)
       .then(async (res) => {
-        const userIds = res.rows.map(r => r.userId);
+        const userIds = res.rows.map(r => r.userId).filter(Boolean);
         
         // Fetch premium & admin status
         const [premiumRes, adminRes, profileRes] = await Promise.all([

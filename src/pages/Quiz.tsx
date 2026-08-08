@@ -50,6 +50,7 @@ const Quiz = () => {
   const [textAnswer, setTextAnswer] = useState("");
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [duration, setDuration] = useState(180);
   const { config: adminConfig } = useAdminBadgeConfig();
   const userIdRef = useRef<string | null>(null);
   const lastSavedRef = useRef<string>("");
@@ -150,7 +151,8 @@ const Quiz = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast.error("Please login to take the test");
-        navigate("/auth");
+        const redirect = `/quiz/${testId}`;
+        navigate(`/auth?redirect=${encodeURIComponent(redirect)}`, { replace: true });
         return;
       }
       userIdRef.current = user.id;
@@ -170,6 +172,7 @@ const Quiz = () => {
       }
 
       const durationMin = testRes.data.duration_minutes || 180;
+      setDuration(durationMin);
       setQuestions(questionsRes.data || []);
       setTestName(testRes.data.name);
 
@@ -312,7 +315,7 @@ const Quiz = () => {
         selected: ans.selected
       }));
 
-      const timeTaken = ((questions[0] ? 180 : 0) * 60) - timeLeft;
+      const timeTaken = (duration * 60) - timeLeft;
 
       // Submit to Edge Function for secure validation
       const { data, error } = await supabase.functions.invoke('validate-quiz-answers', {

@@ -40,7 +40,8 @@ const Auth = () => {
             setPendingUser(session.user);
             setShowWhatsappDialog(true);
           } else {
-            setTimeout(() => navigate(redirectTo), 0);
+            // Use replace to prevent back-button loops after auth
+            setTimeout(() => navigate(redirectTo, { replace: true }), 0);
           }
         }
       }
@@ -57,7 +58,7 @@ const Auth = () => {
           setPendingUser(session.user);
           setShowWhatsappDialog(true);
         } else {
-          navigate(redirectTo);
+          navigate(redirectTo, { replace: true });
         }
       }
     });

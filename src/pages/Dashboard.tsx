@@ -72,10 +72,10 @@ const Dashboard = () => {
     <Helmet>
       <title>Dashboard — Test Sagar: The Best Test Taking Site</title>
       <meta name="description" content="Manage your mock tests and track your JEE, NEET, and TNC nursing exam progress on the best test taking site, Test Sagar." />
-      <link rel="canonical" href="https://test.shashanksv.com/" />
+      <link rel="canonical" href="https://test.shashanksv.com" />
       <meta property="og:title" content="My Dashboard — Test Sagar Mock Tests" />
       <meta property="og:description" content="Manage your mock tests and track your competitive exam progress." />
-      <meta property="og:url" content="https://test.shashanksv.com/" />
+      <meta property="og:url" content="https://test.shashanksv.com" />
     </Helmet>
     <div className="min-h-screen bg-background relative flex flex-col">
       <FloatingBackground />
@@ -109,12 +109,12 @@ const Dashboard = () => {
             return <Card key={className} className="card-hover group cursor-pointer" onClick={() => setSelectedClass(className)}>
                       <CardHeader className="pb-2 sm:pb-4 p-3 sm:p-4 lg:p-6">
                         <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold group-hover:text-primary transition-colors">{className}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm">Click to view tests</CardDescription>
+                        <CardDescription className="text-xs sm:text-sm">{classTests.length} Mock Tests Available</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0 p-3 sm:p-4 lg:p-6">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
-                          <span className="text-sm sm:text-base lg:text-lg font-semibold">{classTests.length} Tests</span>
+                          <span className="text-sm sm:text-base lg:text-lg font-semibold">{classTests.length} Tests Series</span>
                         </div>
                       </CardContent>
                     </Card>;

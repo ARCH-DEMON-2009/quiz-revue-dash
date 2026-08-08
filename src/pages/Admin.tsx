@@ -465,7 +465,7 @@ const Admin = () => {
 
       // Fetch all trial users
       const trialUsers = await fetchAll("user_trials", "user_id, start_date, email");
-      console.log(`Fetched ${trialUsers.length} trial users`);
+      
 
       // Fetch all test results
       const testResults = await fetchAll("test_results", "user_id, percentage");

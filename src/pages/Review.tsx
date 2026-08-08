@@ -226,7 +226,7 @@ const Review = () => {
             };
             
             const userAnswerKey = normalizeToKey(answer?.selected);
-            const correctAnswerKey = normalizeToKey(question.correct);
+            const correctAnswerKey = normalizeToKey(String(question.correct));
 
             const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => (
               <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />
@@ -310,7 +310,7 @@ const Review = () => {
                       <div>
                         <span className="text-muted-foreground">Correct Answer: </span>
                         <span className="font-semibold text-success">
-                          {correctAnswerKey || question.correct}
+                          {correctAnswerKey || String(question.correct)}
                           {(options[correctAnswerKey || ''] || options[(correctAnswerKey || '').toLowerCase()]) && 
                             ` (${stripHtml(options[correctAnswerKey || ''] || options[(correctAnswerKey || '').toLowerCase()])})`}
                         </span>
