@@ -68,7 +68,11 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("Missing Authorization header");
+
     const url = new URL(req.url);
+
     const action = url.searchParams.get("action");
 
     let result: any;
