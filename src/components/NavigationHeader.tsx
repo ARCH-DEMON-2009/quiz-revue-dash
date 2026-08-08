@@ -105,15 +105,6 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <Target className="h-4 w-4 mr-1 sm:mr-2 text-emerald-600" />
               <span className="hidden xs:inline sm:inline">TNC Tests</span>
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => navigate("/rwa-study")} 
-              className="bg-gradient-to-r from-blue-500/15 to-primary/15 border-blue-500/40 hover:border-blue-500 hover:bg-blue-500/20 transition-all font-semibold"
-            >
-              <BookOpen className="h-4 w-4 mr-1 sm:mr-2 text-blue-600" />
-              <span className="hidden xs:inline sm:inline">Study Vault</span>
-            </Button>
 
 
             <Button 
