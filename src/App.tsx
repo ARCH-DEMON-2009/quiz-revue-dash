@@ -27,7 +27,7 @@ import TncLeaderboard from "./pages/TncLeaderboard";
 import TncGlobalLeaderboard from "./pages/TncGlobalLeaderboard";
 import TncSharedResult from "./pages/TncSharedResult";
 import RoutesIndex from "./routes/index";
-import RwaStudy from "./pages/RwaStudy";
+
 
 
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
