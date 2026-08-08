@@ -115,19 +115,6 @@ const Admin = () => {
   useEffect(() => {
     checkAdminAuth();
   }, []);
-      fetchUsers();
-      fetchSubjects();
-      fetchMaintenanceMode();
-      fetchShortenerLink();
-      fetchVerificationEnabled();
-      fetchAdminBadgeConfig();
-    } catch (error) {
-      console.error("Auth error:", error);
-      navigate("/", { replace: true });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   useEffect(() => {
     filterUsers();
