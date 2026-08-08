@@ -206,7 +206,7 @@ const Profile = () => {
   const handleRegisterPasskey = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.addPasskey();
+      const { error } = await (supabase.auth as any).passkey.add();
       if (error) throw error;
       toast.success("Passkey registered successfully! You can now use it to log in.");
     } catch (error: any) {

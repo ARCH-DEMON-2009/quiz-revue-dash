@@ -163,12 +163,11 @@ const Auth = () => {
   const handlePasskeyLogin = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPasskey();
+      const { error } = await supabase.auth.passkey.signIn();
       if (error) throw error;
       toast.success("Signed in with Passkey!");
     } catch (error: any) {
-      // Passkey might not be registered yet
-      if (error.message?.includes("No passkeys found")) {
+      if (error.message?.includes("No passkeys found") || error.message?.includes("User not found")) {
         toast.info("No passkey found. You can register one in your profile settings after logging in.");
       } else {
         toast.error(error.message || "Passkey login failed");
