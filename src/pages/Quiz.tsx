@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { AccessGuard } from "@/components/AccessGuard";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
-
+import { cleanHtml } from "@/lib/sanitizeHtml";
 
 
 interface Question {
@@ -410,6 +410,10 @@ const Quiz = () => {
   const options = parseOptions(currentQuestion.options);
   const isTextQuestion = Object.keys(options).length === 0 || currentQuestion.type === 'text';
 
+  const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => {
+    return <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />;
+  };
+
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -613,7 +617,9 @@ const Quiz = () => {
                     </div>
                   )}
                   {currentQuestion.question_text && (
-                    <p className={cn("text-lg leading-relaxed", adminConfig.anti_extraction !== false && "pointer-events-none")}>{currentQuestion.question_text}</p>
+                    <div className={cn("text-lg leading-relaxed", adminConfig.anti_extraction !== false && "pointer-events-none")}>
+                      <Html html={currentQuestion.question_text} />
+                    </div>
                   )}
                 </div>
                 
@@ -647,7 +653,7 @@ const Quiz = () => {
                         }`}>
                           <span className="text-xs font-bold">{key}</span>
                         </div>
-                        <span className="flex-1">{value}</span>
+                        <Html html={value} className="flex-1" />
                       </button>
                     ))}
                   </div>
