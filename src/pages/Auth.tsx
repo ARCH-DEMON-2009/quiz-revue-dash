@@ -220,8 +220,13 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary to-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
+      <div className="bg-grid opacity-10" />
+      <div className="bg-circles">
+        <div className="bg-circle bg-circle-1 opacity-20" />
+        <div className="bg-circle bg-circle-2 opacity-20" />
+      </div>
+      <Card className="w-full max-w-md glass shadow-glow animate-in fade-in zoom-in duration-500 relative z-10">
         <CardHeader className="space-y-2 text-center">
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             {isLogin ? "Welcome Back" : "Get Started"}

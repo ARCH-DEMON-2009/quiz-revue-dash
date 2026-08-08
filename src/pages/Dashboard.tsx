@@ -85,7 +85,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>
             <div className="mb-4 sm:mb-6 lg:mb-8">
-              <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2">Select Your Class</h2>
+              <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2 text-gradient">Select Your Class</h2>
               <p className="text-sm sm:text-base text-muted-foreground">Choose your class to view available tests</p>
             </div>
 
@@ -106,9 +106,9 @@ const Dashboard = () => {
               </Card> : <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                 {availableClasses.map(className => {
             const classTests = tests.filter(t => t.stream === className);
-            return <Card key={className} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer" onClick={() => setSelectedClass(className)}>
+            return <Card key={className} className="card-hover group cursor-pointer" onClick={() => setSelectedClass(className)}>
                       <CardHeader className="pb-2 sm:pb-4 p-3 sm:p-4 lg:p-6">
-                        <CardTitle className="text-lg sm:text-xl lg:text-2xl">{className}</CardTitle>
+                        <CardTitle className="text-lg sm:text-xl lg:text-2xl font-bold group-hover:text-primary transition-colors">{className}</CardTitle>
                         <CardDescription className="text-xs sm:text-sm">Click to view tests</CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0 p-3 sm:p-4 lg:p-6">
@@ -133,7 +133,7 @@ const Dashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
-              {filteredTests.map(test => <Card key={test.id} className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              {filteredTests.map(test => <Card key={test.id} className="card-hover group">
                   <CardHeader className="p-3 sm:p-4 lg:p-6">
                     <CardTitle className="text-base sm:text-lg lg:text-xl">{test.name}</CardTitle>
                     <CardDescription className="text-xs sm:text-sm line-clamp-2">{test.description || "Test your knowledge"}</CardDescription>
@@ -149,7 +149,7 @@ const Dashboard = () => {
                         <span>{test.total_questions} questions</span>
                       </div>
                     </div>
-                    <Button className="w-full text-sm sm:text-base" onClick={() => navigate(`/quiz/${test.id}`)}>
+                    <Button className="w-full text-sm sm:text-base btn-glow shadow-md" onClick={() => navigate(`/quiz/${test.id}`)}>
                       Start Test
                     </Button>
                   </CardContent>
