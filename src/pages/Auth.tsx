@@ -306,27 +306,6 @@ const Auth = () => {
                 ? "Don't have an account? Sign up"
                 : "Already have an account? Login"}
             </button>
-            {isLogin && (
-              <div className="pt-2 border-t mt-2">
-                <p className="text-xs text-muted-foreground mb-2">Account Recovery</p>
-                <div className="flex flex-col gap-2">
-                  <button
-                    type="button"
-                    onClick={handleResetPasswordRequest}
-                    className="text-sm text-primary hover:underline text-left w-fit"
-                  >
-                    Reset Password
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleResendVerification}
-                    className="text-sm text-primary hover:underline text-left w-fit"
-                  >
-                    Resend Verification Email
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
         </CardContent>
