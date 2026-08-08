@@ -113,6 +113,8 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
             >
               <BookOpen className="h-4 w-4 mr-1 sm:mr-2 text-blue-600" />
               <span className="hidden xs:inline sm:inline">Study Vault</span>
+            </Button>
+
 
             <Button 
               variant="outline" 
