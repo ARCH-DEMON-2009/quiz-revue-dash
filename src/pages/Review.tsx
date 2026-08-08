@@ -5,9 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, Circle, ChevronLeft } from "lucide-react";
+import { stripHtml } from "@/lib/sanitizeHtml";
+
+import { CheckCircle2, XCircle, Circle, ChevronLeft, Info } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
+import { cleanHtml } from "@/lib/sanitizeHtml";
+
 
 interface Question {
   id: string;
@@ -17,7 +21,9 @@ interface Question {
   subject: string;
   image?: string;
   type?: string;
+  explanation?: string;
 }
+
 
 interface UserAnswer {
   questionId: string;
@@ -222,7 +228,12 @@ const Review = () => {
             const userAnswerKey = normalizeToKey(answer?.selected);
             const correctAnswerKey = normalizeToKey(question.correct);
 
+            const Html = ({ html, className }: { html: string | null | undefined; className?: string }) => (
+              <span className={className} dangerouslySetInnerHTML={{ __html: cleanHtml(html) }} />
+            );
+
             return (
+
               <Card key={question.id}>
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
@@ -245,7 +256,7 @@ const Review = () => {
                       />
                     </div>
                   )}
-                  <p className="text-lg mb-4">{question.question_text}</p>
+                  <Html html={question.question_text} className="text-lg mb-4 block" />
 
                   {/* MCQ Options - Show all options with highlighting */}
                   {hasOptions && !isTextQuestion && (
@@ -273,7 +284,7 @@ const Review = () => {
                                 isCorrectAnswer ? "text-success" : isUserAnswer ? "text-destructive" : "text-muted-foreground"
                               }`}>{keyUpper}.</span>
                               <div className="flex-1">
-                                <p className="text-base">{value}</p>
+                                <Html html={value} className="text-base" />
                                 <div className="flex flex-wrap gap-2 mt-1">
                                   {isCorrectAnswer && isUserAnswer && (
                                     <span className="text-xs font-medium text-success bg-success/20 px-2 py-0.5 rounded">✓ Correct! You selected this</span>
@@ -301,7 +312,7 @@ const Review = () => {
                         <span className="font-semibold text-success">
                           {correctAnswerKey || question.correct}
                           {(options[correctAnswerKey || ''] || options[(correctAnswerKey || '').toLowerCase()]) && 
-                            ` (${options[correctAnswerKey || ''] || options[(correctAnswerKey || '').toLowerCase()]})`}
+                            ` (${stripHtml(options[correctAnswerKey || ''] || options[(correctAnswerKey || '').toLowerCase()])})`}
                         </span>
                       </div>
                       <div>
@@ -310,7 +321,7 @@ const Review = () => {
                           <span className={`font-semibold ${answer.isCorrect ? "text-success" : "text-destructive"}`}>
                             {userAnswerKey || answer.selected}
                             {(options[userAnswerKey || ''] || options[(userAnswerKey || '').toLowerCase()]) && 
-                              ` (${options[userAnswerKey || ''] || options[(userAnswerKey || '').toLowerCase()]})`}
+                              ` (${stripHtml(options[userAnswerKey || ''] || options[(userAnswerKey || '').toLowerCase()])})`}
                           </span>
                         ) : (
                           <span className="font-semibold text-warning">Skipped</span>
@@ -336,6 +347,17 @@ const Review = () => {
                       )}
                     </div>
                   )}
+
+                  {question.explanation && (
+                    <div className="mt-6 p-4 bg-primary/5 border border-primary/10 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2 text-primary font-semibold">
+                        <Info className="h-4 w-4" />
+                        <span>Explanation</span>
+                      </div>
+                      <Html html={question.explanation} className="text-sm text-muted-foreground block leading-relaxed" />
+                    </div>
+                  )}
+
                 </CardContent>
               </Card>
             );
