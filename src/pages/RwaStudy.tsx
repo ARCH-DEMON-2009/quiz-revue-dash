@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, FileText, ChevronRight, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { Play, FileText, ChevronRight, Loader2, AlertCircle, RefreshCw, BookOpen } from "lucide-react";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
