@@ -140,7 +140,7 @@ const TncTests = () => {
       <NavigationHeader />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground sm:text-4xl">🎯 TNC Test Series</h1>
+          <h1 className="text-3xl font-bold text-foreground sm:text-4xl text-gradient">🎯 TNC Test Series</h1>
           <p className="mt-2 text-muted-foreground">
             6,800+ Free Mock Tests — NORCET · AIIMS · SGPGI · BTSC · CHO
           </p>

@@ -85,7 +85,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>
             <div className="mb-4 sm:mb-6 lg:mb-8">
-              <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2">Select Your Class</h2>
+              <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2 text-gradient">Select Your Class</h2>
               <p className="text-sm sm:text-base text-muted-foreground">Choose your class to view available tests</p>
             </div>
 
