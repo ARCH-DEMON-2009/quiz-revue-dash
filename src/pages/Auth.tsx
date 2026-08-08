@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { User, Session } from "@supabase/supabase-js";
+import { Shield } from "lucide-react";
 import { isValidEmailProvider } from "@/lib/emailValidator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -158,6 +159,24 @@ const Auth = () => {
       toast.error(error.message || "Could not sign in with Google");
     }
   };
+  
+  const handlePasskeyLogin = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.signInWithPasskey();
+      if (error) throw error;
+      toast.success("Signed in with Passkey!");
+    } catch (error: any) {
+      // Passkey might not be registered yet
+      if (error.message?.includes("No passkeys found")) {
+        toast.info("No passkey found. You can register one in your profile settings after logging in.");
+      } else {
+        toast.error(error.message || "Passkey login failed");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUpdateWhatsapp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -294,6 +313,17 @@ const Auth = () => {
                 />
               </svg>
               Google
+            </Button>
+            
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full flex items-center justify-center gap-2 border-dashed border-2 hover:border-primary/50 transition-all"
+              onClick={handlePasskeyLogin}
+              disabled={loading}
+            >
+              <Shield className="h-4 w-4 text-primary" />
+              Sign in with Passkey
             </Button>
           </form>
 
