@@ -27,6 +27,7 @@ import TncLeaderboard from "./pages/TncLeaderboard";
 import TncGlobalLeaderboard from "./pages/TncGlobalLeaderboard";
 import TncSharedResult from "./pages/TncSharedResult";
 import RoutesIndex from "./routes/index";
+import OauthConsent from "./pages/OauthConsent";
 import { BlockedUserGuard } from "./components/BlockedUserGuard";
 import { BypassBlockGuard } from "./components/BypassBlockGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/tnc-tests/:examId" element={<TncQuiz />} />
             <Route path="/tnc-tests/:examId/result/:attemptId" element={<TncSharedResult />} />
             <Route path="/tnc-tests/:examId/leaderboard" element={<TncLeaderboard />} />
+            <Route path="/oauth/consent" element={<OauthConsent />} />
             <Route path="/src/routes/index.tsx" element={<RoutesIndex />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
