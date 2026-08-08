@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar, Check, X, Sparkles, Star, Shield, Fingerprint } from "lucide-react";
+import { TrendingUp, Target, Award, HelpCircle, Crown, Tv, LogOut, User, Mail, Phone, Calendar, Check, X, Sparkles, Star, Shield } from "lucide-react";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
@@ -203,18 +203,6 @@ const Profile = () => {
     }
   };
 
-  const handleRegisterPasskey = async () => {
-    try {
-      setLoading(true);
-      const { error } = await (supabase.auth as any).linkPasskey();
-      if (error) throw error;
-      toast.success("Passkey registered successfully! You can now use it to log in.");
-    } catch (error: any) {
-      toast.error(error.message || "Failed to register passkey");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleNameChange = async () => {
     if (!userDetails) return;
@@ -413,15 +401,6 @@ const Profile = () => {
                     >
                       <Sparkles className="h-4 w-4" />
                       {showAvatarSelector ? "Hide List" : "Change Avatar"}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleRegisterPasskey}
-                      className="gap-2 border-primary/30 hover:bg-primary/5"
-                    >
-                      <Fingerprint className="h-4 w-4" />
-                      Add Passkey
                     </Button>
                   </div>
                 </div>
