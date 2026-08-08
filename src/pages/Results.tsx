@@ -103,7 +103,7 @@ const Results = () => {
                   <span>Marks Obtained</span>
                   <span className="font-semibold">{result.marks_obtained.toFixed(2)} / {result.max_marks}</span>
                 </div>
-                <Progress value={(result.marks_obtained / result.max_marks) * 100} className="h-2 sm:h-3" />
+                <Progress value={result.max_marks > 0 ? (result.marks_obtained / result.max_marks) * 100 : 0} className="h-2 sm:h-3" />
               </div>
             </div>
           </CardContent>
@@ -167,7 +167,7 @@ const Results = () => {
                       {stats.correct} / {stats.total}
                     </span>
                   </div>
-                  <Progress value={(stats.correct / stats.total) * 100} className="h-1.5 sm:h-2" />
+                  <Progress value={stats.total > 0 ? (stats.correct / stats.total) * 100 : 0} className="h-1.5 sm:h-2" />
                 </div>
               ))}
             </div>
