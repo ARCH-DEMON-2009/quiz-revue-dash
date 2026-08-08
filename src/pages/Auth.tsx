@@ -147,7 +147,50 @@ const Auth = () => {
   };
 
 
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+      if (error) throw error;
+      toast.success("Verification email resent! Please check your inbox.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend verification email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPasswordRequest = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/forgot-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent! Check your email.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send reset link");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUpdateWhatsapp = async (e: React.FormEvent) => {
+
     e.preventDefault();
     if (!whatsappNumber.trim()) {
       toast.error("Please enter your WhatsApp number");
@@ -264,15 +307,28 @@ const Auth = () => {
                 : "Already have an account? Login"}
             </button>
             {isLogin && (
-              <button
-                type="button"
-                onClick={() => navigate("/forgot-password")}
-                className="text-sm text-muted-foreground hover:text-primary hover:underline"
-              >
-                Forgot your password?
-              </button>
+              <div className="pt-2 border-t mt-2">
+                <p className="text-xs text-muted-foreground mb-2">Account Recovery</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={handleResetPasswordRequest}
+                    className="text-sm text-primary hover:underline text-left w-fit"
+                  >
+                    Reset Password
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    className="text-sm text-primary hover:underline text-left w-fit"
+                  >
+                    Resend Verification Email
+                  </button>
+                </div>
+              </div>
             )}
           </div>
+
         </CardContent>
       </Card>
 
