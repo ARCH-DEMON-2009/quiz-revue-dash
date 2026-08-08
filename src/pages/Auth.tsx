@@ -151,7 +151,7 @@ const Auth = () => {
         </form>
 
         <div className="social-account-container">
-          <span className="title">Or {isLogin ? "Sign in" : "Sign up"} with</span>
+          <span className="title">Or {isLogin ? "Sign in" : "Sign up"} with <span className="text-[8px] opacity-60">(Coming Soon)</span></span>
           <div className="social-accounts">
             <button className="social-button google" onClick={() => handleSocialSignIn('google')}>
               <svg className="svg" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 488 512">
