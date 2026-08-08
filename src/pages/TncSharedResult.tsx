@@ -30,7 +30,7 @@ import { downloadTncResultPdf } from "@/lib/tncPdf";
 import TncQuestionImage from "@/components/TncQuestionImage";
 
 const OPTS = ["A", "B", "C", "D"] as const;
-const SITE = "https://quiz-revue-dash.lovable.app";
+const SITE = "https://test.shashanksv.com";
 
 const pdfStageFromProgress = (p: number): "queued" | "rendering" | "saving" | "done" => {
   if (p >= 1) return "done";
