@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2, Star } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2, Star, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
