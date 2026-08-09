@@ -12,6 +12,11 @@ interface PdfArgs {
   questions: TncQuestion[];
   answers: Record<string, string>;
   userName?: string;
+  /** Candidate identity visuals rendered in the header (avatar + frame + badge). */
+  avatarUrl?: string | null;
+  frameUrl?: string | null;
+  badgeUrl?: string | null;
+
   /** Brand/site shown in the watermark + footer so the PDF can't be rebranded. */
   site?: string;
   brand?: string;
@@ -167,13 +172,19 @@ export async function downloadTncResultPdf(args: PdfArgs) {
 
   onProgress?.(0.02);
 
-  // Preload logo + all question images (CORS-safe via the edge proxy).
-  const logo = await urlToDataUrl(LOGO_PATH);
+  // Preload logo + candidate identity art + all question images.
+  const [logo, avatarImg, frameImg, badgeImg] = await Promise.all([
+    urlToDataUrl(LOGO_PATH),
+    args.avatarUrl ? urlToDataUrl(args.avatarUrl) : Promise.resolve(null),
+    args.frameUrl ? urlToDataUrl(args.frameUrl) : Promise.resolve(null),
+    args.badgeUrl ? urlToDataUrl(args.badgeUrl) : Promise.resolve(null),
+  ]);
   let logoRatio = 1;
   if (logo) {
     const s = await imageSize(logo);
     if (s.w) logoRatio = s.h / s.w;
   }
+
 
   const withImages = questions.filter((q) => q.imageUrl);
   const totalImgs = withImages.length;
@@ -266,11 +277,12 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   doc.setTextColor(255, 255, 255);
   doc.text("RESULT REPORT", pageW - margin - 70, 44.5, { align: "center" });
 
-  // Exam title inside header
+  // Exam title inside header (leave room for the candidate avatar on the right)
+  const titleW = maxW - (avatarImg ? 90 : 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
   doc.setTextColor(255, 255, 255);
-  const titleLines = doc.splitTextToSize(stripHtml(examName) || "TNC Test Result", maxW);
+  const titleLines = doc.splitTextToSize(stripHtml(examName) || "TNC Test Result", titleW);
   doc.text(titleLines.slice(0, 2), margin, 100);
 
   doc.setFont("helvetica", "normal");
@@ -279,6 +291,38 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   const meta = `${userName ? `Candidate: ${userName}   |   ` : ""}${new Date().toLocaleString()}`;
   doc.text(meta, margin, 132);
   setOpacity(doc, 1);
+
+  // Candidate avatar with frame + badge (right side of the header)
+  if (avatarImg) {
+    const size = 52;
+    const ax = pageW - margin - size;
+    const ay = headerH - size - 22;
+    try {
+      doc.setFillColor(255, 255, 255);
+      doc.circle(ax + size / 2, ay + size / 2, size / 2 + 2, "F");
+      doc.addImage(avatarImg, fmtType(avatarImg), ax, ay, size, size, undefined, "FAST");
+      if (frameImg) {
+        const fs = size * 1.55;
+        doc.addImage(
+          frameImg,
+          fmtType(frameImg),
+          ax - (fs - size) / 2,
+          ay - (fs - size) / 2,
+          fs,
+          fs,
+          undefined,
+          "FAST",
+        );
+      }
+      if (badgeImg) {
+        const bs = 24;
+        doc.addImage(badgeImg, fmtType(badgeImg), ax + size - bs + 6, ay - 8, bs, bs, undefined, "FAST");
+      }
+    } catch {
+      /* ignore avatar rendering issues */
+    }
+  }
+
 
   y = headerH + 24;
 

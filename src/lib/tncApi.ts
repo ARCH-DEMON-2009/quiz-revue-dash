@@ -219,7 +219,12 @@ export interface TncLeaderboardRow {
   skippedCount: number;
   timeTakenSeconds: number;
   submittedAt: string | null;
+  isPremium?: boolean;
+  isAdmin?: boolean;
+  planType?: string;
+  avatarUrl?: string | null;
 }
+
 
 export interface TncLeaderboardResponse {
   examId: string;

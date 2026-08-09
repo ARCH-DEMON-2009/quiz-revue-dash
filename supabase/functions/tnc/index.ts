@@ -373,16 +373,21 @@ async function getAttempt(attemptId: string) {
   );
   const { data, error } = await admin
     .from("quiz_attempts")
-    .select("id, exam_id, exam_name, user_name, answers, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
+    .select("id, exam_id, exam_name, user_id, user_name, answers, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
     .eq("id", attemptId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) return null;
+  // Prefer the profile display name; never expose the raw email.
+  const { nameById } = await resolveUserIdentities(
+    admin,
+    data.user_id ? [String(data.user_id)] : [],
+  );
   return {
     attemptId: data.id,
     examId: String(data.exam_id ?? ""),
     examName: data.exam_name ?? null,
-    userName: data.user_name ?? "Student",
+    userName: nameById.get(String(data.user_id)) ?? maskName(String(data.user_name ?? "Student")),
     answers: data.answers ?? {},
     score: Number(data.score ?? 0),
     totalMarks: Number(data.total_marks ?? 0),
@@ -394,7 +399,56 @@ async function getAttempt(attemptId: string) {
   };
 }
 
+const ADMIN_EMAILS = [
+  "shashank@testsagar.com",
+  "ayush@testsagar.com",
+  "ayushmishra7235@gmail.com",
+  "ssv01@duck.com",
+];
+
+/**
+ * Resolve display identity for a set of users: real names (never raw emails),
+ * avatars, premium status and admin status (service-role, so RLS can't hide it).
+ */
+async function resolveUserIdentities(admin: any, ids: string[]) {
+  const nameById = new Map<string, string>();
+  const avatarById = new Map<string, string | null>();
+  const premiumById = new Map<string, string>();
+  const adminIds = new Set<string>();
+  if (!ids.length) return { nameById, avatarById, premiumById, adminIds };
+
+  const [profiles, prem, roles] = await Promise.all([
+    admin.from("user_profiles").select("user_id, name, email, avatar_url").in("user_id", ids),
+    admin.from("premium_users").select("user_id, status, expiry_date, plan_duration_type").in("user_id", ids),
+    admin.from("user_roles").select("user_id").in("user_id", ids).eq("role", "admin"),
+  ]);
+
+  for (const p of profiles.data ?? []) {
+    const uid = String(p.user_id);
+    if (p.name && p.name !== "User" && !String(p.name).includes("@")) nameById.set(uid, String(p.name));
+    avatarById.set(uid, p.avatar_url ?? null);
+    if (p.email && ADMIN_EMAILS.includes(String(p.email).toLowerCase())) adminIds.add(uid);
+  }
+  for (const p of prem.data ?? []) {
+    if (p.status === "active" && new Date(p.expiry_date) > new Date()) {
+      premiumById.set(String(p.user_id), p.plan_duration_type || "standard");
+    }
+  }
+  for (const r of roles.data ?? []) adminIds.add(String(r.user_id));
+
+  return { nameById, avatarById, premiumById, adminIds };
+}
+
+/** Never publish raw emails on public leaderboards. */
+function maskName(name: string) {
+  if (!name || name === "Student") return "Student";
+  if (!name.includes("@")) return name;
+  const local = name.split("@")[0];
+  return local.length > 3 ? `${local.slice(0, 3)}${"*".repeat(3)}` : "Student";
+}
+
 async function getLeaderboard(examId: string) {
+
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -422,16 +476,20 @@ async function getLeaderboard(examId: string) {
     }
   }
 
-  const ranked = [...best.values()]
-    .sort((a, b) =>
-      Number(b.score) - Number(a.score) ||
-      Number(a.time_taken_seconds ?? 0) - Number(b.time_taken_seconds ?? 0),
-    )
-    .slice(0, 100)
-    .map((row, i) => ({
+  const bestRows = [...best.values()].sort((a, b) =>
+    Number(b.score) - Number(a.score) ||
+    Number(a.time_taken_seconds ?? 0) - Number(b.time_taken_seconds ?? 0),
+  ).slice(0, 100);
+
+  const ids = bestRows.map((r) => String(r.user_id)).filter((id) => id && id !== "guest");
+  const { nameById, avatarById, premiumById, adminIds } = await resolveUserIdentities(admin, ids);
+
+  const ranked = bestRows.map((row, i) => {
+    const uid = String(row.user_id ?? "guest");
+    return {
       rank: i + 1,
-      userId: String(row.user_id ?? "guest"),
-      userName: row.user_name ?? "Student",
+      userId: uid,
+      userName: nameById.get(uid) ?? maskName(String(row.user_name ?? "Student")),
       score: Number(row.score ?? 0),
       totalMarks: Number(row.total_marks ?? 0),
       correctCount: Number(row.correct_count ?? 0),
@@ -439,7 +497,13 @@ async function getLeaderboard(examId: string) {
       skippedCount: Number(row.skipped_count ?? 0),
       timeTakenSeconds: Number(row.time_taken_seconds ?? 0),
       submittedAt: row.submitted_at ?? null,
-    }));
+      isPremium: premiumById.has(uid),
+      isAdmin: adminIds.has(uid),
+      planType: premiumById.get(uid),
+      avatarUrl: avatarById.get(uid) ?? null,
+    };
+  });
+
 
   return {
     examId: String(examId),
@@ -538,43 +602,25 @@ async function getGlobalLeaderboard(period: "daily" | "monthly" | "all") {
       timeTakenSeconds: time,
       lastAttemptAt,
       isPremium: false,
+      isAdmin: false,
+      planType: undefined as string | undefined,
+      avatarUrl: null as string | null,
     };
   });
 
-  // Flag premium members (display only — free users are ranked equally).
+  // Flag premium/admin members and resolve display names (never raw emails).
   const ids = aggregated.map((a) => a.userId);
   if (ids.length) {
-    const { data: prem } = await admin
-      .from("premium_users")
-      .select("user_id, status, expiry_date")
-      .in("user_id", ids);
-    const premiumIds = new Set(
-      (prem ?? [])
-        .filter((p: any) => p.status === "active" && new Date(p.expiry_date) > new Date())
-        .map((p: any) => String(p.user_id)),
-    );
-    for (const a of aggregated) a.isPremium = premiumIds.has(a.userId);
-
-    // Prefer real display names; never publish raw email addresses (PII).
-    const { data: profiles } = await admin
-      .from("user_profiles")
-      .select("user_id, name")
-      .in("user_id", ids);
-    const nameById = new Map(
-      (profiles ?? [])
-        .filter((p: any) => p.name && p.name !== "User")
-        .map((p: any) => [String(p.user_id), String(p.name)]),
-    );
+    const { nameById, avatarById, premiumById, adminIds } = await resolveUserIdentities(admin, ids);
     for (const a of aggregated) {
-      const profileName = nameById.get(a.userId);
-      if (profileName) {
-        a.userName = profileName;
-      } else if (a.userName.includes("@")) {
-        const local = a.userName.split("@")[0];
-        a.userName = local.length > 3 ? `${local.slice(0, 3)}${"*".repeat(3)}` : "Student";
-      }
+      a.isPremium = premiumById.has(a.userId);
+      a.planType = premiumById.get(a.userId);
+      a.isAdmin = adminIds.has(a.userId);
+      a.avatarUrl = avatarById.get(a.userId) ?? null;
+      a.userName = nameById.get(a.userId) ?? maskName(a.userName);
     }
   }
+
 
 
   const ranked = aggregated

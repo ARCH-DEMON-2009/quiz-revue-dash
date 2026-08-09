@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.get_admin_user_ids() FROM anon;

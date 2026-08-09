@@ -111,15 +111,13 @@ const Leaderboard = () => {
           .in('user_id', userIds)
           .eq('status', 'active')
           .gt('expiry_date', new Date().toISOString()),
-        supabase
-          .from('user_roles')
-          .select('user_id, role')
-          .in('user_id', userIds)
-          .eq('role', 'admin')
+        // RLS hides other users' roles, so use the security-definer helper.
+        supabase.rpc('get_admin_user_ids')
       ]);
 
       const premiumMap = new Map(premiumResponse.data?.map(p => [p.user_id, p.plan_duration_type || 'standard']) || []);
-      const adminSet = new Set(adminResponse.data?.map(a => a.user_id) || []);
+      const adminSet = new Set<string>((adminResponse.data as unknown as string[]) || []);
+
 
       const leaderboardData: LeaderboardEntry[] = (data || []).map((entry: any) => ({
         user_id: entry.user_id,
