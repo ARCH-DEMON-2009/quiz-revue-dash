@@ -891,6 +891,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_admin_user_ids: { Args: never; Returns: string[] }
       get_leaderboard_data: {
         Args: never
         Returns: {
