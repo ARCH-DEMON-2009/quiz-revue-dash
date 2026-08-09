@@ -49,6 +49,7 @@ import TncQuestionImage from "@/components/TncQuestionImage";
 import { LinkShortenerGate } from "@/components/LinkShortenerGate";
 import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { downloadTncResultPdf } from "@/lib/tncPdf";
+import { getPdfIdentity } from "@/lib/userIdentity";
 
 type Phase = "instructions" | "quiz" | "results";
 
@@ -282,10 +283,10 @@ const TncQuiz = () => {
     if (examId) localStorage.removeItem(storageKey(examId));
     setSaving(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const identity = await getPdfIdentity();
       const res = await submitTncAttempt({
         examId: exam.examId,
-        userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? "Student",
+        userName: identity.name,
         answers,
         timeTakenSeconds: totalSecRef.current - timeLeft,
       });
@@ -759,7 +760,7 @@ const TncQuiz = () => {
     setPdfStage("queued");
     const toastId = toast.loading("Queued your result PDF…");
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const identity = await getPdfIdentity();
       // Signed, time-limited permission — server verifies this user owns the attempt.
       if (attemptId) {
         await requestTncPdfPermission(attemptId, false);
@@ -773,7 +774,10 @@ const TncQuiz = () => {
         skipped: r.skipped,
         questions,
         answers,
-        userName: (user?.user_metadata?.full_name as string) ?? user?.email ?? undefined,
+        userName: identity.name,
+        avatarUrl: identity.avatarUrl,
+        frameUrl: identity.frameUrl,
+        badgeUrl: identity.badgeUrl,
         onProgress: (p) => {
           setPdfProgress(Math.round(p * 100));
           setPdfStage(pdfStageFromProgress(p));
