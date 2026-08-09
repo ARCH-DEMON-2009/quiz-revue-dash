@@ -373,16 +373,21 @@ async function getAttempt(attemptId: string) {
   );
   const { data, error } = await admin
     .from("quiz_attempts")
-    .select("id, exam_id, exam_name, user_name, answers, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
+    .select("id, exam_id, exam_name, user_id, user_name, answers, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
     .eq("id", attemptId)
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) return null;
+  // Prefer the profile display name; never expose the raw email.
+  const { nameById } = await resolveUserIdentities(
+    admin,
+    data.user_id ? [String(data.user_id)] : [],
+  );
   return {
     attemptId: data.id,
     examId: String(data.exam_id ?? ""),
     examName: data.exam_name ?? null,
-    userName: data.user_name ?? "Student",
+    userName: nameById.get(String(data.user_id)) ?? maskName(String(data.user_name ?? "Student")),
     answers: data.answers ?? {},
     score: Number(data.score ?? 0),
     totalMarks: Number(data.total_marks ?? 0),
