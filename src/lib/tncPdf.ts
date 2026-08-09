@@ -277,11 +277,12 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   doc.setTextColor(255, 255, 255);
   doc.text("RESULT REPORT", pageW - margin - 70, 44.5, { align: "center" });
 
-  // Exam title inside header
+  // Exam title inside header (leave room for the candidate avatar on the right)
+  const titleW = maxW - (avatarImg ? 90 : 0);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
   doc.setTextColor(255, 255, 255);
-  const titleLines = doc.splitTextToSize(stripHtml(examName) || "TNC Test Result", maxW);
+  const titleLines = doc.splitTextToSize(stripHtml(examName) || "TNC Test Result", titleW);
   doc.text(titleLines.slice(0, 2), margin, 100);
 
   doc.setFont("helvetica", "normal");
@@ -290,6 +291,38 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   const meta = `${userName ? `Candidate: ${userName}   |   ` : ""}${new Date().toLocaleString()}`;
   doc.text(meta, margin, 132);
   setOpacity(doc, 1);
+
+  // Candidate avatar with frame + badge (right side of the header)
+  if (avatarImg) {
+    const size = 52;
+    const ax = pageW - margin - size;
+    const ay = headerH - size - 22;
+    try {
+      doc.setFillColor(255, 255, 255);
+      doc.circle(ax + size / 2, ay + size / 2, size / 2 + 2, "F");
+      doc.addImage(avatarImg, fmtType(avatarImg), ax, ay, size, size, undefined, "FAST");
+      if (frameImg) {
+        const fs = size * 1.55;
+        doc.addImage(
+          frameImg,
+          fmtType(frameImg),
+          ax - (fs - size) / 2,
+          ay - (fs - size) / 2,
+          fs,
+          fs,
+          undefined,
+          "FAST",
+        );
+      }
+      if (badgeImg) {
+        const bs = 24;
+        doc.addImage(badgeImg, fmtType(badgeImg), ax + size - bs + 6, ay - 8, bs, bs, undefined, "FAST");
+      }
+    } catch {
+      /* ignore avatar rendering issues */
+    }
+  }
+
 
   y = headerH + 24;
 
