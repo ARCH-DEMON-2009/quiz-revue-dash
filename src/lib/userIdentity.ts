@@ -56,9 +56,9 @@ export async function getPdfIdentity(): Promise<PdfIdentity> {
     badgeUrl = "/badges/b1.png";
   }
 
-  const avatarUrl =
-    profileRes.data?.avatar_url ||
-    `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
+  // Only raster avatars can be embedded in the PDF (jsPDF can't rasterize SVG).
+  const avatar = profileRes.data?.avatar_url ?? null;
+  const avatarUrl = avatar && !avatar.endsWith(".svg") && !avatar.includes("dicebear") ? avatar : null;
 
   return { name, avatarUrl, frameUrl, badgeUrl };
 }
