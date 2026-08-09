@@ -471,16 +471,20 @@ async function getLeaderboard(examId: string) {
     }
   }
 
-  const ranked = [...best.values()]
-    .sort((a, b) =>
-      Number(b.score) - Number(a.score) ||
-      Number(a.time_taken_seconds ?? 0) - Number(b.time_taken_seconds ?? 0),
-    )
-    .slice(0, 100)
-    .map((row, i) => ({
+  const bestRows = [...best.values()].sort((a, b) =>
+    Number(b.score) - Number(a.score) ||
+    Number(a.time_taken_seconds ?? 0) - Number(b.time_taken_seconds ?? 0),
+  ).slice(0, 100);
+
+  const ids = bestRows.map((r) => String(r.user_id)).filter((id) => id && id !== "guest");
+  const { nameById, avatarById, premiumById, adminIds } = await resolveUserIdentities(admin, ids);
+
+  const ranked = bestRows.map((row, i) => {
+    const uid = String(row.user_id ?? "guest");
+    return {
       rank: i + 1,
-      userId: String(row.user_id ?? "guest"),
-      userName: row.user_name ?? "Student",
+      userId: uid,
+      userName: nameById.get(uid) ?? maskName(String(row.user_name ?? "Student")),
       score: Number(row.score ?? 0),
       totalMarks: Number(row.total_marks ?? 0),
       correctCount: Number(row.correct_count ?? 0),
@@ -488,7 +492,13 @@ async function getLeaderboard(examId: string) {
       skippedCount: Number(row.skipped_count ?? 0),
       timeTakenSeconds: Number(row.time_taken_seconds ?? 0),
       submittedAt: row.submitted_at ?? null,
-    }));
+      isPremium: premiumById.has(uid),
+      isAdmin: adminIds.has(uid),
+      planType: premiumById.get(uid),
+      avatarUrl: avatarById.get(uid) ?? null,
+    };
+  });
+
 
   return {
     examId: String(examId),
