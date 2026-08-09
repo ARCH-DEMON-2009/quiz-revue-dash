@@ -48,29 +48,10 @@ const TncLeaderboard = () => {
     setLoading(true);
     setError(false);
     fetchTncLeaderboard(examId)
-      .then(async (res) => {
-        const userIds = res.rows.map(r => r.userId).filter(Boolean);
-        
-        // Fetch premium & admin status
-        const [premiumRes, adminRes, profileRes] = await Promise.all([
-          supabase.from('premium_users').select('user_id, plan_duration_type').in('user_id', userIds).eq('status', 'active').gt('expiry_date', new Date().toISOString()),
-          supabase.from('user_roles').select('user_id').in('user_id', userIds).eq('role', 'admin'),
-          supabase.from('user_profiles').select('user_id, avatar_url, name').in('user_id', userIds)
-        ]);
-
-        const premMap = new Map(premiumRes.data?.map(p => [p.user_id, p.plan_duration_type || 'standard']) || []);
-        const adminSet = new Set(adminRes.data?.map(a => a.user_id) || []);
-        const profileMap = new Map(profileRes.data?.map(p => [p.user_id, p.avatar_url]) || []);
-
-        const extendedRows: ExtendedTncRow[] = res.rows.map(r => ({
-          ...r,
-          isPremium: premMap.has(r.userId),
-          isAdmin: adminSet.has(r.userId),
-          avatarUrl: profileMap.get(r.userId),
-          planType: premMap.get(r.userId)
-        }));
-
-        setRows(extendedRows);
+      .then((res) => {
+        // The edge function already resolves display names, avatars, premium
+        // and admin status with service-role access (client RLS hides roles).
+        setRows(res.rows as ExtendedTncRow[]);
         setExamName(res.examName);
       })
       .catch((e) => {
@@ -79,6 +60,7 @@ const TncLeaderboard = () => {
       })
       .finally(() => setLoading(false));
   };
+
 
   useEffect(load, [examId]);
 
