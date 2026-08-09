@@ -172,13 +172,19 @@ export async function downloadTncResultPdf(args: PdfArgs) {
 
   onProgress?.(0.02);
 
-  // Preload logo + all question images (CORS-safe via the edge proxy).
-  const logo = await urlToDataUrl(LOGO_PATH);
+  // Preload logo + candidate identity art + all question images.
+  const [logo, avatarImg, frameImg, badgeImg] = await Promise.all([
+    urlToDataUrl(LOGO_PATH),
+    args.avatarUrl ? urlToDataUrl(args.avatarUrl) : Promise.resolve(null),
+    args.frameUrl ? urlToDataUrl(args.frameUrl) : Promise.resolve(null),
+    args.badgeUrl ? urlToDataUrl(args.badgeUrl) : Promise.resolve(null),
+  ]);
   let logoRatio = 1;
   if (logo) {
     const s = await imageSize(logo);
     if (s.w) logoRatio = s.h / s.w;
   }
+
 
   const withImages = questions.filter((q) => q.imageUrl);
   const totalImgs = withImages.length;
