@@ -597,43 +597,25 @@ async function getGlobalLeaderboard(period: "daily" | "monthly" | "all") {
       timeTakenSeconds: time,
       lastAttemptAt,
       isPremium: false,
+      isAdmin: false,
+      planType: undefined as string | undefined,
+      avatarUrl: null as string | null,
     };
   });
 
-  // Flag premium members (display only — free users are ranked equally).
+  // Flag premium/admin members and resolve display names (never raw emails).
   const ids = aggregated.map((a) => a.userId);
   if (ids.length) {
-    const { data: prem } = await admin
-      .from("premium_users")
-      .select("user_id, status, expiry_date")
-      .in("user_id", ids);
-    const premiumIds = new Set(
-      (prem ?? [])
-        .filter((p: any) => p.status === "active" && new Date(p.expiry_date) > new Date())
-        .map((p: any) => String(p.user_id)),
-    );
-    for (const a of aggregated) a.isPremium = premiumIds.has(a.userId);
-
-    // Prefer real display names; never publish raw email addresses (PII).
-    const { data: profiles } = await admin
-      .from("user_profiles")
-      .select("user_id, name")
-      .in("user_id", ids);
-    const nameById = new Map(
-      (profiles ?? [])
-        .filter((p: any) => p.name && p.name !== "User")
-        .map((p: any) => [String(p.user_id), String(p.name)]),
-    );
+    const { nameById, avatarById, premiumById, adminIds } = await resolveUserIdentities(admin, ids);
     for (const a of aggregated) {
-      const profileName = nameById.get(a.userId);
-      if (profileName) {
-        a.userName = profileName;
-      } else if (a.userName.includes("@")) {
-        const local = a.userName.split("@")[0];
-        a.userName = local.length > 3 ? `${local.slice(0, 3)}${"*".repeat(3)}` : "Student";
-      }
+      a.isPremium = premiumById.has(a.userId);
+      a.planType = premiumById.get(a.userId);
+      a.isAdmin = adminIds.has(a.userId);
+      a.avatarUrl = avatarById.get(a.userId) ?? null;
+      a.userName = nameById.get(a.userId) ?? maskName(a.userName);
     }
   }
+
 
 
   const ranked = aggregated
