@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trophy, Medal, AlertCircle, RefreshCw, Crown, Star, Shield } from "lucide-react";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import { fetchTncLeaderboard, type TncLeaderboardRow } from "@/lib/tncApi";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ExtendedTncRow extends TncLeaderboardRow {
   isPremium?: boolean;
