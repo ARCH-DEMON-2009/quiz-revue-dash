@@ -12,6 +12,11 @@ interface PdfArgs {
   questions: TncQuestion[];
   answers: Record<string, string>;
   userName?: string;
+  /** Candidate identity visuals rendered in the header (avatar + frame + badge). */
+  avatarUrl?: string | null;
+  frameUrl?: string | null;
+  badgeUrl?: string | null;
+
   /** Brand/site shown in the watermark + footer so the PDF can't be rebranded. */
   site?: string;
   brand?: string;
