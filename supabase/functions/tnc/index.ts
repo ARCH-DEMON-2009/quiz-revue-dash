@@ -394,7 +394,56 @@ async function getAttempt(attemptId: string) {
   };
 }
 
+const ADMIN_EMAILS = [
+  "shashank@testsagar.com",
+  "ayush@testsagar.com",
+  "ayushmishra7235@gmail.com",
+  "ssv01@duck.com",
+];
+
+/**
+ * Resolve display identity for a set of users: real names (never raw emails),
+ * avatars, premium status and admin status (service-role, so RLS can't hide it).
+ */
+async function resolveUserIdentities(admin: any, ids: string[]) {
+  const nameById = new Map<string, string>();
+  const avatarById = new Map<string, string | null>();
+  const premiumById = new Map<string, string>();
+  const adminIds = new Set<string>();
+  if (!ids.length) return { nameById, avatarById, premiumById, adminIds };
+
+  const [profiles, prem, roles] = await Promise.all([
+    admin.from("user_profiles").select("user_id, name, email, avatar_url").in("user_id", ids),
+    admin.from("premium_users").select("user_id, status, expiry_date, plan_duration_type").in("user_id", ids),
+    admin.from("user_roles").select("user_id").in("user_id", ids).eq("role", "admin"),
+  ]);
+
+  for (const p of profiles.data ?? []) {
+    const uid = String(p.user_id);
+    if (p.name && p.name !== "User" && !String(p.name).includes("@")) nameById.set(uid, String(p.name));
+    avatarById.set(uid, p.avatar_url ?? null);
+    if (p.email && ADMIN_EMAILS.includes(String(p.email).toLowerCase())) adminIds.add(uid);
+  }
+  for (const p of prem.data ?? []) {
+    if (p.status === "active" && new Date(p.expiry_date) > new Date()) {
+      premiumById.set(String(p.user_id), p.plan_duration_type || "standard");
+    }
+  }
+  for (const r of roles.data ?? []) adminIds.add(String(r.user_id));
+
+  return { nameById, avatarById, premiumById, adminIds };
+}
+
+/** Never publish raw emails on public leaderboards. */
+function maskName(name: string) {
+  if (!name || name === "Student") return "Student";
+  if (!name.includes("@")) return name;
+  const local = name.split("@")[0];
+  return local.length > 3 ? `${local.slice(0, 3)}${"*".repeat(3)}` : "Student";
+}
+
 async function getLeaderboard(examId: string) {
+
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
