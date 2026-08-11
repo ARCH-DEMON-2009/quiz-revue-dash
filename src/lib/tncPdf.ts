@@ -1,6 +1,8 @@
 import { jsPDF } from "jspdf";
 import { stripHtml } from "./sanitizeHtml";
 import { fetchTncImageDataUrl, type TncQuestion } from "./tncApi";
+import { displayInitial, toDisplayName } from "./displayName";
+
 
 interface PdfArgs {
   examName: string;
@@ -277,30 +279,43 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   doc.setTextColor(255, 255, 255);
   doc.text("RESULT REPORT", pageW - margin - 70, 44.5, { align: "center" });
 
-  // Exam title inside header (leave room for the candidate avatar on the right)
-  const titleW = maxW - (avatarImg ? 90 : 0);
+  // Exam title inside header (always leave room for the candidate identity block)
+  const titleW = maxW - 90;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(15);
   doc.setTextColor(255, 255, 255);
   const titleLines = doc.splitTextToSize(stripHtml(examName) || "TNC Test Result", titleW);
   doc.text(titleLines.slice(0, 2), margin, 100);
 
+  // Never print an email as the candidate name.
+  const candidate = toDisplayName(userName);
+
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   setOpacity(doc, 0.9);
-  const meta = `${userName ? `Candidate: ${userName}   |   ` : ""}${new Date().toLocaleString()}`;
+  const meta = `Candidate: ${candidate}   |   ${new Date().toLocaleString()}`;
   doc.text(meta, margin, 132);
   setOpacity(doc, 1);
 
-  // Candidate avatar with frame + badge (right side of the header)
-  if (avatarImg) {
+  // Candidate avatar with frame + badge (right side of the header).
+  // Always rendered: falls back to an initials medallion when no avatar exists.
+  {
     const size = 52;
     const ax = pageW - margin - size;
     const ay = headerH - size - 22;
     try {
       doc.setFillColor(255, 255, 255);
       doc.circle(ax + size / 2, ay + size / 2, size / 2 + 2, "F");
-      doc.addImage(avatarImg, fmtType(avatarImg), ax, ay, size, size, undefined, "FAST");
+      if (avatarImg) {
+        doc.addImage(avatarImg, fmtType(avatarImg), ax, ay, size, size, undefined, "FAST");
+      } else {
+        doc.setFillColor(...BRAND_DARK);
+        doc.circle(ax + size / 2, ay + size / 2, size / 2, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.setTextColor(255, 255, 255);
+        doc.text(displayInitial(candidate), ax + size / 2, ay + size / 2 + 8, { align: "center" });
+      }
       if (frameImg) {
         const fs = size * 1.55;
         doc.addImage(
@@ -322,6 +337,7 @@ export async function downloadTncResultPdf(args: PdfArgs) {
       /* ignore avatar rendering issues */
     }
   }
+
 
 
   y = headerH + 24;

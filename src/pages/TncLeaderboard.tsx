@@ -6,7 +6,8 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import LeaderboardIdentityAvatar from "@/components/LeaderboardIdentityAvatar";
+import { toDisplayName } from "@/lib/displayName";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trophy, Medal, AlertCircle, RefreshCw, Crown, Star, Shield } from "lucide-react";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
@@ -130,59 +131,18 @@ const TncLeaderboard = () => {
                   {r.rank <= 3 ? <Medal className="h-5 w-5" /> : r.rank}
                 </div>
                 
-                <div className="relative h-10 w-10 shrink-0">
-                  <div className="absolute inset-0 z-10 pointer-events-none overflow-visible">
-                    {r.isAdmin ? (
-                      ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                        <img src={`/frames/${config.frame_type}.png`} alt="Admin Frame" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" />
-                      ) : (
-                        <div className={getAdminFrameStyles(true) || ""} />
-                      )
-                    ) : r.isPremium ? (
-                      <img src="/frames/f3.png" alt="Premium Frame" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" />
-                    ) : null}
-                  </div>
-                  <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden z-0 ${r.isAdmin ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
-                    <AvatarImage 
-                      src={r.avatarUrl || (r.isAdmin ? "/admin-avatar.png" : `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`)} 
-                      className="object-cover" 
-                      loading="lazy" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${r.userName}`;
-                      }}
-                    />
-                    <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                      {r.userName.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  {r.isAdmin ? (
-                    <div className="absolute -top-3.5 -right-3.5 w-10 h-10 z-10 animate-pulse">
-                      {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
-                        <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
-                      ) : getAdminBadgeIcon(true) === 'shield' ? (
-                        <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                          <Shield className="h-3 w-3 text-white fill-white" />
-                        </div>
-                      ) : getAdminBadgeIcon(true) === 'crown' ? (
-                        <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                          <Crown className="h-3 w-3 text-white fill-white" />
-                        </div>
-                      ) : (
-                        <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                          <Star className="h-3 w-3 text-white fill-white" />
-                        </div>
-                      )}
-                    </div>
-                  ) : r.isPremium && !r.isAdmin ? (
-                    <div className="absolute -top-3 -right-3 z-10">
-                      <img src="/badges/b1.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
-                    </div>
-                  ) : null}
-                </div>
+                <LeaderboardIdentityAvatar
+                  name={r.userName}
+                  avatarUrl={r.avatarUrl}
+                  isAdmin={r.isAdmin}
+                  isPremium={r.isPremium}
+                  adminFrame={config.frame_type}
+                  adminBadge={getAdminBadgeIcon(true) || undefined}
+                />
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className={`truncate font-semibold ${getNameColor(r)}`}>{r.userName}</p>
+                    <p className={`truncate font-semibold ${getNameColor(r)}`}>{toDisplayName(r.userName)}</p>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     <span className="text-green-600">{r.correctCount} correct</span> ·{" "}

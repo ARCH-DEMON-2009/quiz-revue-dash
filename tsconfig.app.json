@@ -14,6 +14,7 @@
     "noEmit": true,
     "noFallthroughCasesInSwitch": false,
     "noImplicitAny": false,
+    "types": ["vitest/globals"],
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "paths": {

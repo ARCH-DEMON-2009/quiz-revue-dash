@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft, Search } from "lucide-react";
 import FloatingBackground from "@/components/FloatingBackground";
+import ErrorEntertainmentImage from "@/components/ErrorEntertainmentImage";
 
 const NotFound = () => {
   const location = useLocation();
@@ -26,7 +27,8 @@ const NotFound = () => {
 
         {/* Error message */}
         <div className="glass rounded-2xl p-8 mb-8 shadow-glow">
-          <div className="flex justify-center mb-4">
+          <div className="flex flex-col items-center gap-4 mb-4">
+            <ErrorEntertainmentImage category="404" />
             <div className="p-4 rounded-full bg-primary/10">
               <Search className="h-8 w-8 text-primary" />
             </div>

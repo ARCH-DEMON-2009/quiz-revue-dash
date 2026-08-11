@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
+import LeaderboardIdentityAvatar, { identityNameClass } from "@/components/LeaderboardIdentityAvatar";
+import { toDisplayName } from "@/lib/displayName";
+
 
 interface LeaderboardEntry {
   user_id: string;
@@ -24,46 +27,50 @@ interface LeaderboardEntry {
   is_admin?: boolean;
 }
 
-const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback: string }) => {
+/** Leaderboard avatar that resolves the stored profile avatar, then applies tier art. */
+const LeaderboardAvatar = ({
+  entry,
+  adminFrame,
+  adminBadge,
+  size,
+}: {
+  entry: LeaderboardEntry;
+  adminFrame?: string;
+  adminBadge?: string;
+  size?: "sm" | "md";
+}) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAvatar = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('avatar_url')
-          .eq('user_id', userId)
-          .maybeSingle();
-        
-        if (error) {
-          console.error("Error fetching avatar for user:", userId, error);
-          return;
-        }
-        
-        if (data?.avatar_url) {
-          setAvatarUrl(data.avatar_url);
-        }
-      } catch (e) {
-        console.error("Failed to fetch avatar:", e);
-      }
+    if (!entry.user_id) return;
+    let active = true;
+    supabase
+      .from("user_profiles")
+      .select("avatar_url")
+      .eq("user_id", entry.user_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active && data?.avatar_url) setAvatarUrl(data.avatar_url);
+      });
+    return () => {
+      active = false;
     };
-    fetchAvatar();
-  }, [userId]);
+  }, [entry.user_id]);
 
   return (
-    <>
-      <AvatarImage 
-        src={avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${fallback}`} 
-        className="object-cover" 
-        loading="lazy" 
-      />
-      <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-        {fallback}
-      </AvatarFallback>
-    </>
+    <LeaderboardIdentityAvatar
+      name={entry.name}
+      avatarUrl={avatarUrl}
+      isAdmin={entry.is_admin}
+      isPremium={entry.is_premium}
+      adminFrame={adminFrame}
+      adminBadge={adminBadge}
+      planDurationType={entry.plan_duration_type}
+      size={size}
+    />
   );
 };
+
 
 const Leaderboard = () => {
   const navigate = useNavigate();
@@ -252,80 +259,19 @@ const Leaderboard = () => {
                         )}
                       </div>
                       
-                      <div className="relative h-10 w-10 flex-shrink-0">
-                        <div className="absolute inset-0 z-10 pointer-events-none overflow-visible">
-                          {entry.is_admin ? (
-                            ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                              <img 
-                                src={`/frames/${config.frame_type}.png`} 
-                                alt="Admin Frame" 
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" 
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/frames/f3.png";
-                                }}
-                              />
-                            ) : (
-                              <div className={getAdminFrameStyles(true) || ""} />
-                            )
-                          ) : entry.is_premium ? (
-                            <img 
-                              src="/frames/f3.png" 
-                              alt="Premium Frame" 
-                              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" 
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/frames/f3.png";
-                              }}
-                            />
-                          ) : null}
-                        </div>
-                        
-                        <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden z-0 ${entry.is_admin ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
-                          {entry.user_id ? (
-                            <AvatarImageWithProfile userId={entry.user_id} fallback={entry.name.charAt(0).toUpperCase()} />
-                          ) : (
-                            <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                              {entry.name.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          )}
-                        </Avatar>
-                        
-                        {entry.is_admin ? (
-                          <div className="absolute -top-3.5 -right-3.5 w-10 h-10 z-10 animate-pulse">
-                            {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
-                              <img 
-                                src={`/badges/${getAdminBadgeIcon(true)}.png`} 
-                                alt="Admin Badge" 
-                                className="w-full h-full object-contain" 
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/badges/b3.png"; // Admin default fallback
-                                }}
-                              />
-                            ) : getAdminBadgeIcon(true) === 'shield' ? (
-                              <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                <Shield className="h-4 w-4 text-white fill-white" />
-                              </div>
-                            ) : getAdminBadgeIcon(true) === 'crown' ? (
-                              <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                <Crown className="h-4 w-4 text-white fill-white" />
-                              </div>
-                            ) : (
-                              <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                <Star className="h-4 w-4 text-white fill-white" />
-                              </div>
-                            )}
-                          </div>
-                        ) : entry.is_premium && !entry.is_admin ? (
-                          <div className="absolute -top-3 -right-3 z-10">
-                            <img src="/badges/b1.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
-                          </div>
-                        ) : null}
-                      </div>
+                      <LeaderboardAvatar
+                        entry={entry}
+                        adminFrame={config.frame_type}
+                        adminBadge={getAdminBadgeIcon(true) || undefined}
+                      />
+
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                           <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(entry)}`}>
-                            {entry.name}
+                            {toDisplayName(entry.name)}
                           </p>
+
                           {isCurrentUser(entry.user_id) && (
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
@@ -380,73 +326,19 @@ const Leaderboard = () => {
                           <span className="font-bold text-lg">{currentUserEntry.global_rank}</span>
                         </div>
                         
-                        <div className="relative">
-                          <div className="absolute -inset-0 z-0 pointer-events-none">
-                            {currentUserEntry.is_admin ? (
-                              ['f1', 'f2', 'f3'].includes(config.frame_type) ? (
-                                <img 
-                                  src={`/frames/${config.frame_type}.png`} 
-                                  alt="Admin Frame" 
-                                  className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = "/frames/f3.png";
-                                  }}
-                                />
-                              ) : (
-                                <div className={getAdminFrameStyles(true) || ""} />
-                              )
-                            ) : currentUserEntry.is_premium && !currentUserEntry.is_admin ? (
-                              <img 
-                                src="/frames/f3.png" 
-                                alt="Premium Frame" 
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] max-w-none object-contain" 
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/frames/f3.png";
-                                }}
-                              />
-                            ) : null}
-                          </div>
+                        <LeaderboardAvatar
+                          entry={currentUserEntry}
+                          adminFrame={config.frame_type}
+                          adminBadge={getAdminBadgeIcon(true) || undefined}
+                        />
 
-                          <Avatar className={`h-10 w-10 relative bg-background border-2 overflow-hidden z-0 ${currentUserEntry.is_admin ? getAdminAvatarBorder(true) : 'border-transparent'}`}>
-                            {currentUserEntry.user_id ? (
-                              <AvatarImageWithProfile userId={currentUserEntry.user_id} fallback={currentUserEntry.name.charAt(0).toUpperCase()} />
-                            ) : (
-                              <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-                                {currentUserEntry.name.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                          
-                          {currentUserEntry.is_admin ? (
-                            <div className="absolute -top-3.5 -right-3.5 w-10 h-10 z-10 animate-pulse">
-                              {['b1', 'b2', 'b3'].includes(getAdminBadgeIcon(true) || "") ? (
-                                <img src={`/badges/${getAdminBadgeIcon(true)}.png`} alt="Admin Badge" className="w-full h-full object-contain" />
-                              ) : getAdminBadgeIcon(true) === 'shield' ? (
-                                <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                  <Shield className="h-4 w-4 text-white fill-white" />
-                                </div>
-                              ) : getAdminBadgeIcon(true) === 'crown' ? (
-                                <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                  <Crown className="h-4 w-4 text-white fill-white" />
-                                </div>
-                              ) : (
-                                <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-1 border-2 border-white shadow-lg">
-                                  <Star className="h-4 w-4 text-white fill-white" />
-                                </div>
-                            )}
-                          </div>
-                        ) : currentUserEntry.is_premium && !currentUserEntry.is_admin ? (
-                          <div className="absolute -top-3 -right-3 z-10">
-                            <img src="/badges/b1.png" alt="Premium Badge" className="w-8 h-8 object-contain" />
-                          </div>
-                        ) : null}
-                        </div>
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                             <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(currentUserEntry)}`}>
-                              {currentUserEntry.name}
+                              {toDisplayName(currentUserEntry.name)}
                             </p>
+
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                               You
