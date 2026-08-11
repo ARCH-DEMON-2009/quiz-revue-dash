@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
+import LeaderboardIdentityAvatar, { identityNameClass } from "@/components/LeaderboardIdentityAvatar";
+import { toDisplayName } from "@/lib/displayName";
+
 
 interface LeaderboardEntry {
   user_id: string;
@@ -24,46 +27,50 @@ interface LeaderboardEntry {
   is_admin?: boolean;
 }
 
-const AvatarImageWithProfile = ({ userId, fallback }: { userId: string, fallback: string }) => {
+/** Leaderboard avatar that resolves the stored profile avatar, then applies tier art. */
+const LeaderboardAvatar = ({
+  entry,
+  adminFrame,
+  adminBadge,
+  size,
+}: {
+  entry: LeaderboardEntry;
+  adminFrame?: string;
+  adminBadge?: string;
+  size?: "sm" | "md";
+}) => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAvatar = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('avatar_url')
-          .eq('user_id', userId)
-          .maybeSingle();
-        
-        if (error) {
-          console.error("Error fetching avatar for user:", userId, error);
-          return;
-        }
-        
-        if (data?.avatar_url) {
-          setAvatarUrl(data.avatar_url);
-        }
-      } catch (e) {
-        console.error("Failed to fetch avatar:", e);
-      }
+    if (!entry.user_id) return;
+    let active = true;
+    supabase
+      .from("user_profiles")
+      .select("avatar_url")
+      .eq("user_id", entry.user_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active && data?.avatar_url) setAvatarUrl(data.avatar_url);
+      });
+    return () => {
+      active = false;
     };
-    fetchAvatar();
-  }, [userId]);
+  }, [entry.user_id]);
 
   return (
-    <>
-      <AvatarImage 
-        src={avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${fallback}`} 
-        className="object-cover" 
-        loading="lazy" 
-      />
-      <AvatarFallback className="bg-primary/20 text-primary font-semibold">
-        {fallback}
-      </AvatarFallback>
-    </>
+    <LeaderboardIdentityAvatar
+      name={entry.name}
+      avatarUrl={avatarUrl}
+      isAdmin={entry.is_admin}
+      isPremium={entry.is_premium}
+      adminFrame={adminFrame}
+      adminBadge={adminBadge}
+      planDurationType={entry.plan_duration_type}
+      size={size}
+    />
   );
 };
+
 
 const Leaderboard = () => {
   const navigate = useNavigate();
