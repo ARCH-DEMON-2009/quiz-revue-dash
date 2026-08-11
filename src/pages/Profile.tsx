@@ -10,6 +10,8 @@ import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
+import IdentityPreviewCard from "@/components/IdentityPreviewCard";
+
 
 import {
   Dialog,
