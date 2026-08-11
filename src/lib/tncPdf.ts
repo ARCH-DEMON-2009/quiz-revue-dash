@@ -1,6 +1,8 @@
 import { jsPDF } from "jspdf";
 import { stripHtml } from "./sanitizeHtml";
 import { fetchTncImageDataUrl, type TncQuestion } from "./tncApi";
+import { displayInitial, toDisplayName } from "./displayName";
+
 
 interface PdfArgs {
   examName: string;
