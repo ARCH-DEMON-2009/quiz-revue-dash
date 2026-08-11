@@ -499,6 +499,22 @@ const Profile = () => {
           </Card>
         )}
 
+        {/* Identity preview: how you appear on leaderboards and in PDFs */}
+        {userDetails && (
+          <div className="mb-4 sm:mb-6 lg:mb-8 max-w-xl">
+            <IdentityPreviewCard
+              name={userDetails.name}
+              avatarUrl={userDetails.avatarUrl}
+              isAdmin={isAdmin}
+              isPremium={accessStatus?.type === 'premium'}
+              adminFrame={config.frame_type}
+              adminBadge={getAdminBadgeIcon(true) || undefined}
+            />
+          </div>
+        )}
+
+
+
         {/* Access Status Card */}
         {accessStatus && (
           <Card className={`mb-4 sm:mb-6 lg:mb-8 ${accessStatus.type === 'premium' ? 'border-primary' : 'border-muted-foreground/30'}`}>
