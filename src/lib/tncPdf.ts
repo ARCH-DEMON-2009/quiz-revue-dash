@@ -156,8 +156,8 @@ function stampOverlay(doc: jsPDF, brand: string, site: string, logo: string | nu
 
 export async function downloadTncResultPdf(args: PdfArgs) {
   const { examName, score, maxMarks, correct, wrong, skipped, questions, answers, userName, onProgress } = args;
-  const site = args.site ?? DEFAULT_SITE;
-  const brand = args.brand ?? DEFAULT_BRAND;
+  const site = DEFAULT_SITE;
+  const brand = DEFAULT_BRAND;
   const cleanSite = site.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
