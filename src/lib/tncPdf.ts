@@ -309,11 +309,13 @@ export async function downloadTncResultPdf(args: PdfArgs) {
       if (avatarImg) {
         doc.addImage(avatarImg, fmtType(avatarImg), ax, ay, size, size, undefined, "FAST");
       } else {
+        // Initials fallback for PDF
         doc.setFillColor(...BRAND_DARK);
         doc.circle(ax + size / 2, ay + size / 2, size / 2, "F");
         doc.setFont("helvetica", "bold");
         doc.setFontSize(22);
         doc.setTextColor(255, 255, 255);
+        // Correctly center initials vertically
         doc.text(displayInitial(candidate), ax + size / 2, ay + size / 2 + 8, { align: "center" });
       }
       if (frameImg) {
