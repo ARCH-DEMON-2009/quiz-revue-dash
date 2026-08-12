@@ -21,13 +21,6 @@ interface PdfArgs {
   onProgress?: (progress: number) => void;
 }
 
-  /** Brand/site shown in the watermark + footer so the PDF can't be rebranded. */
-  site?: string;
-  brand?: string;
-  /** Reports 0..1 progress while images are preloaded (for UI feedback). */
-  onProgress?: (fraction: number) => void;
-}
-
 const OPTS = ["A", "B", "C", "D"] as const;
 const DEFAULT_SITE = "https://test.shashanksv.com/";
 const DEFAULT_BRAND = "Test Sagar";
