@@ -186,6 +186,15 @@ const Analytics = () => {
             </h1>
             <p className="text-muted-foreground mt-1">Track your progress and insights</p>
           </div>
+          <Button 
+            onClick={() => navigate("/comparison")} 
+            className="btn-glow shadow-lg"
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Compare Attempts
+          </Button>
+        </div>
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">

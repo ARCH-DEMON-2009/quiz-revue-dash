@@ -26,7 +26,9 @@ import TncQuiz from "./pages/TncQuiz";
 import TncLeaderboard from "./pages/TncLeaderboard";
 import TncGlobalLeaderboard from "./pages/TncGlobalLeaderboard";
 import TncSharedResult from "./pages/TncSharedResult";
+import AttemptComparison from "./pages/AttemptComparison";
 import RoutesIndex from "./routes/index";
+
 
 
 
@@ -60,6 +62,8 @@ const App = () => (
             <Route path="/review/:resultId" element={<Review />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/comparison" element={<AttemptComparison />} />
+
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<ContactUs />} />
