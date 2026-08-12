@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, Circle, Clock, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, Circle, Clock, FileText, Download, Share2 } from "lucide-react";
+import { handleMobilePdfDownload } from "@/lib/mobilePdf";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 
@@ -197,7 +198,7 @@ const Results = () => {
         </div>
 
 
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-6">
           <Button onClick={() => navigate(`/review/${resultId}`)} className="flex-1 text-sm sm:text-base">
             <FileText className="h-4 w-4 mr-2" />
             Review Answers
