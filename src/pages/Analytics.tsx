@@ -180,12 +180,23 @@ const Analytics = () => {
       <NavigationHeader />
       <div className="p-4 md:p-8 flex-1">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Performance Analytics
-            </h1>
-            <p className="text-muted-foreground mt-1">Track your progress and insights</p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Performance Analytics
+              </h1>
+              <p className="text-muted-foreground mt-1">Track your progress and insights</p>
+            </div>
+            <Button 
+              onClick={() => navigate("/comparison")} 
+              className="btn-glow shadow-lg"
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Compare Attempts
+            </Button>
           </div>
+
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
@@ -273,12 +284,12 @@ const Analytics = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
-
       <Footer />
     </div>
   );
 };
 
 export default Analytics;
+
