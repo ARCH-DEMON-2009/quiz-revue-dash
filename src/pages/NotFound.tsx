@@ -26,9 +26,9 @@ const NotFound = () => {
         </div>
 
         {/* Error message */}
-        <div className="glass rounded-2xl p-8 mb-8 shadow-glow">
-          <div className="flex flex-col items-center gap-4 mb-4">
-            <ErrorEntertainmentImage category="404" />
+        <div className="glass rounded-2xl p-8 mb-8 shadow-glow overflow-hidden">
+          <div className="flex flex-col items-center gap-6 mb-6">
+            <ErrorEntertainmentImage errorType={404} className="rounded-xl shadow-lg border border-primary/20" />
             <div className="p-4 rounded-full bg-primary/10">
               <Search className="h-8 w-8 text-primary" />
             </div>
