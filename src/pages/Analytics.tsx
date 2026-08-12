@@ -289,7 +289,7 @@ const Analytics = () => {
       <Footer />
     </div>
   );
-
 };
 
 export default Analytics;
+
