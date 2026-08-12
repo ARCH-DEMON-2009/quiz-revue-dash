@@ -80,6 +80,18 @@ async function request(url: string, signal: AbortSignal): Promise<string | null>
 }
 
 /**
+ * Preloads an image into the browser cache.
+ */
+async function preloadImage(url: string): Promise<void> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve();
+    img.src = url;
+  });
+}
+
+/**
  * Fetch a SFW entertainment image URL for an error category.
  * Resolves to `null` (silently) on any failure — callers must degrade gracefully.
  */
@@ -96,7 +108,12 @@ export async function getErrorEntertainmentImage(
     const base = `${ENDPOINT}?is_nsfw=false&limit=10`;
     let url = tag ? await request(`${base}&included_tags=${encodeURIComponent(tag)}`, controller.signal) : null;
     if (!url) url = await request(base, controller.signal);
+    
     if (!url) return null;
+    
+    // Preload before returning to ensure it's in browser cache
+    await preloadImage(url);
+    
     cache.set(category, { url, at: Date.now() });
     return url;
   } finally {

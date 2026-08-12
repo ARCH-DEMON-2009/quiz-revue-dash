@@ -25,17 +25,25 @@ const ErrorEntertainmentImage = ({ errorType, category, className }: Props) => {
   useEffect(() => {
     let active = true;
     const cat = category ?? categorizeError(errorType);
-    getErrorEntertainmentImage(cat)
-      .then((u) => {
-        if (!active) return;
-        if (u) setUrl(u);
-        else setState("hidden");
-      })
-      .catch(() => active && setState("hidden"));
+    
+    // Small delay to let the page settle before fetching
+    const timer = setTimeout(() => {
+      getErrorEntertainmentImage(cat)
+        .then((u) => {
+          if (!active) return;
+          if (u) {
+            setUrl(u);
+          } else {
+            setState("hidden");
+          }
+        })
+        .catch(() => active && setState("hidden"));
+    }, 100);
+
     return () => {
       active = false;
+      clearTimeout(timer);
     };
-    // One attempt per mount — never retry in a loop.
   }, [category, errorType]);
 
   if (state === "hidden") return null;
