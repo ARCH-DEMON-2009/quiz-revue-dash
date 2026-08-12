@@ -49,6 +49,7 @@ import TncQuestionImage from "@/components/TncQuestionImage";
 import { LinkShortenerGate } from "@/components/LinkShortenerGate";
 import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { downloadTncResultPdf } from "@/lib/tncPdf";
+import { handleMobilePdfDownload } from "@/lib/mobilePdf";
 import { getPdfIdentity } from "@/lib/userIdentity";
 
 type Phase = "instructions" | "quiz" | "results";
@@ -765,7 +766,7 @@ const TncQuiz = () => {
       if (attemptId) {
         await requestTncPdfPermission(attemptId, false);
       }
-      await downloadTncResultPdf({
+      const pdfBlob = await downloadTncResultPdf({
         examName: exam.name,
         score: r.score,
         maxMarks: exam.maxMarks,
@@ -783,6 +784,8 @@ const TncQuiz = () => {
           setPdfStage(pdfStageFromProgress(p));
         },
       });
+      
+      await handleMobilePdfDownload(pdfBlob, `${stripHtml(exam.name).replace(/\s+/g, '_')}_Result.pdf`);
       setPdfStage("done");
       toast.success("PDF downloaded.", { id: toastId });
     } catch (e) {

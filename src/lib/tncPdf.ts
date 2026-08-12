@@ -18,12 +18,7 @@ interface PdfArgs {
   avatarUrl?: string | null;
   frameUrl?: string | null;
   badgeUrl?: string | null;
-
-  /** Brand/site shown in the watermark + footer so the PDF can't be rebranded. */
-  site?: string;
-  brand?: string;
-  /** Reports 0..1 progress while images are preloaded (for UI feedback). */
-  onProgress?: (fraction: number) => void;
+  onProgress?: (progress: number) => void;
 }
 
 const OPTS = ["A", "B", "C", "D"] as const;
@@ -161,8 +156,8 @@ function stampOverlay(doc: jsPDF, brand: string, site: string, logo: string | nu
 
 export async function downloadTncResultPdf(args: PdfArgs) {
   const { examName, score, maxMarks, correct, wrong, skipped, questions, answers, userName, onProgress } = args;
-  const site = args.site ?? DEFAULT_SITE;
-  const brand = args.brand ?? DEFAULT_BRAND;
+  const site = DEFAULT_SITE;
+  const brand = DEFAULT_BRAND;
   const cleanSite = site.replace(/^https?:\/\//, "").replace(/\/$/, "");
 
   const doc = new jsPDF({ unit: "pt", format: "a4" });
@@ -622,6 +617,5 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   stampOverlay(doc, brand, site, logo, logoRatio);
   onProgress?.(1);
 
-  const safe = (stripHtml(examName) || "tnc-result").replace(/[^a-z0-9]+/gi, "-").slice(0, 40);
-  doc.save(`${safe}-result.pdf`);
-}
+  return doc.output('blob');
+};
