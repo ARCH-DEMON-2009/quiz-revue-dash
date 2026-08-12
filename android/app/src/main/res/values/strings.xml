@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Test Sagar</string>
+    <string name="title_activity_main">Test Sagar</string>
+    <string name="package_name">com.testsagar.app</string>
+    <string name="custom_url_scheme">com.testsagar.app</string>
+</resources>
