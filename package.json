@@ -17,6 +17,7 @@
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
     "@capacitor/device": "^8.0.3",
+    "@capacitor/electron": "^2.5.0",
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/ios": "^8.5.0",
     "@capacitor/network": "^8.0.1",
