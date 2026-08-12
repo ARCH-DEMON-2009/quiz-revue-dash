@@ -1,8 +1,12 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { App as CapacitorApp } from "@capacitor/app";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { Capacitor } from "@capacitor/core";
 import Dashboard from "./pages/Dashboard";
 import Quiz from "./pages/Quiz";
 import QuizRedirect from "./pages/QuizRedirect";
@@ -40,7 +44,39 @@ import AppErrorBoundary from "./components/AppErrorBoundary";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    const setupCapacitor = async () => {
+      if (!Capacitor.isNativePlatform()) return;
+
+      // Handle Android hardware back button
+      CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        if (!canGoBack) {
+          CapacitorApp.exitApp();
+        } else {
+          window.history.back();
+        }
+      });
+
+      // Configure Status Bar
+      try {
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setBackgroundColor({ color: '#0f172a' }); // Deep indigo from theme
+      } catch (e) {
+        console.warn('StatusBar not available', e);
+      }
+    };
+
+    setupCapacitor();
+
+    return () => {
+      if (Capacitor.isNativePlatform()) {
+        CapacitorApp.removeAllListeners();
+      }
+    };
+  }, []);
+
+  return (
   <AppErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -89,6 +125,7 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
   </AppErrorBoundary>
-);
+  );
+};
 
 export default App;
