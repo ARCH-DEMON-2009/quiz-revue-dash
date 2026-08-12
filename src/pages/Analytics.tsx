@@ -284,12 +284,12 @@ const Analytics = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
-
       <Footer />
     </div>
   );
+
 };
 
 export default Analytics;
