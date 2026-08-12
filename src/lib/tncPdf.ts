@@ -18,6 +18,8 @@ interface PdfArgs {
   avatarUrl?: string | null;
   frameUrl?: string | null;
   badgeUrl?: string | null;
+  onProgress?: (progress: number) => void;
+}
 
   /** Brand/site shown in the watermark + footer so the PDF can't be rebranded. */
   site?: string;
@@ -622,6 +624,5 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   stampOverlay(doc, brand, site, logo, logoRatio);
   onProgress?.(1);
 
-  const safe = (stripHtml(examName) || "tnc-result").replace(/[^a-z0-9]+/gi, "-").slice(0, 40);
-  doc.save(`${safe}-result.pdf`);
-}
+  return doc.output('blob');
+};
