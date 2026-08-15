@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { toDisplayName } from "./displayName";
 
 export interface PdfIdentity {
   name: string;
