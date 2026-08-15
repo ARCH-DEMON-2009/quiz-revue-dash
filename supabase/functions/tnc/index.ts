@@ -443,8 +443,8 @@ async function resolveUserIdentities(admin: any, ids: string[]) {
 function maskName(name: string) {
   if (!name || name === "Student") return "Student";
   if (!name.includes("@")) return name;
-  const local = name.split("@")[0];
-  return local.length > 3 ? `${local.slice(0, 3)}${"*".repeat(3)}` : "Student";
+  const local = name.split("@")[0].replace(/[._-]+/g, " ").trim();
+  return local.length > 3 ? `${local.slice(0, 3)}***` : "Student";
 }
 
 async function getLeaderboard(examId: string) {

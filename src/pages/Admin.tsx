@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toDisplayName } from "@/lib/displayName";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -1170,8 +1171,8 @@ const Admin = () => {
                           ) : (
                             paginatedUsers.map((user) => (
                               <TableRow key={user.user_id}>
-                                <TableCell className="font-medium">{user.name}</TableCell>
-                                <TableCell>{user.email}</TableCell>
+                                <TableCell className="font-medium">{toDisplayName(user.name)}</TableCell>
+                                <TableCell>{user.email.replace(/(.{3}).*(@.*)/, "$1***$2")}</TableCell>
                                 <TableCell>{user.whatsapp_number || "N/A"}</TableCell>
                                 <TableCell>
                                   <Badge
