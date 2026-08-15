@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toDisplayName } from "@/lib/displayName";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
