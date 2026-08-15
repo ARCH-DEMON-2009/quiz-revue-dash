@@ -71,6 +71,33 @@ export type Database = {
         }
         Relationships: []
       }
+      config_audit_log: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          config_key: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          config_key: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          config_key?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: []
+      }
       exam_attempts: {
         Row: {
           answers: Json
@@ -913,6 +940,7 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_service_role: { Args: never; Returns: boolean }
+      mask_email: { Args: { email_text: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"
