@@ -13,8 +13,9 @@ export function toDisplayName(
   if (raw.toLowerCase() === "user" || raw.toLowerCase() === "unknown") return fallback;
   if (!raw.includes("@")) return raw;
 
-  // Email-looking value: mask the local part instead of exposing it.
-  const local = raw.split("@")[0].replace(/[._-]+/g, " ").trim();
+  // Mask the email parts to avoid leaking identity
+  const parts = raw.split("@");
+  const local = parts[0].replace(/[._-]+/g, " ").trim();
   if (local.length > 3) return `${local.slice(0, 3)}***`;
   return fallback;
 }
