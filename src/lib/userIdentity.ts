@@ -32,7 +32,7 @@ export async function getPdfIdentity(): Promise<PdfIdentity> {
   const profileName = profileRes.data?.name;
   const metaName = (user.user_metadata?.full_name ?? user.user_metadata?.name) as string | undefined;
   const raw = (profileName && profileName !== "User" ? profileName : metaName) ?? "";
-  const name = raw && !raw.includes("@") ? raw : "Student";
+  const name = toDisplayName(raw);
 
   const isAdmin = adminRes.data === true;
   const isPremium = (premiumRes.data?.length ?? 0) > 0;
