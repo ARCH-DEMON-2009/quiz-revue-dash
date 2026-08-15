@@ -1,38 +1,39 @@
-# Plan: Mobile App Migration (Capacitor)
+# Security Fixes and Hardening Plan
 
-We will convert your existing React web application into a cross-platform mobile app using Capacitor. This approach is better than a pure React Native rewrite because it preserves your complex quiz logic, PDF generation, and glassmorphic UI while providing a native APK for Android and IPA for iOS.
+This plan addresses several security issues identified during a production audit of the codebase, focusing on identity exposure, improper RLS policies, and client-side data leaks.
 
-## User Review Required
+## Identified Issues
 
-> [!IMPORTANT]
-> To build a production APK, you will eventually need a local development environment with Android Studio installed. I will provide the code and the commands, but the final APK "bundling" happens on a machine with the Android SDK.
+1.  **Identity Exposure in TNC Global Leaderboard**: The `tnc` edge function and related frontend components were exposing raw user emails or fallback identifiers.
+2.  **Legacy Identity Resolution**: Older parts of the application were still using email prefixes or raw emails for user identification in leaderboards and PDFs.
+3.  **Inconsistent Admin Identity Protection**: Admins were sometimes appearing with "Premium" badges or frames instead of their exclusive Admin identity.
+4.  **Client-Side Verification Bypass**: Potential for users to self-verify or bypass premium gates by manipulating client-side state.
+5.  **Answer Key Leaks**: Risk of answer keys being sent to the client pre-submission.
 
-## Proposed Changes
+## Implementation Details
 
-### 1. Mobile Infrastructure
-- Install Capacitor core and platforms (Android/iOS).
-- Configure `capacitor.config.ts` with your app identity (`com.testsagar.app`).
-- Add mobile-specific meta tags to `index.html` (viewport handling for notches).
+### 1. Identity Masking & Resolution
+*   **Edge Function Hardening**: Update the `tnc` edge function to strictly resolve user identities server-side using `resolveUserIdentities`. Raw emails will never be sent to the client.
+*   **Universal Name Resolution**: Standardize on `maskName` and `getPdfIdentity` across all components to ensure consistent, privacy-preserving display names.
 
-### 2. Native Features Integration
-- Implement `App` plugin for hardware back button handling (crucial for Android quizzes).
-- Add `StatusBar` plugin to match your glassmorphic theme (transparent/colored status bar).
-- Update `TncPdf.tsx` and `tncPdf.ts` to use Capacitor `Filesystem` and `Share` plugins so users can save/open PDFs directly on their phones.
+### 2. Identity Visuals (Frames & Badges)
+*   **Priority Logic**: Enforce strict identity priority where `Admin` status always overrides `Premium` status for frames, badges, and text styles.
+*   **Component Unification**: Use `LeaderboardIdentityAvatar.tsx` as the single source of truth for rendering user identities in all leaderboards.
 
-### 3. Build & Export Workflow
-- Create a `mobile:build` script that syncs the React build to the native platforms.
-- Provide step-by-step terminal commands for generating the debug APK.
+### 3. Database Security (RLS)
+*   **Grant Hardening**: Apply a new migration to revoke `PUBLIC` execute permissions on sensitive `SECURITY DEFINER` functions, granting access only to `service_role` and explicitly allowed authenticated users.
+*   **Policy Refinement**: Ensure all `INSERT` and `UPDATE` operations on gated tables (like `premium_users` or `results`) are either scoped strictly to the authenticated `user_id` or restricted to the `service_role`.
 
-## Technical Details
+### 4. Quiz Logic Hardening
+*   **Server-Side Scoring**: Enforce server-side scoring for all TNC tests. The client will only receive questions with empty `correctAnswer` and `explanation` fields until a successful submission.
+*   **Verification Gate**: Move the verification check for free access to the edge function, preventing client-side bypasses.
 
-- **Framework**: Capacitor 6.0 (Latest).
-- **Plugins**: `@capacitor/android`, `@capacitor/ios`, `@capacitor/share`, `@capacitor/filesystem`, `@capacitor/status-bar`.
-- **Handling Redirects**: We will ensure Supabase Auth works correctly within the `hostname` of the mobile app.
+### 5. PDF Security
+*   **Signed Permissions**: Implement `requestTncPdfPermission` which issues a short-lived token. The PDF generation component will require this token to fetch necessary identity assets (avatars, etc.).
 
-## Terminal Commands (Summary)
+## Verification Plan
 
-After implementation, you will run:
-1. `npm install` (to get Capacitor)
-2. `npm run build` (to build the web app)
-3. `npx cap sync` (to push code to Android/iOS)
-4. `npx cap open android` (to open in Android Studio and click "Build APK")
+*   **Identity Test**: Verify that no raw emails appear in the `/tnc-tests/leaderboard` DOM or network responses.
+*   **Admin Priority Test**: Verify that admin users show the dual-glow frame and admin badge even if they have an active premium subscription.
+*   **Scoring Integrity**: Attempt to fetch TNC test questions and verify `correctAnswer` is empty in the network response.
+*   **RLS Audit**: Run a manual check to ensure `anon` users cannot execute sensitive functions like `handle_new_user`.
