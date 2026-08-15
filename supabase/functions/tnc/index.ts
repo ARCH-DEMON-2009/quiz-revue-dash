@@ -441,7 +441,10 @@ async function resolveUserIdentities(admin: any, ids: string[]) {
 
 /** Never publish raw emails on public leaderboards. */
 function maskName(name: string) {
-  return public.mask_email(name);
+  if (!name || name === "Student") return "Student";
+  if (!name.includes("@")) return name;
+  const local = name.split("@")[0].replace(/[._-]+/g, " ").trim();
+  return local.length > 3 ? `${local.slice(0, 3)}***` : "Student";
 }
 
 async function getLeaderboard(examId: string) {
