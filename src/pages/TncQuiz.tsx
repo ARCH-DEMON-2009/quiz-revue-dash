@@ -941,6 +941,7 @@ const TncQuiz = () => {
             );
           })}
         </div>
+      </main>
       <TncBotPopup />
     </div>
   );
