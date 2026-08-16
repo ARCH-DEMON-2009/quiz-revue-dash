@@ -11,15 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock, Star, Shield, Bot, ExternalLink } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
+import { TncBotPopup } from "@/components/TncBotPopup";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncGlobalLeaderboard,
@@ -50,20 +43,6 @@ const TncGlobalLeaderboard = () => {
   const [error, setError] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
-  const [showBotPopup, setShowBotPopup] = useState(false);
-
-  useEffect(() => {
-    const hasSeen = localStorage.getItem("tnc_bot_popup_seen");
-    if (!hasSeen) {
-      const timer = setTimeout(() => setShowBotPopup(true), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  const handleClosePopup = () => {
-    setShowBotPopup(false);
-    localStorage.setItem("tnc_bot_popup_seen", "true");
-  };
   const { 
     config,
     getAdminFrameStyles, 
@@ -326,37 +305,7 @@ const TncGlobalLeaderboard = () => {
         )}
       </main>
       <Footer />
-
-      <Dialog open={showBotPopup} onOpenChange={setShowBotPopup}>
-        <DialogContent className="sm:max-w-[425px] border-primary/20 bg-background/95 backdrop-blur-xl">
-          <DialogHeader>
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <Bot className="h-6 w-6" />
-            </div>
-            <DialogTitle className="text-center text-xl font-bold text-gradient">Free Nursing Courses!</DialogTitle>
-            <DialogDescription className="text-center text-base pt-2">
-              Study TNC Nursing Courses and lectures for free on <span className="font-bold text-primary">@Tnccontentbot</span>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4 text-center text-sm text-muted-foreground">
-            Start the bot and open the mini app to access premium content at no cost.
-          </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button 
-              className="w-full gap-2 btn-glow" 
-              onClick={() => {
-                window.open("https://t.me/Tnccontentbot", "_blank");
-                handleClosePopup();
-              }}
-            >
-              <ExternalLink className="h-4 w-4" /> Start Bot Now
-            </Button>
-            <Button variant="ghost" className="w-full" onClick={handleClosePopup}>
-              Maybe Later
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TncBotPopup />
     </div>
   );
 };
