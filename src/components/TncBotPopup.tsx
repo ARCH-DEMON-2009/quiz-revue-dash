@@ -78,7 +78,7 @@ export const TncBotPopup = () => {
             Free Nursing Courses!
           </DialogTitle>
           <DialogDescription id="tnc-bot-description" className="text-center text-base pt-2">
-            Study TNC Nursing Courses and lectures for free on <span className="font-bold text-primary">@Tnccontentbot</span>
+            Study TNC Nursing Courses and lectures for free on <span className="font-bold text-primary">@Tnccontentbot</span> or visit the direct site.
           </DialogDescription>
         </DialogHeader>
         
