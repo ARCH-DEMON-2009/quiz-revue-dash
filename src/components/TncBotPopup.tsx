@@ -88,18 +88,18 @@ export const TncBotPopup = () => {
 
         <div className="flex flex-col gap-3">
           <Button 
-            className="w-full gap-2 btn-glow h-11" 
+            className="w-full gap-2 btn-glow h-11 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none" 
             onClick={handleOpenMiniApp}
-            aria-label="Open Telegram Mini App directly"
+            aria-label="Open TNC Nursing lectures directly on the web app"
           >
             <Smartphone className="h-4 w-4" aria-hidden="true" /> Open Direct Site / Mini App
           </Button>
           
           <Button 
             variant="outline"
-            className="w-full gap-2 h-11 border-primary/20 hover:bg-primary/5" 
+            className="w-full gap-2 h-11 border-primary/20 hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 outline-none" 
             onClick={handleStartBot}
-            aria-label="Start Telegram Bot"
+            aria-label="Open Telegram and start the TNC Content Bot"
           >
             <ExternalLink className="h-4 w-4" aria-hidden="true" /> Start Bot Now
           </Button>
