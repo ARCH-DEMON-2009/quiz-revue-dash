@@ -92,7 +92,7 @@ export const TncBotPopup = () => {
             onClick={handleOpenMiniApp}
             aria-label="Open Telegram Mini App directly"
           >
-            <Smartphone className="h-4 w-4" aria-hidden="true" /> Open Mini App
+            <Smartphone className="h-4 w-4" aria-hidden="true" /> Open Direct Site / Mini App
           </Button>
           
           <Button 
