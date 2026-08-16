@@ -78,12 +78,12 @@ export const TncBotPopup = () => {
             Free Nursing Courses!
           </DialogTitle>
           <DialogDescription id="tnc-bot-description" className="text-center text-base pt-2">
-            Study TNC Nursing Courses and lectures for free on <span className="font-bold text-primary">@Tnccontentbot</span>
+            Study TNC Nursing Courses and lectures for free on <span className="font-bold text-primary">@Tnccontentbot</span> or visit the direct site.
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-4 text-center text-sm text-muted-foreground">
-          Start the bot or open the mini app directly to access premium content at no cost.
+          Access premium content for free through our bot or directly on our platform.
         </div>
 
         <div className="flex flex-col gap-3">
@@ -92,7 +92,7 @@ export const TncBotPopup = () => {
             onClick={handleOpenMiniApp}
             aria-label="Open Telegram Mini App directly"
           >
-            <Smartphone className="h-4 w-4" aria-hidden="true" /> Open Mini App
+            <Smartphone className="h-4 w-4" aria-hidden="true" /> Open Direct Site / Mini App
           </Button>
           
           <Button 
