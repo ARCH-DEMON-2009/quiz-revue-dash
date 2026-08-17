@@ -27,8 +27,9 @@ serve(async (req: Request): Promise<Response> => {
     const token = authHeader.replace("Bearer ", "").trim();
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     
-    let isAuthorized = true; // Temporary bypass for agent task verification
-    /*
+    let isAuthorized = false;
+
+    // Direct check for service key
     if (serviceKey && token === serviceKey) {
       isAuthorized = true;
     } else if (token) {
@@ -43,7 +44,6 @@ serve(async (req: Request): Promise<Response> => {
         }
       }
     }
-    */
 
     if (!isAuthorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
@@ -56,13 +56,7 @@ serve(async (req: Request): Promise<Response> => {
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
-      console.warn("RESEND_API_KEY missing - checking for simulated response");
-      if (email === "ssv01@duck.com") {
-        return new Response(
-          JSON.stringify({ success: true, message: "Simulated success for gift mail task (resend key missing)" }),
-          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
+      console.error("RESEND_API_KEY not configured");
       return new Response(
         JSON.stringify({ success: false, error: "Email service not configured" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
