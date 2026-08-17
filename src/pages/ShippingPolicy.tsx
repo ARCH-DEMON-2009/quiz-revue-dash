@@ -51,7 +51,7 @@ const ShippingPolicy = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Shipping Policy</h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Information about our digital product delivery
+            Test Sagar (a unit of TRMS) — Effective Date: January 2025
           </p>
         </div>
 
@@ -97,7 +97,9 @@ const ShippingPolicy = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-3">Support</h2>
               <p className="text-muted-foreground mb-4">
-                For any delivery-related issues or questions, please contact us via WhatsApp:
+                For any delivery-related issues or questions, please contact us:<br />
+                <strong>Email:</strong> support@shashanksv.com<br />
+                <strong>WhatsApp:</strong>
               </p>
               <a 
                 href={getWhatsAppLink()}
@@ -108,6 +110,9 @@ const ShippingPolicy = () => {
                 <Phone className="h-4 w-4" />
                 +84 522122461
               </a>
+              <p className="text-muted-foreground mt-4">
+                <strong>Address:</strong> Lucknow, Uttar Pradesh, India
+              </p>
             </section>
 
             <section className="pt-4 border-t">

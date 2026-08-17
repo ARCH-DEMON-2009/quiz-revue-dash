@@ -95,20 +95,32 @@ const ContactUs = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Phone className="h-5 w-5 text-primary" />
-                WhatsApp Support
+                Support Channels
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">Chat with us on WhatsApp for instant support</p>
-              <a 
-                href={getWhatsAppUrl()}
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                <Phone className="h-4 w-4" />
-                +84 522122461
-              </a>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold mb-1">WhatsApp Support</p>
+                <a 
+                  href={getWhatsAppUrl()}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <Phone className="h-4 w-4" />
+                  +84 522122461
+                </a>
+              </div>
+              <div>
+                <p className="text-sm font-semibold mb-1">Email Support</p>
+                <a href="mailto:support@shashanksv.com" className="text-primary hover:underline">
+                  support@shashanksv.com
+                </a>
+              </div>
+              <div>
+                <p className="text-sm font-semibold mb-1">Office Address</p>
+                <p className="text-muted-foreground text-sm">Lucknow, Uttar Pradesh, India</p>
+              </div>
             </CardContent>
           </Card>
         </div>
