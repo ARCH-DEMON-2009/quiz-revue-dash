@@ -1149,8 +1149,7 @@ const Admin = () => {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Email</TableHead>
+                            <TableHead>User Identity</TableHead>
                             <TableHead>WhatsApp</TableHead>
                             <TableHead>Type</TableHead>
                             <TableHead>Expires</TableHead>
@@ -1171,8 +1170,14 @@ const Admin = () => {
                           ) : (
                             paginatedUsers.map((user) => (
                               <TableRow key={user.user_id}>
-                                <TableCell className="font-medium">{toDisplayName(user.name)}</TableCell>
-                                <TableCell>{user.email.replace(/(.{3}).*(@.*)/, "$1***$2")}</TableCell>
+                                <TableCell>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium text-sm">{toDisplayName(user.name)}</span>
+                                    <span className="text-[10px] text-muted-foreground opacity-60">
+                                      {user.email.replace(/(.{2}).*(@.*)/, "$1***$2")}
+                                    </span>
+                                  </div>
+                                </TableCell>
                                 <TableCell>{user.whatsapp_number || "N/A"}</TableCell>
                                 <TableCell>
                                   <Badge

@@ -703,11 +703,14 @@ Deno.serve(async (req) => {
       // the quiz is submitted. Scoring and review happen server-side.
       const safe = {
         ...result,
-        questions: result.questions.map((q) => ({
-          ...q,
-          correctAnswer: "",
-          explanation: null,
-        })),
+        questions: result.questions.map((q) => {
+          const { correctAnswer: _c, explanation: _e, ...rest } = q;
+          return {
+            ...rest,
+            correctAnswer: "",
+            explanation: null,
+          };
+        }),
       };
       return json(safe);
     }
