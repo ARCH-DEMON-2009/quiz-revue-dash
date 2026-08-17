@@ -1287,8 +1287,11 @@ const Admin = () => {
           </CardContent>
         </Card>
 
+        <AdminGiftLogsSection />
+
         {/* Promo Code Manager */}
         <div className="mt-8">
+
           <PromoCodeManager />
         </div>
 
