@@ -8,8 +8,10 @@ import { toast } from "sonner";
 
 export const SendGiftEmailDialog = () => {
   const [email, setEmail] = useState("");
+  const [giftKey, setGiftKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; giftKey?: string }>({});
 
   const handleSendGift = async () => {
     if (!email) {
