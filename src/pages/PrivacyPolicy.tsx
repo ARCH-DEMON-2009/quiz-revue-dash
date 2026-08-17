@@ -51,7 +51,7 @@ const PrivacyPolicy = () => {
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            How we collect, use, and protect your information
+            Test Sagar (a unit of TRMS) — Effective Date: January 2025
           </p>
         </div>
 
