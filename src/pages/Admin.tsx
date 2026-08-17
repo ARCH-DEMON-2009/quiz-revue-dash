@@ -23,6 +23,9 @@ import { BypassBlocksSection } from "@/components/BypassBlocksSection";
 import { SmsBroadcastSection } from "@/components/SmsBroadcastSection";
 import { AdminAnalyticsSection } from "@/components/AdminAnalyticsSection";
 import { SecurityEventsSection } from "@/components/SecurityEventsSection";
+import { SendGiftEmailDialog } from "@/components/SendGiftEmailDialog";
+import { AdminGiftLogsSection } from "@/components/AdminGiftLogsSection";
+
 
 export interface UserData {
   user_id: string;
@@ -707,7 +710,9 @@ const Admin = () => {
                 disabled={verificationLoading}
               />
             </div>
+            <SendGiftEmailDialog />
             <AddPremiumUserDialog onSuccess={fetchUsers} />
+
             <Button 
               variant="outline" 
               size="sm"
@@ -739,6 +744,8 @@ const Admin = () => {
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Analytics: Verified users & Visit stats */}
         <AdminAnalyticsSection />
+        <AdminGiftLogsSection />
+
 
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
           <Card>
