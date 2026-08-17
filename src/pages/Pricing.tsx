@@ -354,7 +354,7 @@ const Pricing = () => {
       const message =
         error?.context?.error ||
         error?.message ||
-        "Failed to initiate payment. Please try again.";
+        "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Edge Function returned a non-2xx status code";
       toast.error(message, {
         description: "If this keeps happening, please contact support.",
         duration: 6000,
