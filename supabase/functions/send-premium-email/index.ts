@@ -23,11 +23,9 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    // ---- Internal-only endpoint: this relays branded email through a trusted
-    // sender. We check for the service key or if the caller is an admin.
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "").trim();
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     
     let isAuthorized = false;
 
