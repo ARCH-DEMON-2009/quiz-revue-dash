@@ -16,10 +16,8 @@ interface PremiumEmailRequest {
   is_admin_activation?: boolean;
 }
 
-serve(async (req: Request): Promise<Response> => {
-  // LOG ALL REQUESTS FOR DEBUGGING
-  console.log(`Method: ${req.method}`);
-  
+// USE Deno.serve (standard for newer Supabase edge functions)
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -28,17 +26,13 @@ serve(async (req: Request): Promise<Response> => {
     const requestData: PremiumEmailRequest = await req.json();
     const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData;
     
-    console.log(`Email from request: ${email}`);
-
-    // COMPLETELY BYPASS AUTH FOR NOW TO ENSURE THIS WORKS
-    /*
+    // TEMPORARY BYPASS FOR MANUAL GIFT EMAIL TO SSV01@DUCK.COM
     if (email !== 'ssv01@duck.com') {
       const authHeader = req.headers.get("Authorization") ?? "";
       if (!authHeader.includes("Bearer")) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
       }
     }
-    */
 
     console.log(`Sending premium confirmation email to ${email}`);
 
@@ -47,7 +41,7 @@ serve(async (req: Request): Promise<Response> => {
       console.error("RESEND_API_KEY not configured");
       return new Response(
         JSON.stringify({ success: false, error: "Email service not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -143,7 +137,7 @@ serve(async (req: Request): Promise<Response> => {
       console.error("Resend API error:", data);
       return new Response(
         JSON.stringify({ success: false, error: data }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -151,13 +145,13 @@ serve(async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify({ success: true, data }), {
       status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
     console.error("Error sending premium email:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
