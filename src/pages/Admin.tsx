@@ -23,8 +23,8 @@ import { BypassBlocksSection } from "@/components/BypassBlocksSection";
 import { SmsBroadcastSection } from "@/components/SmsBroadcastSection";
 import { AdminAnalyticsSection } from "@/components/AdminAnalyticsSection";
 import { SecurityEventsSection } from "@/components/SecurityEventsSection";
-import { SendGiftEmailDialog } from "@/components/SendGiftEmailDialog";
 import { AdminGiftLogsSection } from "@/components/AdminGiftLogsSection";
+
 
 
 export interface UserData {
@@ -710,8 +710,8 @@ const Admin = () => {
                 disabled={verificationLoading}
               />
             </div>
-            <SendGiftEmailDialog />
             <AddPremiumUserDialog onSuccess={fetchUsers} />
+
 
             <Button 
               variant="outline" 
