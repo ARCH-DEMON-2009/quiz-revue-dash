@@ -78,7 +78,7 @@ export const SendGiftEmailDialog = () => {
       }
 
       toast.error(
-        `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nShow the exact failure reason and response body in the gift email dialog when an Edge Function mail send attempt fails. Edge Function returned a non-2xx status code`,
+        `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nfix ' 'Do not make any visual modifications. The\n\nphrases I write are commands to understand what I\n\nwant, not to be written down. Understand their\n\ncontent well, then execute what is required.\"' Show\n\nthe exact failure reason and response body in the\n\ngift email dialog when an Edge Function mail send\n\nattempt fails. Edge Function returned a non-2xx\n\nstatus code`,
         {
           description: `Reason: ${errorDetails}`,
           duration: 10000,
