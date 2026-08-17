@@ -16,7 +16,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.send-premium-email]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-verification]
 verify_jwt = true
