@@ -50,7 +50,10 @@ export class TncApiError extends Error {
 async function call<T>(body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke("tnc", { body });
   if (error) {
-    // Non-2xx responses land here; try to surface the server's error code/message.
+    // '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+    //                                         
+    //                                             
+    //                                             Edge Function returned a non-2xx status code
     let message = error.message;
     let code: string | undefined;
     let status: number | undefined;
