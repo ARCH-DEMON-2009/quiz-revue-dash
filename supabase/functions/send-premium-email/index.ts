@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +14,7 @@ interface PremiumEmailRequest {
   amount: number;
   payment_id: string;
   expiry_date: string;
+  is_admin_activation?: boolean;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -25,15 +27,34 @@ serve(async (req: Request): Promise<Response> => {
     // sender, so it must only be callable by our own server-side code
     // (verify-razorpay-payment / razorpay-webhook) using the service-role key.
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "").trim();
-    if (!serviceKey || token !== serviceKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Forbidden" }),
-        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace("Bearer ", "").trim();
+    
+    // Allow both service role and authenticated admins
+    // Note: supabase.functions.invoke sends the user's JWT. 
+    // We should verify if the user is an admin if it's not the service key.
+    if (!serviceKey || (token !== serviceKey)) {
+      // Basic check: if it's not service key, we'd need to verify the JWT against the DB
+      // For now, we trust the Authorization header if it matches the service key 
+      // OR we rely on the fact that verify-razorpay-payment/webhook calls it with service key.
+      // To allow admin client-side calls, we'd need to verify admin status here.
+      // Let's implement a simple admin check if not service role.
+      
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabase = createClient(supabaseUrl, serviceKey);
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      }
+      
+      const { data: isAdmin } = await supabase.rpc('is_admin');
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
+      }
     }
 
-    const { email, name, plan_name, plan_days, amount, payment_id, expiry_date }: PremiumEmailRequest = await req.json();
+    const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation }: PremiumEmailRequest = await req.json();
 
     console.log("Sending premium confirmation email");
 
@@ -63,8 +84,8 @@ serve(async (req: Request): Promise<Response> => {
       <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5;">
         <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 16px 16px 0 0; padding: 40px 30px; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Welcome to Premium!</h1>
-            <p style="color: rgba(255,255,255,0.9); margin-top: 10px; font-size: 16px;">Thank you for upgrading, ${name}!</p>
+            <h1 style="color: white; margin: 0; font-size: 28px;">${is_admin_activation ? '🎊 Premium Activated!' : '🎉 Welcome to Premium!'}</h1>
+            <p style="color: rgba(255,255,255,0.9); margin-top: 10px; font-size: 16px;">${is_admin_activation ? 'An administrator has granted you premium access.' : 'Thank you for upgrading!'} Enjoy your stay, ${name}!</p>
           </div>
           
           <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -106,12 +127,12 @@ serve(async (req: Request): Promise<Response> => {
             </ul>
 
             <div style="text-align: center; margin-top: 30px;">
-              <a href="https://testsagar.com" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600;">Start Practicing Now</a>
+              <a href="https://test.shashanksv.com" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600;">Start Practicing Now</a>
             </div>
 
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
-              <p style="color: #9ca3af; font-size: 14px;">Need help? Contact us on <a href="https://t.me/TestSagarHelpRobot" style="color: #6366f1;">Telegram</a></p>
-              <p style="color: #9ca3af; font-size: 12px; margin-top: 10px;">© ${new Date().getFullYear()} TestSagar. All rights reserved.</p>
+              <p style="color: #9ca3af; font-size: 14px;">Need help? Contact us at <a href="mailto:support@shashanksv.com" style="color: #6366f1;">support@shashanksv.com</a></p>
+              <p style="color: #9ca3af; font-size: 12px; margin-top: 10px;">© ${new Date().getFullYear()} Test Sagar (TRMS). All rights reserved.</p>
             </div>
           </div>
         </div>
@@ -126,9 +147,9 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "TestSagar <noreply@testsagar.com>",
+        from: "Test Sagar <noreply@shashanksv.com>",
         to: [email],
-        subject: "🎉 Welcome to TestSagar Premium!",
+        subject: "🎉 Welcome to Test Sagar Premium!",
         html: emailHtml,
       }),
     });

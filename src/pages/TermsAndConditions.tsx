@@ -149,6 +149,24 @@ const TermsAndConditions = () => {
               </p>
             </section>
 
+            <section>
+              <h2 className="text-2xl font-semibold mb-3">10. Razorpay Payment FAQ</h2>
+              <div className="space-y-4 text-muted-foreground">
+                <div>
+                  <h3 className="text-lg font-medium text-foreground">How is the digital product delivered?</h3>
+                  <p>Upon successful payment via Razorpay, your premium status is activated instantly. You will receive an automated confirmation email at your registered email address.</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-foreground">What is the return/refund policy?</h3>
+                  <p>As per our digital delivery model, we offer a 7-day refund window for technical issues that prevent access to the service. Refund requests must be submitted via email or WhatsApp.</p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-foreground">Is my payment secure?</h3>
+                  <p>Yes, all transactions are processed through Razorpay's secure encrypted gateway. We do not store your credit card or banking details on our servers.</p>
+                </div>
+              </div>
+            </section>
+
             <section className="pt-4 border-t">
               <p className="text-sm text-muted-foreground">
                 Last updated: January 2025

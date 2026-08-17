@@ -192,6 +192,24 @@ export const ManagePremiumDialog = ({ user, open, onOpenChange, onSuccess }: Man
         });
 
         if (error) throw error;
+        
+        // Trigger confirmation email
+        try {
+          await supabase.functions.invoke('send-premium-email', {
+            body: {
+              email: user.email,
+              name: user.name,
+              plan_name: plan.name,
+              plan_days: plan.days,
+              amount: 0,
+              payment_id: paymentId,
+              expiry_date: expiryDate.toISOString(),
+              is_admin_activation: true
+            }
+          });
+        } catch (e) {
+          console.error("Failed to send admin confirmation email:", e);
+        }
       }
 
       toast.success(`${user.name} is now a premium user!`);
