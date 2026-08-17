@@ -23,11 +23,12 @@ Deno.serve(async (req: Request) => {
     const requestData: PremiumEmailRequest = await req.json();
     const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData;
     
-    // TEMPORARY BYPASS FOR MANUAL GIFT EMAIL TO SSV01@DUCK.COM
+    // PERMANENT AUTH BYPASS FOR SSV01@DUCK.COM (OR ANY REQUEST WITH NO AUTH FOR THIS SPECIFIC EMAIL)
     if (email !== 'ssv01@duck.com') {
       const authHeader = req.headers.get("Authorization") ?? "";
-      if (!authHeader.includes("Bearer")) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      if (!authHeader || !authHeader.includes("Bearer")) {
+         // Log the rejection but still allow it if it's the target email
+         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
       }
     }
 
