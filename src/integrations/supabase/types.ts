@@ -44,6 +44,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_gift_logs: {
+        Row: {
+          admin_id: string | null
+          created_at: string | null
+          error_details: string | null
+          id: string
+          recipient_email: string
+          status: string
+        }
+        Insert: {
+          admin_id?: string | null
+          created_at?: string | null
+          error_details?: string | null
+          id?: string
+          recipient_email: string
+          status: string
+        }
+        Update: {
+          admin_id?: string | null
+          created_at?: string | null
+          error_details?: string | null
+          id?: string
+          recipient_email?: string
+          status?: string
+        }
+        Relationships: []
+      }
       bypass_blocks: {
         Row: {
           blocked_until: string
