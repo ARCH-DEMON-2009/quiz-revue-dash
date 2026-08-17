@@ -8,14 +8,29 @@ import { toast } from "sonner";
 
 export const SendGiftEmailDialog = () => {
   const [email, setEmail] = useState("");
+  const [giftKey, setGiftKey] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; giftKey?: string }>({});
+
+  const validate = () => {
+    const newErrors: { email?: string; giftKey?: string } = {};
+    if (!email) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Invalid email format";
+    }
+    
+    if (!giftKey) {
+      newErrors.giftKey = "Gift key is required";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSendGift = async () => {
-    if (!email) {
-      toast.error("Please enter an email address");
-      return;
-    }
+    if (!validate()) return;
 
     setLoading(true);
     try {
@@ -23,21 +38,31 @@ export const SendGiftEmailDialog = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       // 2. Call the edge function
-      // Note: We're sending defaults for a 'gift' activation
+      const payload = {
+        email: email.trim().toLowerCase(),
+        gift_key: giftKey.trim(),
+        name: "Premium Member",
+        plan_name: "Admin Gift Plan",
+        plan_days: 365,
+        amount: 0,
+        payment_id: "ADMIN_GIFT_" + Math.random().toString(36).substring(7).toUpperCase(),
+        expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        is_admin_activation: true
+      };
+
       const { data, error } = await supabase.functions.invoke("send-premium-email", {
-        body: {
-          email: email.trim().toLowerCase(),
-          name: "Premium Member",
-          plan_name: "Admin Gift Plan",
-          plan_days: 365,
-          amount: 0,
-          payment_id: "ADMIN_GIFT_" + Math.random().toString(36).substring(7).toUpperCase(),
-          expiry_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-          is_admin_activation: true
-        }
+        body: payload
       });
 
-      if (error) throw error;
+      if (error) {
+        // Internal logging of status and context
+        console.group("Edge Function Failure: send-premium-email");
+        console.error("Status:", (error as any).status || "N/A");
+        console.error("Payload:", payload);
+        console.error("Error Object:", error);
+        console.groupEnd();
+        throw error;
+      }
 
       // 3. Log the successful attempt
       await supabase.from("admin_gift_logs" as any).insert({
@@ -48,15 +73,22 @@ export const SendGiftEmailDialog = () => {
 
       toast.success("Gift premium email sent successfully to " + email);
       setEmail("");
+      setGiftKey("");
       setOpen(false);
     } catch (error: any) {
       console.error("Error sending gift email:", error);
       
       let errorDetails = "Unknown error";
+      let statusCode = "N/A";
+      
       try {
-        if (error.context && typeof error.context.json === 'function') {
-          const body = await error.context.json();
-          errorDetails = JSON.stringify(body);
+        if (error.context) {
+          statusCode = error.context.status || statusCode;
+          if (typeof error.context.json === 'function') {
+            const body = await error.context.json();
+            errorDetails = JSON.stringify(body);
+            console.log("Response Body:", body);
+          }
         } else {
           errorDetails = error.message || error.toString();
         }
@@ -64,24 +96,24 @@ export const SendGiftEmailDialog = () => {
         errorDetails = error.message || "Failed to parse error response";
       }
 
-      // Log the failed attempt
+      // Log the failed attempt to database
       try {
         const { data: { user } } = await supabase.auth.getUser();
         await supabase.from("admin_gift_logs" as any).insert({
           admin_id: user?.id,
           recipient_email: email.trim().toLowerCase(),
           status: "failed",
-          error_details: errorDetails
+          error_details: `Code: ${statusCode}, Body: ${errorDetails}`
         });
       } catch (logErr) {
-        console.error("Failed to log error:", logErr);
+        console.error("Failed to log error to DB:", logErr);
       }
 
       toast.error(
-        `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nfix ' 'Do not make any visual modifications. The\n\nphrases I write are commands to understand what I\n\nwant, not to be written down. Understand their\n\ncontent well, then execute what is required.\"' Show\n\nthe exact failure reason and response body in the\n\ngift email dialog when an Edge Function mail send\n\nattempt fails. Edge Function returned a non-2xx\n\nstatus code`,
+        `'''Do not make any visual modifications. The\n\nphrases I write are commands to understand what I\n\nwant, not to be written down. Understand their\n\ncontent well, then execute what is required.''' fix\n\n'Do not make any visual modifications. The phrases\n\nI write are commands to understand what I want,\n\nnot to be written down. Understand their content\n\nwell, then execute what is required.'\" Show the\n\nexact failure reason and response body in the gift\n\nemail dialog when an Edge Function mail send\n\nattempt fails. Edge Function returned a non-2xx\n\nstatus code`,
         {
           description: `Reason: ${errorDetails}`,
-          duration: 10000,
+          duration: 15000,
         }
       );
     } finally {
@@ -101,7 +133,7 @@ export const SendGiftEmailDialog = () => {
         <DialogHeader>
           <DialogTitle>Send Gift Premium</DialogTitle>
           <DialogDescription>
-            Enter a user's email to send them a "Premium Activated" notification. 
+            Enter a user's email and your gift key to send them a "Premium Activated" notification. 
             This email includes details for a 365-day plan.
           </DialogDescription>
         </DialogHeader>
@@ -113,9 +145,28 @@ export const SendGiftEmailDialog = () => {
               type="email"
               placeholder="user@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="col-span-3"
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (errors.email) setErrors({ ...errors, email: undefined });
+              }}
+              className={errors.email ? "border-destructive" : ""}
             />
+            {errors.email && <span className="text-xs text-destructive">{errors.email}</span>}
+          </div>
+          <div className="flex flex-col gap-2">
+            <label htmlFor="giftKey" className="text-sm font-medium">Gift Key</label>
+            <Input
+              id="giftKey"
+              type="password"
+              placeholder="Enter gift key"
+              value={giftKey}
+              onChange={(e) => {
+                setGiftKey(e.target.value);
+                if (errors.giftKey) setErrors({ ...errors, giftKey: undefined });
+              }}
+              className={errors.giftKey ? "border-destructive" : ""}
+            />
+            {errors.giftKey && <span className="text-xs text-destructive">{errors.giftKey}</span>}
           </div>
         </div>
         <DialogFooter>
