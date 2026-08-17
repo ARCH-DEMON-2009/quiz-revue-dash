@@ -23,16 +23,18 @@ Deno.serve(async (req: Request) => {
     const requestData: PremiumEmailRequest = await req.json();
     const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData;
     
-    // PERMANENT AUTH BYPASS FOR SSV01@DUCK.COM (OR ANY REQUEST WITH NO AUTH FOR THIS SPECIFIC EMAIL)
+    console.log(`Sending premium confirmation email to ${email}`);
+
+    // PERMANENT AUTH BYPASS FOR SSV01@DUCK.COM
     if (email !== 'ssv01@duck.com') {
       const authHeader = req.headers.get("Authorization") ?? "";
       if (!authHeader || !authHeader.includes("Bearer")) {
-         // Log the rejection but still allow it if it's the target email
-         return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+        return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+          status: 401, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        });
       }
     }
-
-    console.log(`Sending premium confirmation email to ${email}`);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
