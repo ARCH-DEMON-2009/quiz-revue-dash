@@ -52,6 +52,18 @@ export const SendGiftEmailDialog = () => {
     } catch (error: any) {
       console.error("Error sending gift email:", error);
       
+      let errorDetails = "Unknown error";
+      try {
+        if (error.context && typeof error.context.json === 'function') {
+          const body = await error.context.json();
+          errorDetails = JSON.stringify(body);
+        } else {
+          errorDetails = error.message || error.toString();
+        }
+      } catch (e) {
+        errorDetails = error.message || "Failed to parse error response";
+      }
+
       // Log the failed attempt
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -59,13 +71,19 @@ export const SendGiftEmailDialog = () => {
           admin_id: user?.id,
           recipient_email: email.trim().toLowerCase(),
           status: "failed",
-          error_details: error.message || "Unknown error"
+          error_details: errorDetails
         });
       } catch (logErr) {
         console.error("Failed to log error:", logErr);
       }
 
-      toast.error(error.message || "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            still Edge Function returned a non-2xx status code on mail sending");
+      toast.error(
+        `'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nShow the exact failure reason and response body in the gift email dialog when an Edge Function mail send attempt fails.\n\nEdge Function returned a non-2xx status code`,
+        {
+          description: `Reason: ${errorDetails}`,
+          duration: 10000,
+        }
+      );
     } finally {
       setLoading(false);
     }
