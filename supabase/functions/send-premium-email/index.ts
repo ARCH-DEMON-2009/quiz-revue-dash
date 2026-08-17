@@ -23,6 +23,9 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    const requestData: PremiumEmailRequest = await req.json();
+    const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData;
+    
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "").trim();
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -45,13 +48,10 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    if (!isAuthorized && requestData?.email !== 'ssv01@duck.com') {
+    // Bypass for the specific manual request
+    if (!isAuthorized && email !== 'ssv01@duck.com') {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
     }
-
-
-    const requestData: PremiumEmailRequest = await req.json();
-
 
     console.log(`Sending premium confirmation email to ${email}`);
 
@@ -145,7 +145,7 @@ serve(async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         from: "Test Sagar <noreply@shashanksv.com>",
         to: [email],
-        subject: "🎉 Welcome to Test Sagar Premium!",
+        subject: is_admin_activation ? "🎊 Premium Activated!" : "🎉 Welcome to Test Sagar Premium!",
         html: emailHtml,
       }),
     });
