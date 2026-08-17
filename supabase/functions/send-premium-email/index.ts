@@ -23,41 +23,36 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    // ---- Internal-only endpoint: this relays branded email through a trusted
-    // sender, so it must only be callable by our own server-side code
-    // (verify-razorpay-payment / razorpay-webhook) using the service-role key.
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "").trim();
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     
-    // Allow both service role and authenticated admins
-    // Note: supabase.functions.invoke sends the user's JWT. 
-    // We should verify if the user is an admin if it's not the service key.
-    if (!serviceKey || (token !== serviceKey)) {
-      // Basic check: if it's not service key, we'd need to verify the JWT against the DB
-      // For now, we trust the Authorization header if it matches the service key 
-      // OR we rely on the fact that verify-razorpay-payment/webhook calls it with service key.
-      // To allow admin client-side calls, we'd need to verify admin status here.
-      // Let's implement a simple admin check if not service role.
-      
+    let isAuthorized = false;
+
+    // Direct check for service key
+    if (serviceKey && token === serviceKey) {
+      isAuthorized = true;
+    } else if (token) {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabase = createClient(supabaseUrl, serviceKey);
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      const client = createClient(supabaseUrl, serviceKey);
+      const { data: { user }, error: authError } = await client.auth.getUser(token);
       
-      if (authError || !user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
-      }
-      
-      const { data: isAdmin } = await supabase.rpc('is_admin');
-      if (!isAdmin) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
+      if (!authError && user) {
+        const { data: isAdmin } = await client.rpc('is_admin');
+        if (isAdmin) {
+          isAuthorized = true;
+        }
       }
     }
 
-    const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation }: PremiumEmailRequest = await req.json();
+    if (!isAuthorized) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
 
-    console.log("Sending premium confirmation email");
+    const requestData: PremiumEmailRequest = await req.json();
+    const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData;
 
+    console.log(`Sending premium confirmation email to ${email}`);
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
