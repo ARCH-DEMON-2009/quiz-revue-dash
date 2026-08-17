@@ -97,7 +97,9 @@ const ShippingPolicy = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-3">Support</h2>
               <p className="text-muted-foreground mb-4">
-                For any delivery-related issues or questions, please contact us via WhatsApp:
+                For any delivery-related issues or questions, please contact us:<br />
+                <strong>Email:</strong> support@shashanksv.com<br />
+                <strong>WhatsApp:</strong>
               </p>
               <a 
                 href={getWhatsAppLink()}
@@ -108,6 +110,9 @@ const ShippingPolicy = () => {
                 <Phone className="h-4 w-4" />
                 +84 522122461
               </a>
+              <p className="text-muted-foreground mt-4">
+                <strong>Address:</strong> Lucknow, Uttar Pradesh, India
+              </p>
             </section>
 
             <section className="pt-4 border-t">

@@ -158,7 +158,9 @@ const PrivacyPolicy = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-3">10. Contact Us</h2>
               <p className="text-muted-foreground">
-                If you have any questions about this Privacy Policy, please contact us via WhatsApp:{" "}
+                If you have any questions about this Privacy Policy, please contact us:<br />
+                <strong>Email:</strong> support@shashanksv.com<br />
+                <strong>WhatsApp:</strong>{" "}
                 <a 
                   href={getWhatsAppUrl()}
                   target="_blank" 
@@ -166,7 +168,8 @@ const PrivacyPolicy = () => {
                   className="text-primary hover:underline"
                 >
                   +84 522122461
-                </a>
+                </a><br />
+                <strong>Address:</strong> Lucknow, Uttar Pradesh, India
               </p>
             </section>
 

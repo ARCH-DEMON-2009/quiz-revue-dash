@@ -97,7 +97,7 @@ const TermsAndConditions = () => {
               <h2 className="text-2xl font-semibold mb-3">5. Intellectual Property</h2>
               <p className="text-muted-foreground">
                 All content on TestSagar, including but not limited to tests, questions, analytics, 
-                and materials, is the property of TestSagar and protected by intellectual property laws. 
+                and materials, is the property of Test Sagar (Parent: TRMS) and protected by intellectual property laws. 
                 You may not reproduce, distribute, or create derivative works without express permission.
               </p>
             </section>
@@ -134,7 +134,9 @@ const TermsAndConditions = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-3">9. Contact Information</h2>
               <p className="text-muted-foreground">
-                For questions about these Terms and Conditions, please contact us via WhatsApp:{" "}
+                For questions about these Terms and Conditions, please contact us:<br />
+                <strong>Email:</strong> support@shashanksv.com<br />
+                <strong>WhatsApp:</strong>{" "}
                 <a 
                   href={getWhatsAppUrl()}
                   target="_blank" 
@@ -142,7 +144,8 @@ const TermsAndConditions = () => {
                   className="text-primary hover:underline"
                 >
                   +84 522122461
-                </a>
+                </a><br />
+                <strong>Address:</strong> Lucknow, Uttar Pradesh, India
               </p>
             </section>
 

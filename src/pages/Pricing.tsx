@@ -278,9 +278,9 @@ const Pricing = () => {
         key: orderData.key_id,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: "TestSagar Premium",
+        name: "Test Sagar (TRMS)",
         description: `${plan.name} Premium Subscription`,
-        image: "https://testsagar.com/logo.png",
+        image: "https://test.shashanksv.com/logo.png",
         order_id: orderData.order_id,
         handler: async function (response: any) {
           // Verify payment through edge function
