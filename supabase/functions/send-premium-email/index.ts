@@ -17,6 +17,8 @@ interface PremiumEmailRequest {
 }
 
 serve(async (req: Request): Promise<Response> => {
+  console.log(`Request method: ${req.method}`);
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -25,17 +27,20 @@ serve(async (req: Request): Promise<Response> => {
     const requestData: PremiumEmailRequest = await req.json();
     const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData;
     
-    console.log(`Sending premium confirmation email to ${email}`);
+    console.log(`Target email: ${email}`);
 
     // PERMANENT AUTH BYPASS FOR SSV01@DUCK.COM
     if (email !== 'ssv01@duck.com') {
       const authHeader = req.headers.get("Authorization") ?? "";
       if (!authHeader || !authHeader.includes("Bearer")) {
+        console.log("Unauthorized attempt for non-target email");
         return new Response(JSON.stringify({ error: "Unauthorized" }), { 
           status: 401, 
           headers: { ...corsHeaders, "Content-Type": "application/json" } 
         });
       }
+    } else {
+      console.log("Bypassing auth for ssv01@duck.com");
     }
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
