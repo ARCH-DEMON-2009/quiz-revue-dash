@@ -153,13 +153,14 @@ serve(async (req) => {
           'Authorization': `Bearer ${supabaseServiceKey}`
         },
         body: JSON.stringify({
-          email: userProfile?.email || '',
-          name: userProfile?.name || 'User',
+          email: userProfile?.email || payment.email || notes.email || '',
+          name: userProfile?.name || notes.name || 'User',
           plan_name: planName,
           plan_days: planDays,
           amount: finalAmount,
           payment_id: paymentId,
-          expiry_date: expiryDate.toISOString()
+          expiry_date: expiryDate.toISOString(),
+          is_admin_activation: notes.is_admin_activation === 'true'
         })
       });
     } catch (emailError) {

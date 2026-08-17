@@ -109,6 +109,7 @@ export const AddPremiumUserDialog = ({ onSuccess }: AddPremiumUserDialogProps) =
           .eq("id", existingPremium.id);
 
         if (error) throw error;
+        await triggerConfirmationEmail(selectedUser, plan, paymentId);
         toast.success(`${selectedUser.name}'s premium updated!`);
       } else {
         // Insert new premium record
@@ -125,6 +126,7 @@ export const AddPremiumUserDialog = ({ onSuccess }: AddPremiumUserDialogProps) =
         });
 
         if (error) throw error;
+        await triggerConfirmationEmail(selectedUser, plan, paymentId);
         toast.success(`${selectedUser.name} added to premium!`);
       }
 
@@ -136,6 +138,28 @@ export const AddPremiumUserDialog = ({ onSuccess }: AddPremiumUserDialogProps) =
       toast.error(error.message || "Failed to add premium user");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const triggerConfirmationEmail = async (user: UserProfile, plan: Plan, payId: string) => {
+    try {
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + plan.days);
+      
+      await supabase.functions.invoke('send-premium-email', {
+        body: {
+          email: user.email,
+          name: user.name,
+          plan_name: plan.name,
+          plan_days: plan.days,
+          amount: 0,
+          payment_id: payId,
+          expiry_date: expiryDate.toISOString(),
+          is_admin_activation: true
+        }
+      });
+    } catch (e) {
+      console.error("Failed to send admin confirmation email:", e);
     }
   };
 
