@@ -41,6 +41,7 @@ const TncTests = () => {
   const [category, setCategory] = useState("All");
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [cached, setCached] = useState(false);
 
   const loadTests = () => {
     setLoading(true);
@@ -49,6 +50,7 @@ const TncTests = () => {
       .then((res) => {
         setQuizzes(res.quizzes);
         setTotal(res.total);
+        setCached(!!res.cached);
       })
       .catch((e) => {
         console.error(e);
