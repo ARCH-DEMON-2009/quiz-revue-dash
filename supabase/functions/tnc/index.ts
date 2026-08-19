@@ -283,7 +283,7 @@ function parseQuestion(row: any) {
   };
 }
 
-async function listTests(page: number, limit: number) {
+async function listTestsLive(page: number, limit: number) {
   const data = await fetchFromCRM({
     fn: "common_fn",
     se: "fe",
@@ -294,10 +294,10 @@ async function listTests(page: number, limit: number) {
   const valid = data.filter((row: any) => (row.qu_refid ?? []).length > 0);
   valid.sort((a: any, b: any) => (b.examno ?? 0) - (a.examno ?? 0));
   const quizzes = valid.slice((page - 1) * limit, page * limit).map(parseExam);
-  return { quizzes, total: valid.length, page, limit };
+  return { quizzes, total: valid.length, page, limit, all: valid.map(parseExam) };
 }
 
-async function getTest(examId: string) {
+async function getTestLive(examId: string) {
   const examData = await fetchFromCRM({
     fn: "common_fn",
     se: "fe",
@@ -342,6 +342,118 @@ async function getTest(examId: string) {
 
   return { ...parseExam(exam), questions };
 }
+
+// ============================================================================
+// Offline mirror: every successful CRM read is written to `tnc_exam_cache`
+// (service-role only table). If the CRM is down we serve the mirror instead so
+// users can still browse and take previously synced tests. Answer keys stay
+// server-side exactly as with live data.
+// ============================================================================
+
+function examRow(exam: any) {
+  return {
+    exam_id: exam.examId,
+    exam_no: exam.examNo ?? 0,
+    name: exam.name ?? "Quiz",
+    max_marks: exam.maxMarks ?? 0,
+    negative_marks: exam.negativeMarks ?? 0.33,
+    duration_minutes: String(exam.durationMinutes ?? "90"),
+    question_count: exam.questionCount ?? 0,
+    allow_for_premium: !!exam.allowForPremium,
+    crm_created_at: exam.createdAt ?? null,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+function rowToExam(row: any) {
+  return {
+    examId: row.exam_id,
+    examNo: row.exam_no ?? 0,
+    name: row.name ?? "Quiz",
+    maxMarks: Number(row.max_marks ?? 0),
+    negativeMarks: Number(row.negative_marks ?? 0.33),
+    durationMinutes: String(row.duration_minutes ?? "90"),
+    questionCount: row.question_count ?? 0,
+    allowForPremium: !!row.allow_for_premium,
+    createdAt: row.crm_created_at ?? null,
+  };
+}
+
+async function syncExams(exams: any[]) {
+  if (!exams.length) return;
+  try {
+    await adminClient()
+      .from("tnc_exam_cache")
+      .upsert(exams.map(examRow), { onConflict: "exam_id" });
+  } catch (e) {
+    console.error("tnc_exam_cache exam sync failed", e);
+  }
+}
+
+async function syncExamWithQuestions(exam: any) {
+  try {
+    await adminClient()
+      .from("tnc_exam_cache")
+      .upsert([{
+        ...examRow(exam),
+        question_count: exam.questions?.length ?? exam.questionCount ?? 0,
+        questions: exam.questions ?? [],
+        questions_synced_at: new Date().toISOString(),
+      }], { onConflict: "exam_id" });
+  } catch (e) {
+    console.error("tnc_exam_cache question sync failed", e);
+  }
+}
+
+async function listTests(page: number, limit: number) {
+  try {
+    const live = await listTestsLive(page, limit);
+    // Fire-and-forget mirror of the full list so the fallback stays fresh.
+    await syncExams(live.all ?? []);
+    const { all: _all, ...rest } = live as any;
+    return { ...rest, cached: false };
+  } catch (e) {
+    console.error("CRM list failed, falling back to cache", e);
+    const admin = adminClient();
+    const { data, count } = await admin
+      .from("tnc_exam_cache")
+      .select("*", { count: "exact" })
+      .order("exam_no", { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+    if (!data || data.length === 0) throw e;
+    return {
+      quizzes: data.map(rowToExam),
+      total: count ?? data.length,
+      page,
+      limit,
+      cached: true,
+    };
+  }
+}
+
+async function getTest(examId: string) {
+  try {
+    const live = await getTestLive(examId);
+    if (live) {
+      await syncExamWithQuestions(live);
+      return { ...live, cached: false };
+    }
+    // Not found upstream — fall through to the mirror below.
+  } catch (e) {
+    console.error("CRM test fetch failed, falling back to cache", e);
+  }
+
+  const { data } = await adminClient()
+    .from("tnc_exam_cache")
+    .select("*")
+    .eq("exam_id", examId)
+    .maybeSingle();
+  const questions = Array.isArray(data?.questions) ? data!.questions : [];
+  if (!data || questions.length === 0) return null;
+  return { ...rowToExam(data), questions, cached: true };
+}
+
+
 
 async function saveAttempt(body: any) {
   const admin = createClient(

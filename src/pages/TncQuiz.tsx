@@ -161,7 +161,12 @@ const TncQuiz = () => {
     setLoadError(false);
     setAccessRequired(false);
     fetchTncTest(examId)
-      .then((res) => setExam(res))
+      .then((res) => {
+        setExam(res);
+        if (res.cached) {
+          toast.info("Provider is temporarily unreachable — loaded your saved copy of this test.");
+        }
+      })
       .catch((e) => {
         console.error(e);
         if (e instanceof TncApiError && (e.code === "verification_required" || e.code === "premium_required")) {
