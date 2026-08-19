@@ -261,7 +261,9 @@ const TncTests = () => {
               </Card>
             ))}
           </div>
+          </>
         )}
+
 
         {/* Pagination */}
         {!loading && totalPages > 1 && (
