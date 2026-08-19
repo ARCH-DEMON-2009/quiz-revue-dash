@@ -27,6 +27,8 @@ export interface TncQuestion {
 
 export interface TncExamWithQuestions extends TncExam {
   questions: TncQuestion[];
+  /** True when the test came from the offline backup because the provider was unreachable. */
+  cached?: boolean;
 }
 
 export interface TncListResponse {
@@ -34,6 +36,8 @@ export interface TncListResponse {
   total: number;
   page: number;
   limit: number;
+  /** True when the list came from the offline backup because the provider was unreachable. */
+  cached?: boolean;
 }
 
 export class TncApiError extends Error {
