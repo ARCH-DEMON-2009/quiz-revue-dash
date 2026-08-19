@@ -212,6 +212,18 @@ const TncTests = () => {
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground">No tests found.</div>
         ) : (
+          <>
+          {cached && (
+            <Card className="mb-4 flex items-start gap-3 border-amber-500/40 bg-amber-500/10 p-4">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+              <p className="text-sm text-muted-foreground">
+                The TNC provider is temporarily unreachable, so you're seeing your saved test
+                series. Newly added tests may be missing until the provider is back — everything
+                shown here can still be attempted normally.
+              </p>
+            </Card>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((q) => (
               <Card key={q.examId} className="flex flex-col p-5 card-hover group">
