@@ -664,6 +664,51 @@ export type Database = {
         }
         Relationships: []
       }
+      tnc_exam_cache: {
+        Row: {
+          allow_for_premium: boolean
+          crm_created_at: string | null
+          duration_minutes: string
+          exam_id: string
+          exam_no: number
+          max_marks: number
+          name: string
+          negative_marks: number
+          question_count: number
+          questions: Json | null
+          questions_synced_at: string | null
+          synced_at: string
+        }
+        Insert: {
+          allow_for_premium?: boolean
+          crm_created_at?: string | null
+          duration_minutes?: string
+          exam_id: string
+          exam_no?: number
+          max_marks?: number
+          name?: string
+          negative_marks?: number
+          question_count?: number
+          questions?: Json | null
+          questions_synced_at?: string | null
+          synced_at?: string
+        }
+        Update: {
+          allow_for_premium?: boolean
+          crm_created_at?: string | null
+          duration_minutes?: string
+          exam_id?: string
+          exam_no?: number
+          max_marks?: number
+          name?: string
+          negative_marks?: number
+          question_count?: number
+          questions?: Json | null
+          questions_synced_at?: string | null
+          synced_at?: string
+        }
+        Relationships: []
+      }
       user_analytics: {
         Row: {
           average_score: number | null
