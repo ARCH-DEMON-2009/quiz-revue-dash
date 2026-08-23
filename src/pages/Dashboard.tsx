@@ -73,7 +73,7 @@ const Dashboard = () => {
   const availableClasses = Array.from(new Set(tests.map(test => test.stream)));
   const filteredTests = selectedClass ? tests.filter(test => test.stream === selectedClass) : [];
   if (!user) {
-    return null;
+    return authChecked ? <Landing /> : null;
   }
   return <LinkShortenerGate>
     <Helmet>
