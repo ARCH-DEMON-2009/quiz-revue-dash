@@ -13,6 +13,7 @@ import FloatingBackground from "@/components/FloatingBackground";
 import TelegramPopup from "@/components/TelegramPopup";
 import Footer from "@/components/Footer";
 import { LinkShortenerGate } from "@/components/LinkShortenerGate";
+import Landing from "@/pages/Landing";
 interface Test {
   id: string;
   name: string;
