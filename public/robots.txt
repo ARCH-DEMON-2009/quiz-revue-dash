@@ -1,6 +1,9 @@
 User-agent: Googlebot
 Allow: /
 
+User-agent: Mediapartners-Google
+Allow: /
+
 User-agent: Bingbot
 Allow: /
 
@@ -12,5 +15,17 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# Utility screens with no publisher content — keep them out of the index so
+# they are never treated as thin pages or served ads.
+Disallow: /auth
+Disallow: /forgot-password
+Disallow: /verify
+Disallow: /admin
+Disallow: /profile
+Disallow: /results/
+Disallow: /review/
+Disallow: /quiz
+Disallow: /comparison
 
 Sitemap: https://test.shashanksv.com/sitemap.xml

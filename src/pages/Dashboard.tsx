@@ -13,6 +13,7 @@ import FloatingBackground from "@/components/FloatingBackground";
 import TelegramPopup from "@/components/TelegramPopup";
 import Footer from "@/components/Footer";
 import { LinkShortenerGate } from "@/components/LinkShortenerGate";
+import Landing from "@/pages/Landing";
 interface Test {
   id: string;
   name: string;
@@ -27,6 +28,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
@@ -39,10 +41,15 @@ const Dashboard = () => {
       }
     } = await supabase.auth.getUser();
     if (!user) {
-      navigate("/auth");
+      // Show the public landing page instead of bouncing visitors (and crawlers)
+      // to a bare login screen.
+      setUser(null);
+      setAuthChecked(true);
+      setLoading(false);
       return;
     }
     setUser(user);
+    setAuthChecked(true);
     fetchTests();
   };
   const fetchTests = async () => {
@@ -67,7 +74,7 @@ const Dashboard = () => {
   const availableClasses = Array.from(new Set(tests.map(test => test.stream)));
   const filteredTests = selectedClass ? tests.filter(test => test.stream === selectedClass) : [];
   if (!user) {
-    return null;
+    return authChecked ? <Landing /> : null;
   }
   return <LinkShortenerGate>
     <Helmet>
