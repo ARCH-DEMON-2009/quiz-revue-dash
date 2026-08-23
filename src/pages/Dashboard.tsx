@@ -39,10 +39,15 @@ const Dashboard = () => {
       }
     } = await supabase.auth.getUser();
     if (!user) {
-      navigate("/auth");
+      // Show the public landing page instead of bouncing visitors (and crawlers)
+      // to a bare login screen.
+      setUser(null);
+      setAuthChecked(true);
+      setLoading(false);
       return;
     }
     setUser(user);
+    setAuthChecked(true);
     fetchTests();
   };
   const fetchTests = async () => {
