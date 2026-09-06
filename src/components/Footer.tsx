@@ -26,6 +26,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/about" className="text-muted-foreground hover:text-primary text-sm transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact" className="text-muted-foreground hover:text-primary text-sm transition-colors">
                   Contact Us
                 </Link>
@@ -49,6 +54,11 @@ const Footer = () => {
               <li>
                 <Link to="/shipping-policy" className="text-muted-foreground hover:text-primary text-sm transition-colors">
                   Shipping Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/disclaimer" className="text-muted-foreground hover:text-primary text-sm transition-colors">
+                  Disclaimer
                 </Link>
               </li>
             </ul>

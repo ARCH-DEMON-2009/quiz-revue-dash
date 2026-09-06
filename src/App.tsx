@@ -23,6 +23,8 @@ import ContactUs from "./pages/ContactUs";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import AboutUs from "./pages/AboutUs";
+import Disclaimer from "./pages/Disclaimer";
 import NotFound from "./pages/NotFound";
 import Verify from "./pages/Verify";
 import TncTests from "./pages/TncTests";
@@ -106,6 +108,8 @@ const App = () => {
             <Route path="/shipping-policy" element={<ShippingPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/about" element={<AboutUs />} />
+            <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/tnc-tests" element={<TncTests />} />
