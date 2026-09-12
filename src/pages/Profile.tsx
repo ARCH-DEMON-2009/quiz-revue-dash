@@ -683,9 +683,42 @@ const Profile = () => {
                 )}
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader className="p-3 sm:p-4 lg:p-6">
+                <CardTitle className="text-base sm:text-lg lg:text-xl">How to read these numbers</CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 sm:p-4 lg:p-6 pt-0 space-y-4 text-sm leading-relaxed text-muted-foreground">
+                <p>
+                  <span className="font-semibold text-foreground">Accuracy is not the same as score.</span> Accuracy
+                  counts only the questions you attempted, while your score also reflects negative marking and the
+                  questions you skipped. A student with 80% accuracy on half the paper usually ranks below one with 65%
+                  accuracy on the whole paper, so treat a rising accuracy figure as meaningful only when your attempt
+                  count is holding steady too.
+                </p>
+                <p>
+                  <span className="font-semibold text-foreground">Subject bars show where to spend this week.</span> The
+                  weakest bar is rarely a knowledge gap across the entire subject — open two or three recent papers from
+                  the list above and check whether the wrong answers cluster in the same chapters. Revise those chapters
+                  first, then re-attempt the same test after a few days to confirm the fix.
+                </p>
+                <p>
+                  <span className="font-semibold text-foreground">One bad test is not a trend.</span> Scores swing with
+                  sleep, paper difficulty and time of day. Compare a group of five attempts against the previous five
+                  rather than reacting to a single result, and use the comparison page to see the direction of travel
+                  for a specific exam type.
+                </p>
+                <p>
+                  <span className="font-semibold text-foreground">Time taken matters as much as marks.</span> If you
+                  finish well inside the limit but lose marks, you are guessing too fast; if you run out of time with
+                  questions untouched, practise sectional timing before attempting another full-length paper.
+                </p>
+              </CardContent>
+            </Card>
           </>
         )}
       </main>
+
 
       <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
         <DialogContent className="sm:max-w-md">

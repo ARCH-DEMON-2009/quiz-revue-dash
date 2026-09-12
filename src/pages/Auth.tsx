@@ -82,8 +82,10 @@ const Auth = () => {
   if (user && user.user_metadata?.whatsapp_number) return null;
 
   return (
-    <div className="min-height-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 to-emerald-50">
-      <Card className="w-full max-w-md shadow-2xl border-indigo-100">
+    <div className="min-h-screen p-4 py-8 bg-gradient-to-br from-indigo-50 to-emerald-50">
+      <div className="mx-auto grid w-full max-w-5xl items-start gap-8 lg:grid-cols-2">
+      <Card className="w-full max-w-md mx-auto shadow-2xl border-indigo-100">
+
         <CardHeader className="space-y-4 text-center">
           <div 
             className="flex flex-col items-center cursor-pointer transition-transform hover:scale-105"
@@ -203,7 +205,83 @@ const Auth = () => {
           </form>
         </CardContent>
       </Card>
+
+      <section className="space-y-6 text-gray-700">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isLogin ? "Sign in to continue your preparation" : "Start preparing with Test Sagar"}
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed">
+            Test Sagar is a mock test platform for students preparing for medical, engineering and nursing entrance
+            exams. An account keeps every attempt, score and mistake in one place, so your practice builds on itself
+            instead of starting from zero each week.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-gray-900">What your account keeps for you</h2>
+          <ul className="space-y-3 text-sm leading-relaxed">
+            <li>
+              <span className="font-semibold text-gray-900">Your full attempt history.</span> Every test you finish is
+              saved with your answers, the correct answers and the time you spent, so you can revisit a paper months
+              later and see exactly where marks slipped away.
+            </li>
+            <li>
+              <span className="font-semibold text-gray-900">Subject-wise accuracy.</span> Your results are broken down
+              by subject and topic, which shows whether a low score came from weak concepts or from rushing the last
+              ten questions.
+            </li>
+            <li>
+              <span className="font-semibold text-gray-900">Weekly rankings.</span> Scores feed a weekly leaderboard so
+              you can compare your performance against other students attempting the same papers.
+            </li>
+            <li>
+              <span className="font-semibold text-gray-900">Downloadable question papers.</span> Finished tests can be
+              saved as PDFs for revision away from the screen.
+            </li>
+          </ul>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-gray-900">Why we ask for a WhatsApp number</h2>
+          <p className="text-sm leading-relaxed">
+            New test series, result corrections and account or payment issues are handled over WhatsApp, because that
+            reaches students faster than email. We use the number only for these updates and for verifying your account
+            if you ever lose access to your email. We never sell contact details, and you can ask us to remove your
+            number at any time.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-gray-900">Choosing your email address</h2>
+          <p className="text-sm leading-relaxed">
+            Please sign up with a real, permanent inbox such as Gmail or your college address. Temporary and disposable
+            mail services are blocked, since confirmation links, premium receipts and password resets all travel by
+            email and cannot be recovered once a throwaway address expires.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-gray-900">Trouble signing in?</h2>
+          <p className="text-sm leading-relaxed">
+            If the confirmation email has not arrived, check your spam folder before requesting another one. For a
+            forgotten password, a blocked account or premium that has not activated, message our support assistant on
+            Telegram at{" "}
+            <a
+              href="https://t.me/TestSagarHelpRobot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-indigo-600 hover:underline"
+            >
+              @TestSagarHelpRobot
+            </a>{" "}
+            and include the email address on your account.
+          </p>
+        </div>
+      </section>
+      </div>
     </div>
+
   );
 };
 
