@@ -83,12 +83,6 @@ const plans: PricingPlan[] = [
   },
 ];
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
 const Pricing = () => {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan | null>(null);
@@ -103,10 +97,11 @@ const Pricing = () => {
   const [loading, setLoading] = useState(false);
   const [promoLoading, setPromoLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualDetails, setManualDetails] = useState<ManualPaymentDetails | null>(null);
 
   useEffect(() => {
     checkAuth();
-    loadRazorpay();
   }, []);
 
   const checkAuth = async () => {
@@ -119,12 +114,6 @@ const Pricing = () => {
     setUser(user);
   };
 
-  const loadRazorpay = () => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  };
 
   const applyPromoCode = async () => {
     if (!promoCode.trim()) {
