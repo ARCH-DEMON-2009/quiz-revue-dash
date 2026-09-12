@@ -82,8 +82,10 @@ const Auth = () => {
   if (user && user.user_metadata?.whatsapp_number) return null;
 
   return (
-    <div className="min-height-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-50 to-emerald-50">
-      <Card className="w-full max-w-md shadow-2xl border-indigo-100">
+    <div className="min-h-screen p-4 py-8 bg-gradient-to-br from-indigo-50 to-emerald-50">
+      <div className="mx-auto grid w-full max-w-5xl items-start gap-8 lg:grid-cols-2">
+      <Card className="w-full max-w-md mx-auto shadow-2xl border-indigo-100">
+
         <CardHeader className="space-y-4 text-center">
           <div 
             className="flex flex-col items-center cursor-pointer transition-transform hover:scale-105"
