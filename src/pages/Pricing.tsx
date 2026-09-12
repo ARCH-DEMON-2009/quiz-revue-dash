@@ -465,13 +465,14 @@ const Pricing = () => {
             ) : (
               <>
                 <Crown className="h-5 w-5 mr-2" />
-                {selectedPlan ? `Pay ₹${calculateFinalPrice(selectedPlan)}` : "Select a plan"}
+                {selectedPlan ? `Get Premium · ₹${calculateFinalPrice(selectedPlan)}` : "Select a plan"}
               </>
             )}
           </Button>
           <p className="text-xs text-muted-foreground mt-3">
-            Secure payment powered by Razorpay
+            Online payment is temporarily unavailable — our team activates premium manually within a few hours.
           </p>
+
         </div>
 
         {/* Features */}
