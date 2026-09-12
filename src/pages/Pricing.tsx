@@ -191,30 +191,27 @@ const Pricing = () => {
 
     setLoading(true);
     setSelectedPlan(plan);
-    
-    // Recalculate if promo was applied to a different plan
+
     let finalPrice = plan.price;
     let promoToUse = appliedPromo;
-    
+
     if (appliedPromo && selectedPlan?.id !== plan.id) {
-      // Promo was applied to different plan, need to revalidate
       promoToUse = null;
     } else if (appliedPromo) {
       finalPrice = appliedPromo.final_price;
     }
 
     try {
-      // Get user profile
       const { data: profile } = await supabase
         .from("user_profiles")
-        .select("name, email")
+        .select("name, email, whatsapp_number")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      // Handle FREE orders (100% discount) - skip Razorpay
+      // Handle FREE orders (100% discount) - no payment gateway needed
       if (finalPrice === 0) {
         toast.info("Activating your free premium...");
-        
+
         const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
           body: {
             razorpay_order_id: `free_${Date.now()}`,
@@ -243,125 +240,32 @@ const Pricing = () => {
         return;
       }
 
-      // Create order through edge function for paid orders
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
-        body: {
-          amount: finalPrice,
-          currency: 'INR',
-          receipt: `premium_${user.id}_${Date.now()}`,
-          notes: {
-            plan_id: plan.id,
-            plan_name: plan.name,
-            plan_days: String(plan.durationDays),
-            original_amount: String(plan.price),
-            final_amount: String(finalPrice),
-            user_id: user.id,
-            promo_code: promoToUse?.code || null
-          }
-        }
+      // Online payments are temporarily unavailable — route the user to
+      // assisted activation via the support assistant with their details ready.
+      setManualDetails({
+        name: profile?.name || user.user_metadata?.name || "Student",
+        email: profile?.email || user.email || "",
+        whatsapp: profile?.whatsapp_number || user.user_metadata?.whatsapp_number || null,
+        userId: user.id,
+        planId: plan.id,
+        planName: plan.name,
+        planDuration: plan.duration,
+        price: finalPrice,
+        originalPrice: plan.price,
+        promoCode: promoToUse?.code || null,
       });
-
-      if (orderError) throw orderError;
-      
-      if (orderData.error) {
-        throw new Error(orderData.error);
-      }
-
-      // Ensure Razorpay is loaded
-      if (!window.Razorpay) {
-        toast.error("Payment gateway not loaded. Please refresh the page.");
-        setLoading(false);
-        return;
-      }
-
-      const options = {
-        key: orderData.key_id,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Test Sagar (TRMS)",
-        description: `${plan.name} Premium Subscription`,
-        image: "https://test.shashanksv.com/logo.png",
-        order_id: orderData.order_id,
-        handler: async function (response: any) {
-          // Verify payment through edge function
-          try {
-            toast.info("Verifying payment...");
-            
-            const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                user_id: user.id,
-                plan_id: plan.id,
-                plan_name: plan.name,
-                plan_days: plan.durationDays,
-                original_amount: plan.price,
-                final_amount: finalPrice,
-                promo_code: promoToUse?.code || null
-              }
-            });
-
-            if (verifyError) throw verifyError;
-
-            if (verifyData.success) {
-              toast.success("Payment successful! Welcome to Premium!");
-              navigate("/");
-            } else {
-              toast.error(verifyData.error || "Payment verification failed");
-            }
-          } catch (err) {
-            console.error("Error verifying payment:", err);
-            toast.error("Payment received but verification failed. Contact support with payment ID: " + response.razorpay_payment_id);
-          } finally {
-            setLoading(false);
-          }
-        },
-        prefill: {
-          name: profile?.name || "",
-          email: user.email || "",
-          contact: "",
-        },
-        notes: {
-          plan_id: plan.id,
-          plan_name: plan.name,
-          user_id: user.id,
-        },
-        theme: {
-          color: "#6366f1",
-        },
-        modal: {
-          ondismiss: function() {
-            setLoading(false);
-            toast.info("Payment cancelled");
-          },
-          escape: true,
-          backdropclose: false,
-        }
-      };
-
-      const rzp = new window.Razorpay(options);
-      
-      rzp.on('payment.failed', function (response: any) {
-        console.error("Payment failed:", response.error);
-        toast.error(`Payment failed: ${response.error.description}`);
-        setLoading(false);
-      });
-      
-      rzp.open();
+      setManualOpen(true);
+      setLoading(false);
     } catch (error: any) {
       console.error("Payment error:", error);
-      const message =
-        error?.context?.error ||
-        error?.message ||
-        "'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Edge Function returned a non-2xx status code";
-      toast.error(message, {
+      toast.error(error?.message || "Something went wrong. Please try again.", {
         description: "If this keeps happening, please contact support.",
         duration: 6000,
       });
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background">
