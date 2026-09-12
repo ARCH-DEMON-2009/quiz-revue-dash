@@ -507,6 +507,9 @@ const Pricing = () => {
           </p>
         </div>
       </main>
+
+      <ManualPaymentDialog open={manualOpen} onOpenChange={setManualOpen} details={manualDetails} />
+
     </div>
   );
 };
