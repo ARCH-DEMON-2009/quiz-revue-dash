@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft, Percent, Crown, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
+import { ManualPaymentDialog, type ManualPaymentDetails } from "@/components/ManualPaymentDialog";
+
 
 interface PricingPlan {
   id: string;
