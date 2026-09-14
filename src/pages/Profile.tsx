@@ -331,8 +331,8 @@ const Profile = () => {
           <Card className="mb-4 sm:mb-6 lg:mb-8 bg-gradient-to-br from-card to-muted/30">
             <CardHeader className="p-3 sm:p-4 lg:p-6 pb-0">
               <CardTitle className="text-base sm:text-lg lg:text-xl flex flex-col gap-4">
-                <div className="flex items-center justify-between gap-3 w-full">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 w-full min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="relative h-16 w-16">
                       <div className="absolute inset-0 z-10 pointer-events-none overflow-visible">
                         {isAdmin ? (
@@ -382,17 +382,17 @@ const Profile = () => {
                         </div>
                       ) : null}
                     </div>
-                    <div>
-                      <h2 className={`text-xl font-bold ${isAdmin ? getAdminNameColor(true) : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
-                      <p className="text-sm text-muted-foreground">{userDetails.email}</p>
+                    <div className="min-w-0 flex-1">
+                      <h2 className={`text-lg sm:text-xl font-bold truncate ${isAdmin ? getAdminNameColor(true) : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">{userDetails.email}</p>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                     <Button 
                       variant="outline" 
                       size="sm" 
                       onClick={handleNameChange}
-                      className="gap-2"
+                      className="gap-2 flex-1 sm:flex-none min-w-0"
                     >
                       <User className="h-4 w-4" />
                       Edit Name
@@ -401,9 +401,9 @@ const Profile = () => {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setShowAvatarSelector(!showAvatarSelector)}
-                      className="gap-2"
+                      className="gap-2 flex-1 sm:flex-none min-w-0"
                     >
-                      <Sparkles className="h-4 w-4" />
+                      <Sparkles className="h-4 w-4 shrink-0" />
                       {showAvatarSelector ? "Hide List" : "Change Avatar"}
                     </Button>
                   </div>
@@ -414,7 +414,7 @@ const Profile = () => {
               <div className="space-y-4">
                 {showAvatarSelector && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                       <p className="text-sm font-semibold text-muted-foreground">Select Avatar</p>
                       {accessStatus?.type !== 'premium' && (
                         <Button variant="link" size="sm" className="text-amber-600 h-auto p-0" onClick={() => navigate("/pricing")}>
