@@ -86,6 +86,8 @@ const Profile = () => {
     mathsAccuracy: 0,
   });
   const [recentTests, setRecentTests] = useState<any[]>([]);
+  const [bestScore, setBestScore] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
   const [loading, setLoading] = useState(true);
   const [accessStatus, setAccessStatus] = useState<AccessStatus | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
@@ -285,6 +287,29 @@ const Profile = () => {
           chemistryAccuracy: chemistryTotal > 0 ? (chemistryCorrect / chemistryTotal) * 100 : 0,
           mathsAccuracy: mathsTotal > 0 ? (mathsCorrect / mathsTotal) * 100 : 0,
         });
+
+        setBestScore(Math.max(...results.map((r) => r.percentage || 0)));
+
+        // Consecutive-day practice streak (counting today or yesterday as the start)
+        const dayKeys = Array.from(
+          new Set(
+            results
+              .filter((r) => r.completed_at)
+              .map((r) => new Date(r.completed_at as string).toDateString())
+          )
+        ).map((d) => new Date(d).getTime());
+        dayKeys.sort((a, b) => b - a);
+        const DAY = 86400000;
+        const today = new Date(new Date().toDateString()).getTime();
+        let streak = 0;
+        if (dayKeys.length && (today - dayKeys[0]) / DAY <= 1) {
+          streak = 1;
+          for (let i = 1; i < dayKeys.length; i++) {
+            if ((dayKeys[i - 1] - dayKeys[i]) / DAY === 1) streak++;
+            else break;
+          }
+        }
+        setStreakDays(streak);
 
         setRecentTests(results.slice(0, 5));
       }
