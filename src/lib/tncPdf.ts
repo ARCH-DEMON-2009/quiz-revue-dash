@@ -57,6 +57,47 @@ async function urlToDataUrl(url: string): Promise<string | null> {
   }
 }
 
+/**
+ * Re-encode a data URL to PNG through a canvas.
+ * Needed because jsPDF cannot embed SVG/WEBP avatars (dicebear, Google photos).
+ */
+function toPngDataUrl(dataUrl: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const size = Math.max(64, Math.min(512, img.naturalWidth || 256));
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(null);
+        ctx.drawImage(img, 0, 0, size, size);
+        resolve(canvas.toDataURL("image/png"));
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+
+/**
+ * Load a candidate avatar/frame/badge for embedding.
+ * Cross-origin avatar hosts block direct fetch, so fall back to the TNC image
+ * proxy, then normalise everything to PNG so jsPDF can always draw it.
+ */
+async function loadPdfImage(url: string): Promise<string | null> {
+  let data = await urlToDataUrl(url);
+  if (!data && /^https?:/i.test(url)) data = await fetchTncImageDataUrl(url);
+  if (!data) return null;
+  if (data.startsWith("data:image/png") || data.startsWith("data:image/jpeg") || data.startsWith("data:image/jpg")) {
+    return data;
+  }
+  return (await toPngDataUrl(data)) ?? null;
+}
+
 /** Get the natural pixel dimensions of a data URL. */
 function imageSize(dataUrl: string): Promise<{ w: number; h: number }> {
   return new Promise((resolve) => {
@@ -172,9 +213,9 @@ export async function downloadTncResultPdf(args: PdfArgs) {
   // Preload logo + candidate identity art + all question images.
   const [logo, avatarImg, frameImg, badgeImg] = await Promise.all([
     urlToDataUrl(LOGO_PATH),
-    args.avatarUrl ? urlToDataUrl(args.avatarUrl) : Promise.resolve(null),
-    args.frameUrl ? urlToDataUrl(args.frameUrl) : Promise.resolve(null),
-    args.badgeUrl ? urlToDataUrl(args.badgeUrl) : Promise.resolve(null),
+    args.avatarUrl ? loadPdfImage(args.avatarUrl) : Promise.resolve(null),
+    args.frameUrl ? loadPdfImage(args.frameUrl) : Promise.resolve(null),
+    args.badgeUrl ? loadPdfImage(args.badgeUrl) : Promise.resolve(null),
   ]);
   let logoRatio = 1;
   if (logo) {
