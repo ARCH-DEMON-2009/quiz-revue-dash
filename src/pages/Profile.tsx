@@ -643,6 +643,17 @@ const Profile = () => {
               </Card>
             </div>
 
+            <MilestoneBadges
+              stats={{
+                totalTests: stats.totalTests,
+                overallAccuracy: stats.overallAccuracy,
+                bestScore,
+                streakDays,
+              }}
+            />
+
+
+
             <Card className="mb-4 sm:mb-6 lg:mb-8">
               <CardHeader className="p-3 sm:p-4 lg:p-6">
                 <CardTitle className="text-base sm:text-lg lg:text-xl">Subject-wise Performance</CardTitle>
