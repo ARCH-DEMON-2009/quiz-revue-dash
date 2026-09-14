@@ -219,7 +219,13 @@ function shouldAlert(key: string) {
   return true;
 }
 
-const ALLOWED_IMG_HOSTS = new Set<string>();
+const ALLOWED_IMG_HOSTS = new Set<string>([
+  // Avatar hosts used on the profile page (embedded in result PDFs).
+  "i.pinimg.com",
+  "lh3.googleusercontent.com",
+  "api.dicebear.com",
+  "avatars.githubusercontent.com",
+]);
 try {
   ALLOWED_IMG_HOSTS.add(new URL(CRM_BASE).host);
 } catch {
