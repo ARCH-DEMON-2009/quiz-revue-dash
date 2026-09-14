@@ -293,3 +293,98 @@
   background: hsl(var(--primary) / 0.3);
   color: hsl(var(--foreground));
 }
+
+/* ============ Landing page: Midnight Aurora ============ */
+.landing-aurora {
+  --aurora-cyan: 187 92% 53%;
+  --aurora-violet: 258 90% 76%;
+  --aurora-deep: 222 47% 6%;
+  background:
+    radial-gradient(900px 520px at 15% -5%, hsl(var(--aurora-violet) / 0.22), transparent 70%),
+    radial-gradient(760px 460px at 85% 10%, hsl(var(--aurora-cyan) / 0.18), transparent 70%),
+    radial-gradient(700px 700px at 50% 110%, hsl(var(--aurora-violet) / 0.14), transparent 70%),
+    hsl(var(--aurora-deep));
+  color: hsl(210 40% 98%);
+  font-family: 'Figtree', system-ui, sans-serif;
+}
+
+.landing-aurora h1,
+.landing-aurora h2,
+.landing-aurora h3,
+.landing-aurora .font-display {
+  font-family: 'Outfit', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.aurora-text {
+  background: linear-gradient(100deg, hsl(var(--aurora-cyan)), hsl(var(--aurora-violet)) 60%, hsl(var(--aurora-cyan)));
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: auroraShift 9s ease-in-out infinite;
+}
+
+@keyframes auroraShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.aurora-card {
+  position: relative;
+  border-radius: 1.25rem;
+  border: 1px solid hsl(var(--aurora-cyan) / 0.16);
+  background: linear-gradient(160deg, hsl(0 0% 100% / 0.07), hsl(0 0% 100% / 0.02));
+  backdrop-filter: blur(14px);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.4s, box-shadow 0.4s;
+  transform-style: preserve-3d;
+}
+
+.aurora-card:hover {
+  transform: translateY(-6px) rotateX(3deg) rotateY(-3deg);
+  border-color: hsl(var(--aurora-cyan) / 0.45);
+  box-shadow: 0 24px 60px -24px hsl(var(--aurora-violet) / 0.55);
+}
+
+.aurora-orb {
+  position: absolute;
+  inset: 8%;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 50%, hsl(var(--aurora-violet) / 0.35), transparent 62%);
+  filter: blur(38px);
+  pointer-events: none;
+  animation: orbPulse 7s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+.aurora-grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(hsl(var(--aurora-cyan) / 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--aurora-cyan) / 0.12) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 75%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent 75%);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  animation: revealUp 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes revealUp {
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .aurora-text, .aurora-orb { animation: none; opacity: 1; transform: none; }
+  .aurora-card:hover { transform: none; }
+}
