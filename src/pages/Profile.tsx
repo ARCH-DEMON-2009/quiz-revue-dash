@@ -46,6 +46,8 @@ const AVATARS = [
   { id: 'p9', url: 'https://i.pinimg.com/736x/aa/20/dc/aa20dcdacd49131834639f61f8f8026d.jpg', premium: true },
   { id: 'p10', url: 'https://i.pinimg.com/736x/41/0c/ca/410ccab41a6ca4aa38a4de35da59bc43.jpg', premium: true },
   { id: 'p11', url: 'https://i.pinimg.com/736x/46/98/52/469852f2ac6c7ace80f5eb65a61aede2.jpg', premium: true },
+  { id: 'p12', url: 'https://i.pinimg.com/736x/b2/48/25/b24825560455f51aad495d5420fd6023.jpg', premium: true },
+  { id: 'p13', url: 'https://i.pinimg.com/1200x/0b/7a/44/0b7a4483a82294ecd3d77e703196e4de.jpg', premium: true },
 ];
 
 interface Stats {
