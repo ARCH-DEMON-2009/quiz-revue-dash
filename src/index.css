@@ -308,6 +308,21 @@
   font-family: 'Figtree', system-ui, sans-serif;
 }
 
+/* Blend the shared header and footer into the aurora page */
+.landing-aurora > nav,
+.landing-aurora > footer {
+  background: hsl(var(--aurora-deep) / 0.72) !important;
+  border-color: hsl(var(--aurora-cyan) / 0.14) !important;
+  color: hsl(210 40% 98%);
+}
+
+.landing-aurora > footer .text-muted-foreground,
+.landing-aurora > nav .text-muted-foreground {
+  color: hsl(215 25% 72%) !important;
+}
+
+
+
 .landing-aurora h1,
 .landing-aurora h2,
 .landing-aurora h3,
