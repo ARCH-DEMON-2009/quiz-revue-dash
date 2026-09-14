@@ -78,7 +78,7 @@ serve(async (req) => {
     }
 
     // Create order via Razorpay API
-    const authHeader = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
+    const razorpayBasicAuth = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
 
     // Razorpay receipt must be <= 40 chars
     const rawReceipt = receipt || `order_${Date.now()}`;
@@ -87,7 +87,7 @@ serve(async (req) => {
     const orderResponse = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${authHeader}`,
+        'Authorization': `Basic ${razorpayBasicAuth}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
