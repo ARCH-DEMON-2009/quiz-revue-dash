@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import IdentityPreviewCard from "@/components/IdentityPreviewCard";
+import MilestoneBadges from "@/components/MilestoneBadges";
 
 
 import {
