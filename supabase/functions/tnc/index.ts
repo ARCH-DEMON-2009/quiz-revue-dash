@@ -289,24 +289,51 @@ function parseQuestion(row: any) {
   };
 }
 
+/**
+ * Category rules, evaluated in order. Each rule carries the keywords it looks
+ * for so the UI can explain WHY a test landed in a category.
+ * Daily Dose intentionally comes first: daily practice papers (Morning Dose,
+ * Offline batch tests, RRB dailies) belong there even if the title also
+ * mentions another exam.
+ */
+const CATEGORY_RULES: { category: string; keywords: string[] }[] = [
+  { category: "Daily Dose", keywords: ["MORNING", "DOSE", "DAILY", "OFFLINE", "RRB"] },
+  { category: "NORCET", keywords: ["NORCET"] },
+  { category: "AIIMS", keywords: ["AIIMS"] },
+  { category: "SGPGI", keywords: ["SGPGI"] },
+  { category: "BTSC", keywords: ["BTSC"] },
+  { category: "CHO", keywords: ["CHO"] },
+  { category: "CHN", keywords: ["CHN"] },
+  { category: "OT", keywords: ["OT ", "THEATRE"] },
+];
+
 /** Same category rules as the client so counts and filtering agree. */
 function examCategory(name = "") {
-  const n = name.toUpperCase();
-  if (n.includes("NORCET")) return "NORCET";
-  if (n.includes("AIIMS")) return "AIIMS";
-  if (n.includes("SGPGI")) return "SGPGI";
-  if (n.includes("BTSC")) return "BTSC";
-  if (n.includes("CHO")) return "CHO";
-  if (n.includes("CHN")) return "CHN";
-  if (n.includes("OT ") || n.includes("THEATRE")) return "OT";
-  if (n.includes("MORNING") || n.includes("DOSE")) return "Daily Dose";
-  return "Other";
+  return classifyExam(name).category;
+}
+
+/** Returns the resolved category plus a human-readable reason. */
+function classifyExam(name = "") {
+  const n = String(name).toUpperCase();
+  for (const rule of CATEGORY_RULES) {
+    const hit = rule.keywords.find((k) => n.includes(k));
+    if (hit) {
+      return {
+        category: rule.category,
+        reason: `Test name contains "${hit.trim()}", so it is grouped under ${rule.category}.`,
+      };
+    }
+  }
+  return {
+    category: "Other",
+    reason: "Test name matches none of the exam keywords, so it is grouped under Other.",
+  };
 }
 
 function countByCategory(exams: any[]) {
   const counts: Record<string, number> = { All: exams.length };
   for (const e of exams) {
-    const c = examCategory(e.name);
+    const c = e.category ?? examCategory(e.name);
     counts[c] = (counts[c] ?? 0) + 1;
   }
   return counts;
