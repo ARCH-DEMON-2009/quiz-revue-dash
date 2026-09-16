@@ -36,6 +36,8 @@ export interface TncListResponse {
   total: number;
   page: number;
   limit: number;
+  /** Counts per category across the WHOLE catalogue (not just this page). */
+  categoryCounts?: Record<string, number>;
   /** True when the list came from the offline backup because the provider was unreachable. */
   cached?: boolean;
 }
