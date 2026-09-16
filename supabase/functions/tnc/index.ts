@@ -289,7 +289,30 @@ function parseQuestion(row: any) {
   };
 }
 
-async function listTestsLive(page: number, limit: number) {
+/** Same category rules as the client so counts and filtering agree. */
+function examCategory(name = "") {
+  const n = name.toUpperCase();
+  if (n.includes("NORCET")) return "NORCET";
+  if (n.includes("AIIMS")) return "AIIMS";
+  if (n.includes("SGPGI")) return "SGPGI";
+  if (n.includes("BTSC")) return "BTSC";
+  if (n.includes("CHO")) return "CHO";
+  if (n.includes("CHN")) return "CHN";
+  if (n.includes("OT ") || n.includes("THEATRE")) return "OT";
+  if (n.includes("MORNING") || n.includes("DOSE")) return "Daily Dose";
+  return "Other";
+}
+
+function countByCategory(exams: any[]) {
+  const counts: Record<string, number> = { All: exams.length };
+  for (const e of exams) {
+    const c = examCategory(e.name);
+    counts[c] = (counts[c] ?? 0) + 1;
+  }
+  return counts;
+}
+
+async function listTestsLive(page: number, limit: number, search = "", category = "All") {
   const data = await fetchFromCRM({
     fn: "common_fn",
     se: "fe",
@@ -299,8 +322,23 @@ async function listTestsLive(page: number, limit: number) {
   });
   const valid = data.filter((row: any) => (row.qu_refid ?? []).length > 0);
   valid.sort((a: any, b: any) => (b.examno ?? 0) - (a.examno ?? 0));
-  const quizzes = valid.slice((page - 1) * limit, page * limit).map(parseExam);
-  return { quizzes, total: valid.length, page, limit, all: valid.map(parseExam) };
+  const all = valid.map(parseExam);
+
+  const q = search.trim().toLowerCase();
+  const matched = all.filter(
+    (e: any) =>
+      (!q || String(e.name).toLowerCase().includes(q)) &&
+      (category === "All" || examCategory(e.name) === category),
+  );
+
+  return {
+    quizzes: matched.slice((page - 1) * limit, page * limit),
+    total: matched.length,
+    page,
+    limit,
+    categoryCounts: countByCategory(all),
+    all,
+  };
 }
 
 async function getTestLive(examId: string) {
