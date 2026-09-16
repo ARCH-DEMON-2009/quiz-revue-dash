@@ -42,15 +42,27 @@ const TncTests = () => {
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [cached, setCached] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [serverCounts, setServerCounts] = useState<Record<string, number>>({});
+
+  // Debounce typing so each keystroke doesn't hit the provider.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const loadTests = () => {
     setLoading(true);
     setError(false);
-    fetchTncTests(page, LIMIT)
+    fetchTncTests(page, LIMIT, debouncedSearch, category)
       .then((res) => {
         setQuizzes(res.quizzes);
         setTotal(res.total);
         setCached(!!res.cached);
+        if (res.categoryCounts) setServerCounts(res.categoryCounts);
       })
       .catch((e) => {
         console.error(e);
