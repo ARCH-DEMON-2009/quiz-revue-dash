@@ -667,6 +667,8 @@ export type Database = {
       tnc_exam_cache: {
         Row: {
           allow_for_premium: boolean
+          category: string | null
+          category_reason: string | null
           crm_created_at: string | null
           duration_minutes: string
           exam_id: string
@@ -681,6 +683,8 @@ export type Database = {
         }
         Insert: {
           allow_for_premium?: boolean
+          category?: string | null
+          category_reason?: string | null
           crm_created_at?: string | null
           duration_minutes?: string
           exam_id: string
@@ -695,6 +699,8 @@ export type Database = {
         }
         Update: {
           allow_for_premium?: boolean
+          category?: string | null
+          category_reason?: string | null
           crm_created_at?: string | null
           duration_minutes?: string
           exam_id?: string
