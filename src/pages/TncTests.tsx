@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
@@ -42,15 +42,27 @@ const TncTests = () => {
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [cached, setCached] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [serverCounts, setServerCounts] = useState<Record<string, number>>({});
+
+  // Debounce typing so each keystroke doesn't hit the provider.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const loadTests = () => {
     setLoading(true);
     setError(false);
-    fetchTncTests(page, LIMIT)
+    fetchTncTests(page, LIMIT, debouncedSearch, category)
       .then((res) => {
         setQuizzes(res.quizzes);
         setTotal(res.total);
         setCached(!!res.cached);
+        if (res.categoryCounts) setServerCounts(res.categoryCounts);
       })
       .catch((e) => {
         console.error(e);
@@ -73,24 +85,12 @@ const TncTests = () => {
       .finally(() => setLoading(false));
   };
 
-  useEffect(loadTests, [page]);
+  useEffect(loadTests, [page, debouncedSearch, category]);
 
-  const filtered = useMemo(() => {
-    return quizzes.filter((q) => {
-      const matchesSearch = q.name.toLowerCase().includes(search.toLowerCase());
-      const matchesCat = category === "All" || getCategory(q.name) === category;
-      return matchesSearch && matchesCat;
-    });
-  }, [quizzes, search, category]);
-
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { All: quizzes.length };
-    for (const q of quizzes) {
-      const c = getCategory(q.name);
-      counts[c] = (counts[c] ?? 0) + 1;
-    }
-    return counts;
-  }, [quizzes]);
+  // Filtering now happens on the server across the entire catalogue, so the
+  // page already contains exactly the tests that match.
+  const filtered = quizzes;
+  const categoryCounts = serverCounts;
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
   const startIdx = total === 0 ? 0 : (page - 1) * LIMIT + 1;

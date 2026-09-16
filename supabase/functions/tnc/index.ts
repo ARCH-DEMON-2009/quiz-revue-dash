@@ -289,7 +289,30 @@ function parseQuestion(row: any) {
   };
 }
 
-async function listTestsLive(page: number, limit: number) {
+/** Same category rules as the client so counts and filtering agree. */
+function examCategory(name = "") {
+  const n = name.toUpperCase();
+  if (n.includes("NORCET")) return "NORCET";
+  if (n.includes("AIIMS")) return "AIIMS";
+  if (n.includes("SGPGI")) return "SGPGI";
+  if (n.includes("BTSC")) return "BTSC";
+  if (n.includes("CHO")) return "CHO";
+  if (n.includes("CHN")) return "CHN";
+  if (n.includes("OT ") || n.includes("THEATRE")) return "OT";
+  if (n.includes("MORNING") || n.includes("DOSE")) return "Daily Dose";
+  return "Other";
+}
+
+function countByCategory(exams: any[]) {
+  const counts: Record<string, number> = { All: exams.length };
+  for (const e of exams) {
+    const c = examCategory(e.name);
+    counts[c] = (counts[c] ?? 0) + 1;
+  }
+  return counts;
+}
+
+async function listTestsLive(page: number, limit: number, search = "", category = "All") {
   const data = await fetchFromCRM({
     fn: "common_fn",
     se: "fe",
@@ -299,8 +322,23 @@ async function listTestsLive(page: number, limit: number) {
   });
   const valid = data.filter((row: any) => (row.qu_refid ?? []).length > 0);
   valid.sort((a: any, b: any) => (b.examno ?? 0) - (a.examno ?? 0));
-  const quizzes = valid.slice((page - 1) * limit, page * limit).map(parseExam);
-  return { quizzes, total: valid.length, page, limit, all: valid.map(parseExam) };
+  const all = valid.map(parseExam);
+
+  const q = search.trim().toLowerCase();
+  const matched = all.filter(
+    (e: any) =>
+      (!q || String(e.name).toLowerCase().includes(q)) &&
+      (category === "All" || examCategory(e.name) === category),
+  );
+
+  return {
+    quizzes: matched.slice((page - 1) * limit, page * limit),
+    total: matched.length,
+    page,
+    limit,
+    categoryCounts: countByCategory(all),
+    all,
+  };
 }
 
 async function getTestLive(examId: string) {
@@ -387,12 +425,18 @@ function rowToExam(row: any) {
 
 async function syncExams(exams: any[]) {
   if (!exams.length) return;
-  try {
-    await adminClient()
-      .from("tnc_exam_cache")
-      .upsert(exams.map(examRow), { onConflict: "exam_id" });
-  } catch (e) {
-    console.error("tnc_exam_cache exam sync failed", e);
+  // Thousands of rows in one upsert exceeds request limits and silently drops
+  // tests from the mirror — write in chunks so every test is stored.
+  const CHUNK = 500;
+  const admin = adminClient();
+  for (let i = 0; i < exams.length; i += CHUNK) {
+    try {
+      await admin
+        .from("tnc_exam_cache")
+        .upsert(exams.slice(i, i + CHUNK).map(examRow), { onConflict: "exam_id" });
+    } catch (e) {
+      console.error("tnc_exam_cache exam sync failed", e);
+    }
   }
 }
 
@@ -411,22 +455,45 @@ async function syncExamWithQuestions(exam: any) {
   }
 }
 
-async function listTests(page: number, limit: number) {
+const CATEGORY_PATTERNS: Record<string, string[]> = {
+  NORCET: ["%norcet%"],
+  AIIMS: ["%aiims%"],
+  SGPGI: ["%sgpgi%"],
+  BTSC: ["%btsc%"],
+  CHO: ["%cho%"],
+  CHN: ["%chn%"],
+  OT: ["%ot %", "%theatre%"],
+  "Daily Dose": ["%morning%", "%dose%"],
+};
+
+async function listTests(page: number, limit: number, search = "", category = "All") {
   try {
-    const live = await listTestsLive(page, limit);
-    // Fire-and-forget mirror of the full list so the fallback stays fresh.
+    const live = await listTestsLive(page, limit, search, category);
+    // Mirror the full list so the offline fallback stays complete and fresh.
     await syncExams(live.all ?? []);
     const { all: _all, ...rest } = live as any;
     return { ...rest, cached: false };
   } catch (e) {
     console.error("CRM list failed, falling back to cache", e);
     const admin = adminClient();
-    const { data, count } = await admin
-      .from("tnc_exam_cache")
-      .select("*", { count: "exact" })
+    let query = admin.from("tnc_exam_cache").select("*", { count: "exact" });
+    const q = search.trim();
+    if (q) query = query.ilike("name", `%${q}%`);
+    if (category !== "All") {
+      const pats = CATEGORY_PATTERNS[category];
+      if (pats) {
+        query = query.or(pats.map((p) => `name.ilike.${p}`).join(","));
+      } else {
+        // "Other": everything that matches none of the known categories.
+        for (const p of Object.values(CATEGORY_PATTERNS).flat()) {
+          query = query.not("name", "ilike", p);
+        }
+      }
+    }
+    const { data, count } = await query
       .order("exam_no", { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
-    if (!data || data.length === 0) throw e;
+    if (!data) throw e;
     return {
       quizzes: data.map(rowToExam),
       total: count ?? data.length,
@@ -795,7 +862,9 @@ Deno.serve(async (req) => {
     if (action === "tests") {
       const page = Math.max(1, parseInt(String(body.page ?? url.searchParams.get("page") ?? "1")) || 1);
       const limit = Math.min(50, Math.max(1, parseInt(String(body.limit ?? url.searchParams.get("limit") ?? "20")) || 20));
-      return json(await listTests(page, limit));
+      const search = String(body.search ?? url.searchParams.get("search") ?? "").slice(0, 100);
+      const category = String(body.category ?? url.searchParams.get("category") ?? "All").slice(0, 40);
+      return json(await listTests(page, limit, search, category));
     }
 
     if (action === "test") {

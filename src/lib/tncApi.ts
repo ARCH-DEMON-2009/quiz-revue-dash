@@ -36,6 +36,8 @@ export interface TncListResponse {
   total: number;
   page: number;
   limit: number;
+  /** Counts per category across the WHOLE catalogue (not just this page). */
+  categoryCounts?: Record<string, number>;
   /** True when the list came from the offline backup because the provider was unreachable. */
   cached?: boolean;
 }
@@ -76,8 +78,8 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
-export function fetchTncTests(page: number, limit = 20) {
-  return call<TncListResponse>({ action: "tests", page, limit });
+export function fetchTncTests(page: number, limit = 20, search = "", category = "All") {
+  return call<TncListResponse>({ action: "tests", page, limit, search, category });
 }
 
 export function fetchTncTest(examId: string) {
