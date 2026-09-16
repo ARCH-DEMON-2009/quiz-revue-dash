@@ -255,16 +255,21 @@ async function proxyImage(rawUrl: string) {
 
 function parseExam(row: any) {
   const j = row.json ?? {};
+  const name = j._ex_na ?? "Quiz";
+  const cls = classifyExam(name);
   return {
     examId: row.row_id,
     examNo: row.examno ?? 0,
-    name: j._ex_na ?? "Quiz",
+    name,
     maxMarks: j._ma_ma ?? 0,
     negativeMarks: j._ne_ma ?? 0.33,
     durationMinutes: String(j._ex_du ?? "90"),
     questionCount: (row.qu_refid ?? []).length,
     allowForPremium: j._al_fo_pr === 1,
     createdAt: row.cr_on ?? null,
+    // Explicit category fields so clients never have to re-guess from the name.
+    category: cls.category,
+    categoryReason: cls.reason,
   };
 }
 
