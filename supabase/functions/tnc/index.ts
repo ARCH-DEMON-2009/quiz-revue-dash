@@ -449,22 +449,45 @@ async function syncExamWithQuestions(exam: any) {
   }
 }
 
-async function listTests(page: number, limit: number) {
+const CATEGORY_PATTERNS: Record<string, string[]> = {
+  NORCET: ["%norcet%"],
+  AIIMS: ["%aiims%"],
+  SGPGI: ["%sgpgi%"],
+  BTSC: ["%btsc%"],
+  CHO: ["%cho%"],
+  CHN: ["%chn%"],
+  OT: ["%ot %", "%theatre%"],
+  "Daily Dose": ["%morning%", "%dose%"],
+};
+
+async function listTests(page: number, limit: number, search = "", category = "All") {
   try {
-    const live = await listTestsLive(page, limit);
-    // Fire-and-forget mirror of the full list so the fallback stays fresh.
+    const live = await listTestsLive(page, limit, search, category);
+    // Mirror the full list so the offline fallback stays complete and fresh.
     await syncExams(live.all ?? []);
     const { all: _all, ...rest } = live as any;
     return { ...rest, cached: false };
   } catch (e) {
     console.error("CRM list failed, falling back to cache", e);
     const admin = adminClient();
-    const { data, count } = await admin
-      .from("tnc_exam_cache")
-      .select("*", { count: "exact" })
+    let query = admin.from("tnc_exam_cache").select("*", { count: "exact" });
+    const q = search.trim();
+    if (q) query = query.ilike("name", `%${q}%`);
+    if (category !== "All") {
+      const pats = CATEGORY_PATTERNS[category];
+      if (pats) {
+        query = query.or(pats.map((p) => `name.ilike.${p}`).join(","));
+      } else {
+        // "Other": everything that matches none of the known categories.
+        for (const p of Object.values(CATEGORY_PATTERNS).flat()) {
+          query = query.not("name", "ilike", p);
+        }
+      }
+    }
+    const { data, count } = await query
       .order("exam_no", { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
-    if (!data || data.length === 0) throw e;
+    if (!data) throw e;
     return {
       quizzes: data.map(rowToExam),
       total: count ?? data.length,
