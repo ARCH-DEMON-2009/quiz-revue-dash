@@ -425,12 +425,18 @@ function rowToExam(row: any) {
 
 async function syncExams(exams: any[]) {
   if (!exams.length) return;
-  try {
-    await adminClient()
-      .from("tnc_exam_cache")
-      .upsert(exams.map(examRow), { onConflict: "exam_id" });
-  } catch (e) {
-    console.error("tnc_exam_cache exam sync failed", e);
+  // Thousands of rows in one upsert exceeds request limits and silently drops
+  // tests from the mirror — write in chunks so every test is stored.
+  const CHUNK = 500;
+  const admin = adminClient();
+  for (let i = 0; i < exams.length; i += CHUNK) {
+    try {
+      await admin
+        .from("tnc_exam_cache")
+        .upsert(exams.slice(i, i + CHUNK).map(examRow), { onConflict: "exam_id" });
+    } catch (e) {
+      console.error("tnc_exam_cache exam sync failed", e);
+    }
   }
 }
 
