@@ -427,6 +427,9 @@ async function getTestLive(examId: string) {
 // ============================================================================
 
 function examRow(exam: any) {
+  const cls = exam.category
+    ? { category: exam.category, reason: exam.categoryReason ?? classifyExam(exam.name).reason }
+    : classifyExam(exam.name);
   return {
     exam_id: exam.examId,
     exam_no: exam.examNo ?? 0,
@@ -437,21 +440,31 @@ function examRow(exam: any) {
     question_count: exam.questionCount ?? 0,
     allow_for_premium: !!exam.allowForPremium,
     crm_created_at: exam.createdAt ?? null,
+    // Stored explicitly so the offline mirror can filter/count by category
+    // without re-parsing test names.
+    category: cls.category,
+    category_reason: cls.reason,
     synced_at: new Date().toISOString(),
   };
 }
 
 function rowToExam(row: any) {
+  const name = row.name ?? "Quiz";
+  const cls = row.category
+    ? { category: row.category, reason: row.category_reason ?? classifyExam(name).reason }
+    : classifyExam(name);
   return {
     examId: row.exam_id,
     examNo: row.exam_no ?? 0,
-    name: row.name ?? "Quiz",
+    name,
     maxMarks: Number(row.max_marks ?? 0),
     negativeMarks: Number(row.negative_marks ?? 0.33),
     durationMinutes: String(row.duration_minutes ?? "90"),
     questionCount: row.question_count ?? 0,
     allowForPremium: !!row.allow_for_premium,
     createdAt: row.crm_created_at ?? null,
+    category: cls.category,
+    categoryReason: cls.reason,
   };
 }
 
@@ -487,16 +500,19 @@ async function syncExamWithQuestions(exam: any) {
   }
 }
 
-const CATEGORY_PATTERNS: Record<string, string[]> = {
-  NORCET: ["%norcet%"],
-  AIIMS: ["%aiims%"],
-  SGPGI: ["%sgpgi%"],
-  BTSC: ["%btsc%"],
-  CHO: ["%cho%"],
-  CHN: ["%chn%"],
-  OT: ["%ot %", "%theatre%"],
-  "Daily Dose": ["%morning%", "%dose%"],
-};
+/** Category counts over the whole mirror (used by the offline fallback). */
+async function cachedCategoryCounts() {
+  const admin = adminClient();
+  const counts: Record<string, number> = {};
+  const cats = ["All", ...CATEGORY_RULES.map((r) => r.category), "Other"];
+  await Promise.all(cats.map(async (c) => {
+    let q = admin.from("tnc_exam_cache").select("exam_id", { count: "exact", head: true });
+    if (c !== "All") q = q.eq("category", c);
+    const { count } = await q;
+    counts[c] = count ?? 0;
+  }));
+  return counts;
+}
 
 async function listTests(page: number, limit: number, search = "", category = "All") {
   try {
@@ -511,26 +527,22 @@ async function listTests(page: number, limit: number, search = "", category = "A
     let query = admin.from("tnc_exam_cache").select("*", { count: "exact" });
     const q = search.trim();
     if (q) query = query.ilike("name", `%${q}%`);
-    if (category !== "All") {
-      const pats = CATEGORY_PATTERNS[category];
-      if (pats) {
-        query = query.or(pats.map((p) => `name.ilike.${p}`).join(","));
-      } else {
-        // "Other": everything that matches none of the known categories.
-        for (const p of Object.values(CATEGORY_PATTERNS).flat()) {
-          query = query.not("name", "ilike", p);
-        }
-      }
-    }
+    // Filtering now uses the stored category column instead of name matching.
+    if (category !== "All") query = query.eq("category", category);
     const { data, count } = await query
       .order("exam_no", { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
     if (!data) throw e;
+    let categoryCounts: Record<string, number> | undefined;
+    try {
+      categoryCounts = await cachedCategoryCounts();
+    } catch { /* counts are non-critical */ }
     return {
       quizzes: data.map(rowToExam),
       total: count ?? data.length,
       page,
       limit,
+      categoryCounts,
       cached: true,
     };
   }
