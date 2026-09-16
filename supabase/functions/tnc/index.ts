@@ -862,7 +862,9 @@ Deno.serve(async (req) => {
     if (action === "tests") {
       const page = Math.max(1, parseInt(String(body.page ?? url.searchParams.get("page") ?? "1")) || 1);
       const limit = Math.min(50, Math.max(1, parseInt(String(body.limit ?? url.searchParams.get("limit") ?? "20")) || 20));
-      return json(await listTests(page, limit));
+      const search = String(body.search ?? url.searchParams.get("search") ?? "").slice(0, 100);
+      const category = String(body.category ?? url.searchParams.get("category") ?? "All").slice(0, 40);
+      return json(await listTests(page, limit, search, category));
     }
 
     if (action === "test") {
