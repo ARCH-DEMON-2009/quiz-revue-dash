@@ -255,16 +255,21 @@ async function proxyImage(rawUrl: string) {
 
 function parseExam(row: any) {
   const j = row.json ?? {};
+  const name = j._ex_na ?? "Quiz";
+  const cls = classifyExam(name);
   return {
     examId: row.row_id,
     examNo: row.examno ?? 0,
-    name: j._ex_na ?? "Quiz",
+    name,
     maxMarks: j._ma_ma ?? 0,
     negativeMarks: j._ne_ma ?? 0.33,
     durationMinutes: String(j._ex_du ?? "90"),
     questionCount: (row.qu_refid ?? []).length,
     allowForPremium: j._al_fo_pr === 1,
     createdAt: row.cr_on ?? null,
+    // Explicit category fields so clients never have to re-guess from the name.
+    category: cls.category,
+    categoryReason: cls.reason,
   };
 }
 
@@ -289,24 +294,51 @@ function parseQuestion(row: any) {
   };
 }
 
+/**
+ * Category rules, evaluated in order. Each rule carries the keywords it looks
+ * for so the UI can explain WHY a test landed in a category.
+ * Daily Dose intentionally comes first: daily practice papers (Morning Dose,
+ * Offline batch tests, RRB dailies) belong there even if the title also
+ * mentions another exam.
+ */
+const CATEGORY_RULES: { category: string; keywords: string[] }[] = [
+  { category: "Daily Dose", keywords: ["MORNING", "DOSE", "DAILY", "OFFLINE", "RRB"] },
+  { category: "NORCET", keywords: ["NORCET"] },
+  { category: "AIIMS", keywords: ["AIIMS"] },
+  { category: "SGPGI", keywords: ["SGPGI"] },
+  { category: "BTSC", keywords: ["BTSC"] },
+  { category: "CHO", keywords: ["CHO"] },
+  { category: "CHN", keywords: ["CHN"] },
+  { category: "OT", keywords: ["OT ", "THEATRE"] },
+];
+
 /** Same category rules as the client so counts and filtering agree. */
 function examCategory(name = "") {
-  const n = name.toUpperCase();
-  if (n.includes("NORCET")) return "NORCET";
-  if (n.includes("AIIMS")) return "AIIMS";
-  if (n.includes("SGPGI")) return "SGPGI";
-  if (n.includes("BTSC")) return "BTSC";
-  if (n.includes("CHO")) return "CHO";
-  if (n.includes("CHN")) return "CHN";
-  if (n.includes("OT ") || n.includes("THEATRE")) return "OT";
-  if (n.includes("MORNING") || n.includes("DOSE")) return "Daily Dose";
-  return "Other";
+  return classifyExam(name).category;
+}
+
+/** Returns the resolved category plus a human-readable reason. */
+function classifyExam(name = "") {
+  const n = String(name).toUpperCase();
+  for (const rule of CATEGORY_RULES) {
+    const hit = rule.keywords.find((k) => n.includes(k));
+    if (hit) {
+      return {
+        category: rule.category,
+        reason: `Test name contains "${hit.trim()}", so it is grouped under ${rule.category}.`,
+      };
+    }
+  }
+  return {
+    category: "Other",
+    reason: "Test name matches none of the exam keywords, so it is grouped under Other.",
+  };
 }
 
 function countByCategory(exams: any[]) {
   const counts: Record<string, number> = { All: exams.length };
   for (const e of exams) {
-    const c = examCategory(e.name);
+    const c = e.category ?? examCategory(e.name);
     counts[c] = (counts[c] ?? 0) + 1;
   }
   return counts;
@@ -395,6 +427,9 @@ async function getTestLive(examId: string) {
 // ============================================================================
 
 function examRow(exam: any) {
+  const cls = exam.category
+    ? { category: exam.category, reason: exam.categoryReason ?? classifyExam(exam.name).reason }
+    : classifyExam(exam.name);
   return {
     exam_id: exam.examId,
     exam_no: exam.examNo ?? 0,
@@ -405,21 +440,31 @@ function examRow(exam: any) {
     question_count: exam.questionCount ?? 0,
     allow_for_premium: !!exam.allowForPremium,
     crm_created_at: exam.createdAt ?? null,
+    // Stored explicitly so the offline mirror can filter/count by category
+    // without re-parsing test names.
+    category: cls.category,
+    category_reason: cls.reason,
     synced_at: new Date().toISOString(),
   };
 }
 
 function rowToExam(row: any) {
+  const name = row.name ?? "Quiz";
+  const cls = row.category
+    ? { category: row.category, reason: row.category_reason ?? classifyExam(name).reason }
+    : classifyExam(name);
   return {
     examId: row.exam_id,
     examNo: row.exam_no ?? 0,
-    name: row.name ?? "Quiz",
+    name,
     maxMarks: Number(row.max_marks ?? 0),
     negativeMarks: Number(row.negative_marks ?? 0.33),
     durationMinutes: String(row.duration_minutes ?? "90"),
     questionCount: row.question_count ?? 0,
     allowForPremium: !!row.allow_for_premium,
     createdAt: row.crm_created_at ?? null,
+    category: cls.category,
+    categoryReason: cls.reason,
   };
 }
 
@@ -455,16 +500,19 @@ async function syncExamWithQuestions(exam: any) {
   }
 }
 
-const CATEGORY_PATTERNS: Record<string, string[]> = {
-  NORCET: ["%norcet%"],
-  AIIMS: ["%aiims%"],
-  SGPGI: ["%sgpgi%"],
-  BTSC: ["%btsc%"],
-  CHO: ["%cho%"],
-  CHN: ["%chn%"],
-  OT: ["%ot %", "%theatre%"],
-  "Daily Dose": ["%morning%", "%dose%"],
-};
+/** Category counts over the whole mirror (used by the offline fallback). */
+async function cachedCategoryCounts() {
+  const admin = adminClient();
+  const counts: Record<string, number> = {};
+  const cats = ["All", ...CATEGORY_RULES.map((r) => r.category), "Other"];
+  await Promise.all(cats.map(async (c) => {
+    let q = admin.from("tnc_exam_cache").select("exam_id", { count: "exact", head: true });
+    if (c !== "All") q = q.eq("category", c);
+    const { count } = await q;
+    counts[c] = count ?? 0;
+  }));
+  return counts;
+}
 
 async function listTests(page: number, limit: number, search = "", category = "All") {
   try {
@@ -479,26 +527,22 @@ async function listTests(page: number, limit: number, search = "", category = "A
     let query = admin.from("tnc_exam_cache").select("*", { count: "exact" });
     const q = search.trim();
     if (q) query = query.ilike("name", `%${q}%`);
-    if (category !== "All") {
-      const pats = CATEGORY_PATTERNS[category];
-      if (pats) {
-        query = query.or(pats.map((p) => `name.ilike.${p}`).join(","));
-      } else {
-        // "Other": everything that matches none of the known categories.
-        for (const p of Object.values(CATEGORY_PATTERNS).flat()) {
-          query = query.not("name", "ilike", p);
-        }
-      }
-    }
+    // Filtering now uses the stored category column instead of name matching.
+    if (category !== "All") query = query.eq("category", category);
     const { data, count } = await query
       .order("exam_no", { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
     if (!data) throw e;
+    let categoryCounts: Record<string, number> | undefined;
+    try {
+      categoryCounts = await cachedCategoryCounts();
+    } catch { /* counts are non-critical */ }
     return {
       quizzes: data.map(rowToExam),
       total: count ?? data.length,
       page,
       limit,
+      categoryCounts,
       cached: true,
     };
   }
