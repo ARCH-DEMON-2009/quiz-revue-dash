@@ -408,16 +408,17 @@
    Animated login / register panel (sliding split-screen design)
    ============================================================ */
 .auth-stage {
-  --auth-bg: #25252b;
-  --auth-accent: #e46033;
+  --auth-bg: #0b1121;
+  --auth-accent: #6366f1;
+  --auth-glow: #10b981;
   min-height: 100vh;
-  background: var(--auth-bg);
+  background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0b1121 60%);
   color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3rem;
-  padding: 3rem 1rem;
+  justify-content: center;
+  padding: 1.5rem;
 }
 
 .auth-shell {
@@ -544,13 +545,16 @@
   position: absolute;
   height: 300%;
   width: 100%;
-  background: linear-gradient(var(--auth-bg), var(--auth-accent), var(--auth-bg), var(--auth-accent));
+  background: linear-gradient(var(--auth-bg), var(--auth-accent), var(--auth-glow), var(--auth-accent));
   top: -100%;
   left: 0;
   z-index: -1;
   transition: 0.5s;
 }
 .auth-btn:hover::before { top: 0; }
+.auth-btn:hover {
+  box-shadow: 0 0 18px var(--auth-accent), 0 0 8px var(--auth-glow);
+}
 .auth-btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
 .auth-link { font-size: 14px; text-align: center; margin: 20px 0 10px; }
@@ -613,7 +617,7 @@
   top: -5px;
   height: 600px;
   width: 850px;
-  background: linear-gradient(45deg, var(--auth-bg), var(--auth-accent));
+  background: linear-gradient(45deg, var(--auth-bg), var(--auth-accent), var(--auth-glow));
   transform: rotate(10deg) skewY(40deg);
   transform-origin: bottom right;
   transition: 1.5s ease;
@@ -630,7 +634,7 @@
   height: 700px;
   width: 850px;
   background: var(--auth-bg);
-  border-top: 3px solid var(--auth-accent);
+  border-top: 3px solid var(--auth-glow);
   transform: rotate(0deg) skewY(0deg);
   transform-origin: bottom left;
   transition: 1.5s ease;
@@ -641,22 +645,15 @@
   transition-delay: 1.2s;
 }
 
-.auth-copy { width: 100%; max-width: 750px; color: #d7d7de; }
-.auth-copy h1 { font-size: 24px; font-weight: 700; color: #fff; }
-.auth-copy h2 { font-size: 17px; font-weight: 600; color: #fff; margin-top: 24px; }
-.auth-copy p, .auth-copy li { font-size: 14px; line-height: 1.7; margin-top: 8px; }
-.auth-copy ul { margin-top: 4px; padding-left: 18px; list-style: disc; }
-.auth-copy strong { color: #fff; }
-.auth-copy a { color: var(--auth-accent); font-weight: 600; }
-
 /* On phones the split panel stacks: only the active side is shown. */
 @media (max-width: 767px) {
+  .auth-stage { padding: 1rem; }
   .auth-shell { height: 560px; }
   .auth-shell .auth-form-box { width: 100%; padding: 0 28px; }
   .auth-info { display: none; }
   .auth-shell .auth-curve,
   .auth-shell .auth-curve2 { display: none; }
-  .auth-shell { background: linear-gradient(160deg, #25252b, #33241f); }
+  .auth-shell { background: linear-gradient(160deg, #0b1121, #1e1b4b); }
 }
 
 /* Hide the injected "Edit with Lovable" badge without affecting layout */

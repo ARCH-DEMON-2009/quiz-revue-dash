@@ -203,61 +203,6 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Supporting content, kept for students and for search engines */}
-      <section className="auth-copy">
-        <h1>{isLogin ? "Sign in to continue your preparation" : "Start preparing with Test Sagar"}</h1>
-        <p>
-          Test Sagar is a mock test platform for students preparing for medical, engineering and nursing
-          entrance exams. An account keeps every attempt, score and mistake in one place, so your practice
-          builds on itself instead of starting from zero each week.
-        </p>
-
-        <h2>What your account keeps for you</h2>
-        <ul>
-          <li>
-            <strong>Your full attempt history.</strong> Every test you finish is saved with your answers, the
-            correct answers and the time you spent.
-          </li>
-          <li>
-            <strong>Subject-wise accuracy.</strong> Results are broken down by subject, so you can see whether
-            marks slipped from weak concepts or from rushing.
-          </li>
-          <li>
-            <strong>Weekly rankings.</strong> Scores feed a weekly leaderboard against students attempting the
-            same papers.
-          </li>
-          <li>
-            <strong>Downloadable question papers.</strong> Finished tests can be saved as PDFs for offline
-            revision.
-          </li>
-        </ul>
-
-        <h2>Why we ask for a WhatsApp number</h2>
-        <p>
-          New test series, result corrections and account or payment issues are handled over WhatsApp, because
-          that reaches students faster than email. We use the number only for these updates and for verifying
-          your account if you lose access to your email. We never sell contact details, and you can ask us to
-          remove your number at any time.
-        </p>
-
-        <h2>Choosing your email address</h2>
-        <p>
-          Please sign up with a real, permanent inbox such as Gmail or your college address. Temporary and
-          disposable mail services are blocked, since confirmation links, premium receipts and password resets
-          all travel by email.
-        </p>
-
-        <h2>Trouble signing in?</h2>
-        <p>
-          If the confirmation email has not arrived, check your spam folder before requesting another one. For a
-          forgotten password, a blocked account or premium that has not activated, message our support
-          assistant on Telegram at{" "}
-          <a href="https://t.me/TestSagarHelpRobot" target="_blank" rel="noopener noreferrer">
-            @TestSagarHelpRobot
-          </a>{" "}
-          and include the email address on your account.
-        </p>
-      </section>
     </div>
   );
 };
