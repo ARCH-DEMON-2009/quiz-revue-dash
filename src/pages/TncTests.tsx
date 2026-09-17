@@ -22,10 +22,18 @@ import {
   RefreshCw,
   ExternalLink,
   Bot,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TncBotPopup } from "@/components/TncBotPopup";
-import { fetchTncTests, getCategory, type TncExam } from "@/lib/tncApi";
+import {
+  fetchTncTests,
+  CATEGORY_RULES,
+  examCategoryOf,
+  examCategoryReason,
+  type TncExam,
+} from "@/lib/tncApi";
 
 const CATEGORIES = ["All", "NORCET", "AIIMS", "SGPGI", "BTSC", "CHO", "CHN", "Daily Dose", "Other"];
 const LIMIT = 20;
@@ -166,24 +174,43 @@ const TncTests = () => {
         </div>
 
         {/* Category chips */}
-        <div className="mb-6 flex flex-wrap gap-2">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => resetAndFilter(() => setCategory(cat))}
-              className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                category === cat
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {cat}
-              {categoryCounts[cat] ? (
-                <span className="ml-1.5 opacity-70">({categoryCounts[cat]})</span>
-              ) : null}
-            </button>
-          ))}
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          {CATEGORIES.map((cat) => {
+            const rule = CATEGORY_RULES.find((r) => r.category === cat);
+            const tip = rule
+              ? `Tests whose name contains: ${rule.keywords.map((k) => k.trim()).join(", ")}`
+              : cat === "All"
+                ? "Every test in the series."
+                : "Tests whose name matches none of the exam keywords.";
+            return (
+              <Tooltip key={cat}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => resetAndFilter(() => setCategory(cat))}
+                    className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      category === cat
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {cat}
+                    {categoryCounts[cat] ? (
+                      <span className="ml-1.5 opacity-70">({categoryCounts[cat]})</span>
+                    ) : null}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-xs">{tip}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
         </div>
+        <p className="mb-6 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Info className="h-3.5 w-3.5" />
+          Groups are decided by keywords in the test name — hover a group or a test's badge to see the
+          exact rule that placed it there.
+        </p>
 
         {/* Results meta */}
         {!loading && (
@@ -228,7 +255,16 @@ const TncTests = () => {
             {filtered.map((q) => (
               <Card key={q.examId} className="flex flex-col p-5 card-hover group">
                 <div className="mb-3 flex items-start justify-between gap-2">
-                  <Badge variant="secondary">{getCategory(q.name)}</Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="secondary" className="cursor-help gap-1">
+                        {examCategoryOf(q)} <Info className="h-3 w-3 opacity-70" />
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs">{examCategoryReason(q)}</p>
+                    </TooltipContent>
+                  </Tooltip>
                   {q.allowForPremium && (
                     <Badge className="gap-1 bg-amber-500 text-white hover:bg-amber-500">
                       <Crown className="h-3 w-3" /> Premium

@@ -10,6 +10,10 @@ export interface TncExam {
   questionCount: number;
   allowForPremium: boolean;
   createdAt: string | null;
+  /** Category resolved on the server (explicit field, not guessed in the UI). */
+  category?: string;
+  /** Human-readable explanation of why this category was chosen. */
+  categoryReason?: string;
 }
 
 export interface TncQuestion {
@@ -279,15 +283,47 @@ export function fetchTncGlobalLeaderboard(period: TncLeaderboardPeriod = "all") 
 }
 
 
-export function getCategory(name = ""): string {
+/**
+ * Category rules, mirrored from the server (same order, same keywords) so the
+ * fallback classification and the tooltip explanations always agree.
+ */
+export const CATEGORY_RULES: { category: string; keywords: string[] }[] = [
+  { category: "Daily Dose", keywords: ["MORNING", "DOSE", "DAILY", "OFFLINE", "RRB"] },
+  { category: "NORCET", keywords: ["NORCET"] },
+  { category: "AIIMS", keywords: ["AIIMS"] },
+  { category: "SGPGI", keywords: ["SGPGI"] },
+  { category: "BTSC", keywords: ["BTSC"] },
+  { category: "CHO", keywords: ["CHO"] },
+  { category: "CHN", keywords: ["CHN"] },
+  { category: "OT", keywords: ["OT ", "THEATRE"] },
+];
+
+export function classifyCategory(name = ""): { category: string; reason: string } {
   const n = name.toUpperCase();
-  if (n.includes("NORCET")) return "NORCET";
-  if (n.includes("AIIMS")) return "AIIMS";
-  if (n.includes("SGPGI")) return "SGPGI";
-  if (n.includes("BTSC")) return "BTSC";
-  if (n.includes("CHO")) return "CHO";
-  if (n.includes("CHN")) return "CHN";
-  if (n.includes("OT ") || n.includes("THEATRE")) return "OT";
-  if (n.includes("MORNING") || n.includes("DOSE")) return "Daily Dose";
-  return "Other";
+  for (const rule of CATEGORY_RULES) {
+    const hit = rule.keywords.find((k) => n.includes(k));
+    if (hit) {
+      return {
+        category: rule.category,
+        reason: `Test name contains "${hit.trim()}", so it is grouped under ${rule.category}.`,
+      };
+    }
+  }
+  return {
+    category: "Other",
+    reason: "Test name matches none of the exam keywords, so it is grouped under Other.",
+  };
+}
+
+/** Prefer the server's explicit category; fall back to the shared name rules. */
+export function examCategoryOf(exam: TncExam): string {
+  return exam.category ?? classifyCategory(exam.name).category;
+}
+
+export function examCategoryReason(exam: TncExam): string {
+  return exam.categoryReason ?? classifyCategory(exam.name).reason;
+}
+
+export function getCategory(name = ""): string {
+  return classifyCategory(name).category;
 }
