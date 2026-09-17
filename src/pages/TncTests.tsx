@@ -22,10 +22,18 @@ import {
   RefreshCw,
   ExternalLink,
   Bot,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TncBotPopup } from "@/components/TncBotPopup";
-import { fetchTncTests, getCategory, type TncExam } from "@/lib/tncApi";
+import {
+  fetchTncTests,
+  getCategory,
+  examCategoryOf,
+  examCategoryReason,
+  type TncExam,
+} from "@/lib/tncApi";
 
 const CATEGORIES = ["All", "NORCET", "AIIMS", "SGPGI", "BTSC", "CHO", "CHN", "Daily Dose", "Other"];
 const LIMIT = 20;
