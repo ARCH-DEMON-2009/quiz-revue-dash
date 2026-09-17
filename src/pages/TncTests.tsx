@@ -228,7 +228,16 @@ const TncTests = () => {
             {filtered.map((q) => (
               <Card key={q.examId} className="flex flex-col p-5 card-hover group">
                 <div className="mb-3 flex items-start justify-between gap-2">
-                  <Badge variant="secondary">{getCategory(q.name)}</Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="secondary" className="cursor-help gap-1">
+                        {examCategoryOf(q)} <Info className="h-3 w-3 opacity-70" />
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-xs">{examCategoryReason(q)}</p>
+                    </TooltipContent>
+                  </Tooltip>
                   {q.allowForPremium && (
                     <Badge className="gap-1 bg-amber-500 text-white hover:bg-amber-500">
                       <Crown className="h-3 w-3" /> Premium
