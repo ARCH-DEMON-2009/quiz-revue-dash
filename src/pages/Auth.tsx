@@ -2,12 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { User, Session } from "@supabase/supabase-js";
+import { User } from "@supabase/supabase-js";
 import { isValidEmailProvider } from "@/lib/emailValidator";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Mail, Lock, User as UserIcon, Phone } from "lucide-react";
 
 const Auth = () => {
@@ -55,7 +51,7 @@ const Auth = () => {
       } else {
         if (!name.trim()) throw new Error("Please enter your name");
         if (!whatsappNumber.trim()) throw new Error("Please enter your WhatsApp number");
-        
+
         const emailValidation = isValidEmailProvider(email);
         if (!emailValidation.valid) throw new Error(emailValidation.message);
 
@@ -65,9 +61,9 @@ const Auth = () => {
           options: {
             data: {
               name: name.trim(),
-              whatsapp_number: whatsappNumber.trim()
-            }
-          }
+              whatsapp_number: whatsappNumber.trim(),
+            },
+          },
         });
         if (error) throw error;
         toast.success("Check your email to confirm registration!");
@@ -82,206 +78,187 @@ const Auth = () => {
   if (user && user.user_metadata?.whatsapp_number) return null;
 
   return (
-    <div className="min-h-screen p-4 py-8 bg-gradient-to-br from-indigo-50 to-emerald-50">
-      <div className="mx-auto grid w-full max-w-5xl items-start gap-8 lg:grid-cols-2">
-      <Card className="w-full max-w-md mx-auto shadow-2xl border-indigo-100">
+    <div className="auth-stage">
+      <div className={`auth-shell ${isLogin ? "" : "active"}`}>
+        <div className="auth-curve" />
+        <div className="auth-curve2" />
 
-        <CardHeader className="space-y-4 text-center">
-          <div 
-            className="flex flex-col items-center cursor-pointer transition-transform hover:scale-105"
-            onClick={() => navigate("/")}
-          >
-            <img 
-              src="/logo.png" 
-              alt="Test Sagar" 
-              className="h-16 w-16 rounded-2xl shadow-lg object-contain bg-white" 
-            />
-            <CardTitle className="text-3xl font-extrabold mt-3 bg-gradient-to-r from-indigo-600 to-emerald-600 bg-clip-text text-transparent">
-              Test Sagar
-            </CardTitle>
-          </div>
-          <CardDescription className="text-gray-500 font-medium">
-            {isLogin ? "Welcome back! Please sign in to your account." : "Create your account to start your journey."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            {!isLogin && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="name"
-                      placeholder="John Doe"
-                      className="pl-10"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="whatsapp">WhatsApp Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="whatsapp"
-                      type="tel"
-                      placeholder="1234567890"
-                      className="pl-10"
-                      value={whatsappNumber}
-                      onChange={(e) => setWhatsappNumber(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  className="pl-10"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+        {/* ---------- Login form ---------- */}
+        <div className="auth-form-box login">
+          <h2 className="auth-anim" style={{ ["--D" as any]: 0, ["--S" as any]: 21 }}>Login</h2>
+          <form onSubmit={handleAuth}>
+            <div className="auth-input auth-anim" style={{ ["--D" as any]: 1, ["--S" as any]: 22 }}>
+              <input
+                type="email"
+                required={isLogin}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <label>Email</label>
+              <Mail className="auth-icon" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  className="pl-10"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+
+            <div className="auth-input auth-anim" style={{ ["--D" as any]: 2, ["--S" as any]: 23 }}>
+              <input
+                type="password"
+                required={isLogin}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <label>Password</label>
+              <Lock className="auth-icon" />
             </div>
-            {isLogin && (
-              <div className="text-right">
-                <Button 
-                  variant="link" 
-                  className="px-0 font-normal text-indigo-600 hover:text-indigo-500"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    toast.info("Please contact support to reset your password.");
-                  }}
-                >
-                  Forgot password?
-                </Button>
-              </div>
-            )}
-            <Button 
-              type="submit" 
-              className="w-full bg-gradient-to-r from-indigo-600 to-emerald-600 hover:from-indigo-700 hover:to-emerald-700 text-white font-bold py-6 rounded-xl shadow-lg transition-all active:scale-[0.98]"
-              disabled={loading}
-            >
-              {loading ? "Processing..." : (isLogin ? "Sign In" : "Sign Up")}
-            </Button>
-            <div className="text-center mt-6">
-              <p className="text-sm text-gray-600">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <button
-                  type="button"
-                  className="text-indigo-600 font-bold hover:underline"
-                  onClick={() => setIsLogin(!isLogin)}
-                >
-                  {isLogin ? "Sign Up" : "Sign In"}
-                </button>
+
+            <div className="auth-input auth-anim" style={{ ["--D" as any]: 3, ["--S" as any]: 24 }}>
+              <button className="auth-btn" type="submit" disabled={loading}>
+                {loading ? "Processing..." : "Login"}
+              </button>
+            </div>
+
+            <div className="auth-link auth-anim" style={{ ["--D" as any]: 4, ["--S" as any]: 25 }}>
+              <p>
+                Don't have an account? <br />
+                <button type="button" onClick={() => setIsLogin(false)}>Sign Up</button>
               </p>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        </div>
 
-      <section className="space-y-6 text-gray-700">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {isLogin ? "Sign in to continue your preparation" : "Start preparing with Test Sagar"}
-          </h1>
-          <p className="mt-2 text-sm leading-relaxed">
-            Test Sagar is a mock test platform for students preparing for medical, engineering and nursing entrance
-            exams. An account keeps every attempt, score and mistake in one place, so your practice builds on itself
-            instead of starting from zero each week.
+        <div className="auth-info login">
+          <h2 className="auth-anim" style={{ ["--D" as any]: 0, ["--S" as any]: 20 }}>WELCOME BACK!</h2>
+          <p className="auth-anim" style={{ ["--D" as any]: 1, ["--S" as any]: 21 }}>
+            Your attempts, accuracy and rankings are waiting. Sign in to continue where you left off.
           </p>
         </div>
 
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">What your account keeps for you</h2>
-          <ul className="space-y-3 text-sm leading-relaxed">
-            <li>
-              <span className="font-semibold text-gray-900">Your full attempt history.</span> Every test you finish is
-              saved with your answers, the correct answers and the time you spent, so you can revisit a paper months
-              later and see exactly where marks slipped away.
-            </li>
-            <li>
-              <span className="font-semibold text-gray-900">Subject-wise accuracy.</span> Your results are broken down
-              by subject and topic, which shows whether a low score came from weak concepts or from rushing the last
-              ten questions.
-            </li>
-            <li>
-              <span className="font-semibold text-gray-900">Weekly rankings.</span> Scores feed a weekly leaderboard so
-              you can compare your performance against other students attempting the same papers.
-            </li>
-            <li>
-              <span className="font-semibold text-gray-900">Downloadable question papers.</span> Finished tests can be
-              saved as PDFs for revision away from the screen.
-            </li>
-          </ul>
+        {/* ---------- Register form ---------- */}
+        <div className="auth-form-box register">
+          <h2 className="auth-anim" style={{ ["--li" as any]: 17, ["--S" as any]: 0 }}>Register</h2>
+          <form onSubmit={handleAuth}>
+            <div className="auth-input auth-anim" style={{ ["--li" as any]: 18, ["--S" as any]: 1 }}>
+              <input
+                type="text"
+                required={!isLogin}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <label>Full Name</label>
+              <UserIcon className="auth-icon" />
+            </div>
+
+            <div className="auth-input auth-anim" style={{ ["--li" as any]: 19, ["--S" as any]: 2 }}>
+              <input
+                type="email"
+                required={!isLogin}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <label>Email</label>
+              <Mail className="auth-icon" />
+            </div>
+
+            <div className="auth-input auth-anim" style={{ ["--li" as any]: 20, ["--S" as any]: 3 }}>
+              <input
+                type="tel"
+                required={!isLogin}
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value)}
+              />
+              <label>WhatsApp Number</label>
+              <Phone className="auth-icon" />
+            </div>
+
+            <div className="auth-input auth-anim" style={{ ["--li" as any]: 21, ["--S" as any]: 4 }}>
+              <input
+                type="password"
+                required={!isLogin}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <label>Password</label>
+              <Lock className="auth-icon" />
+            </div>
+
+            <div className="auth-input auth-anim" style={{ ["--li" as any]: 22, ["--S" as any]: 5 }}>
+              <button className="auth-btn" type="submit" disabled={loading}>
+                {loading ? "Processing..." : "Register"}
+              </button>
+            </div>
+
+            <div className="auth-link auth-anim" style={{ ["--li" as any]: 23, ["--S" as any]: 6 }}>
+              <p>
+                Already have an account? <br />
+                <button type="button" onClick={() => setIsLogin(true)}>Sign In</button>
+              </p>
+            </div>
+          </form>
         </div>
 
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900">Why we ask for a WhatsApp number</h2>
-          <p className="text-sm leading-relaxed">
-            New test series, result corrections and account or payment issues are handled over WhatsApp, because that
-            reaches students faster than email. We use the number only for these updates and for verifying your account
-            if you ever lose access to your email. We never sell contact details, and you can ask us to remove your
-            number at any time.
+        <div className="auth-info register">
+          <h2 className="auth-anim" style={{ ["--li" as any]: 17, ["--S" as any]: 0 }}>WELCOME!</h2>
+          <p className="auth-anim" style={{ ["--li" as any]: 18, ["--S" as any]: 1 }}>
+            Create your Test Sagar account to save every attempt, track subject-wise accuracy and join the
+            weekly rankings.
           </p>
         </div>
-
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900">Choosing your email address</h2>
-          <p className="text-sm leading-relaxed">
-            Please sign up with a real, permanent inbox such as Gmail or your college address. Temporary and disposable
-            mail services are blocked, since confirmation links, premium receipts and password resets all travel by
-            email and cannot be recovered once a throwaway address expires.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-gray-900">Trouble signing in?</h2>
-          <p className="text-sm leading-relaxed">
-            If the confirmation email has not arrived, check your spam folder before requesting another one. For a
-            forgotten password, a blocked account or premium that has not activated, message our support assistant on
-            Telegram at{" "}
-            <a
-              href="https://t.me/TestSagarHelpRobot"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-indigo-600 hover:underline"
-            >
-              @TestSagarHelpRobot
-            </a>{" "}
-            and include the email address on your account.
-          </p>
-        </div>
-      </section>
       </div>
-    </div>
 
+      {/* Supporting content, kept for students and for search engines */}
+      <section className="auth-copy">
+        <h1>{isLogin ? "Sign in to continue your preparation" : "Start preparing with Test Sagar"}</h1>
+        <p>
+          Test Sagar is a mock test platform for students preparing for medical, engineering and nursing
+          entrance exams. An account keeps every attempt, score and mistake in one place, so your practice
+          builds on itself instead of starting from zero each week.
+        </p>
+
+        <h2>What your account keeps for you</h2>
+        <ul>
+          <li>
+            <strong>Your full attempt history.</strong> Every test you finish is saved with your answers, the
+            correct answers and the time you spent.
+          </li>
+          <li>
+            <strong>Subject-wise accuracy.</strong> Results are broken down by subject, so you can see whether
+            marks slipped from weak concepts or from rushing.
+          </li>
+          <li>
+            <strong>Weekly rankings.</strong> Scores feed a weekly leaderboard against students attempting the
+            same papers.
+          </li>
+          <li>
+            <strong>Downloadable question papers.</strong> Finished tests can be saved as PDFs for offline
+            revision.
+          </li>
+        </ul>
+
+        <h2>Why we ask for a WhatsApp number</h2>
+        <p>
+          New test series, result corrections and account or payment issues are handled over WhatsApp, because
+          that reaches students faster than email. We use the number only for these updates and for verifying
+          your account if you lose access to your email. We never sell contact details, and you can ask us to
+          remove your number at any time.
+        </p>
+
+        <h2>Choosing your email address</h2>
+        <p>
+          Please sign up with a real, permanent inbox such as Gmail or your college address. Temporary and
+          disposable mail services are blocked, since confirmation links, premium receipts and password resets
+          all travel by email.
+        </p>
+
+        <h2>Trouble signing in?</h2>
+        <p>
+          If the confirmation email has not arrived, check your spam folder before requesting another one. For a
+          forgotten password, a blocked account or premium that has not activated, message our support
+          assistant on Telegram at{" "}
+          <a href="https://t.me/TestSagarHelpRobot" target="_blank" rel="noopener noreferrer">
+            @TestSagarHelpRobot
+          </a>{" "}
+          and include the email address on your account.
+        </p>
+      </section>
+    </div>
   );
 };
 
