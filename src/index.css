@@ -658,3 +658,17 @@
   .auth-shell .auth-curve2 { display: none; }
   .auth-shell { background: linear-gradient(160deg, #25252b, #33241f); }
 }
+
+/* Hide the injected "Edit with Lovable" badge without affecting layout */
+#lovable-badge,
+#lovable-badge-close,
+a[href*="lovable.dev/projects"],
+a[href*="lovable.dev?utm"],
+a[href*="lovable.app/projects"],
+[class*="lovable-badge"],
+[id*="lovable-badge"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
