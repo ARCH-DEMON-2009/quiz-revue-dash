@@ -10,6 +10,10 @@ export interface TncExam {
   questionCount: number;
   allowForPremium: boolean;
   createdAt: string | null;
+  /** Category resolved on the server (explicit field, not guessed in the UI). */
+  category?: string;
+  /** Human-readable explanation of why this category was chosen. */
+  categoryReason?: string;
 }
 
 export interface TncQuestion {
