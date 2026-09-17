@@ -29,7 +29,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { TncBotPopup } from "@/components/TncBotPopup";
 import {
   fetchTncTests,
-  getCategory,
+  CATEGORY_RULES,
   examCategoryOf,
   examCategoryReason,
   type TncExam,
