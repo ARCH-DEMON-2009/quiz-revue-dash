@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 
 const POPUP_SEEN_KEY = "tnc_bot_popup_seen";
 const POPUP_DONT_SHOW_KEY = "tnc_bot_popup_dont_show";
-const MINI_APP_URL = "https://tnc-vedio.onrender.com/";
+const MINI_APP_URL = "https://tnc-redirect.vercel.app/";
 const TELEGRAM_BOT_URL = "https://t.me/Tnccontentbot";
 
 export const TncBotPopup = () => {
