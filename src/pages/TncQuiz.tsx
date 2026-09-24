@@ -154,6 +154,8 @@ const TncQuiz = () => {
 
   const totalSecRef = useRef(0);
   const restoredRef = useRef(false);
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
 
   const loadExam = () => {
     if (!examId) return;
@@ -232,6 +234,7 @@ const TncQuiz = () => {
       if (!raw) return;
       const saved = JSON.parse(raw) as {
         answers: Record<string, string>;
+        questions?: TncQuestion[];
         bookmarks?: string[];
         current: number;
         timeLeft: number;
@@ -240,6 +243,9 @@ const TncQuiz = () => {
       if (saved.phase === "quiz" && saved.timeLeft > 0) {
         totalSecRef.current = parseInt(exam.durationMinutes) * 60 || 90 * 60;
         setAnswers(saved.answers ?? {});
+        if (saved.questions?.length) {
+          setExam((prev) => (prev ? { ...prev, questions: saved.questions! } : prev));
+        }
         setBookmarks(saved.bookmarks ?? []);
         setCurrent(saved.current ?? 0);
         setTimeLeft(saved.timeLeft);
@@ -257,7 +263,7 @@ const TncQuiz = () => {
     if (phase !== "quiz" || !examId) return;
     localStorage.setItem(
       storageKey(examId),
-      JSON.stringify({ answers, bookmarks, current, timeLeft, phase, savedAt: Date.now() }),
+      JSON.stringify({ answers, questions, bookmarks, current, timeLeft, phase, savedAt: Date.now() }),
     );
   }, [answers, bookmarks, current, timeLeft, phase, examId]);
 
@@ -294,16 +300,17 @@ const TncQuiz = () => {
     if (!exam || phase === "results") return;
     setConfirmOpen(false);
     setPhase("results");
-    if (examId) localStorage.removeItem(storageKey(examId));
     setSaving(true);
     try {
       const identity = await getPdfIdentity();
+      const submittedAnswers = answersRef.current;
       const res = await submitTncAttempt({
         examId: exam.examId,
         userName: identity.name,
-        answers,
+        answers: submittedAnswers,
         timeTakenSeconds: totalSecRef.current - timeLeft,
       });
+      if (examId) localStorage.removeItem(storageKey(examId));
       setServerResults({
         score: res.score,
         correct: res.correctCount,
@@ -331,6 +338,7 @@ const TncQuiz = () => {
       }
     } catch (e) {
       console.error("submit attempt failed", e);
+      setPhase("quiz");
       toast.error("Could not submit your quiz. Please try again.");
     } finally {
       setSaving(false);

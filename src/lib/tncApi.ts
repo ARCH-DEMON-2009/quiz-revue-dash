@@ -188,6 +188,7 @@ export interface TncSharedAttempt {
   examName: string | null;
   userName: string;
   answers: Record<string, string>;
+  questionSnapshot: TncQuestion[];
   score: number;
   totalMarks: number;
   correctCount: number;

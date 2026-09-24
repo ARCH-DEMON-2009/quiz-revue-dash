@@ -22,6 +22,37 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
   return Array.isArray(data) ? data : [];
 }
 
+async function fetchQuestion(rowId: string) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const rows = await fetchFromCRM({
+        fn: "common_fn",
+        se: "fe",
+        sch: "t_qu",
+        data: { json: "*", row_id: "*" },
+        cond: { row_id: rowId },
+      });
+      if (rows.length > 0) return rows[0];
+    } catch (e) {
+      if (attempt === 2) console.error(`CRM question fetch failed for ${rowId}`, e);
+    }
+  }
+  return null;
+}
+
+async function fetchQuestions(rowIds: string[]) {
+  const result: any[] = new Array(rowIds.length).fill(null);
+  let next = 0;
+  const worker = async () => {
+    while (next < rowIds.length) {
+      const index = next++;
+      result[index] = await fetchQuestion(rowIds[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(10, rowIds.length) }, worker));
+  return result.filter(Boolean);
+}
+
 function buildMediaUrl(path: string | null) {
   if (!path) return null;
   const url = path.startsWith("http") ? path : `${CRM_BASE}/${path.replace(/^\//, "")}`;
@@ -385,36 +416,12 @@ async function getTestLive(examId: string) {
   const exam = examData[0];
   const quRefids: string[] = exam.qu_refid ?? [];
 
-  const BATCH = 50;
-  const batches: string[][] = [];
-  for (let i = 0; i < quRefids.length; i += BATCH) {
-    batches.push(quRefids.slice(i, i + BATCH));
-  }
-
-  const batchResults = await Promise.all(
-    batches.map((batch) =>
-      Promise.allSettled(
-        batch.map((rowId) =>
-          fetchFromCRM({
-            fn: "common_fn",
-            se: "fe",
-            sch: "t_qu",
-            data: { json: "*", row_id: "*" },
-            cond: { row_id: rowId },
-          }),
-        ),
-      )
-    ),
-  );
-
-  const questions = batchResults
-    .flat()
-    .filter((r) => r.status === "fulfilled")
-    .flatMap((r) => (Array.isArray((r as PromiseFulfilledResult<any>).value) ? (r as PromiseFulfilledResult<any>).value : []))
+  const questions = (await fetchQuestions(quRefids))
     .map(parseQuestion)
     .filter((q) => q.questionText.trim() !== "");
-
-  questions.sort((a, b) => (a.questionNo ?? 0) - (b.questionNo ?? 0));
+  if (questions.length !== quRefids.length) {
+    throw new Error(`CRM returned ${questions.length} of ${quRefids.length} assigned questions`);
+  }
 
   return { ...parseExam(exam), questions };
 }
@@ -491,7 +498,7 @@ async function syncExamWithQuestions(exam: any) {
       .from("tnc_exam_cache")
       .upsert([{
         ...examRow(exam),
-        question_count: exam.questions?.length ?? exam.questionCount ?? 0,
+        question_count: exam.questionCount ?? exam.questions?.length ?? 0,
         questions: exam.questions ?? [],
         questions_synced_at: new Date().toISOString(),
       }], { onConflict: "exam_id" });
@@ -549,6 +556,7 @@ async function listTests(page: number, limit: number, search = "", category = "A
 }
 
 async function getTest(examId: string) {
+  let expectedQuestionCount: number | null = null;
   try {
     const live = await getTestLive(examId);
     if (live) {
@@ -558,6 +566,10 @@ async function getTest(examId: string) {
     // Not found upstream — fall through to the mirror below.
   } catch (e) {
     console.error("CRM test fetch failed, falling back to cache", e);
+    const match = e instanceof Error
+      ? e.message.match(/CRM returned \d+ of (\d+) assigned questions/)
+      : null;
+    expectedQuestionCount = match ? Number(match[1]) : null;
   }
 
   const { data } = await adminClient()
@@ -567,6 +579,7 @@ async function getTest(examId: string) {
     .maybeSingle();
   const questions = Array.isArray(data?.questions) ? data!.questions : [];
   if (!data || questions.length === 0) return null;
+  if (expectedQuestionCount !== null && questions.length !== expectedQuestionCount) return null;
   return { ...rowToExam(data), questions, cached: true };
 }
 
@@ -588,6 +601,7 @@ async function saveAttempt(body: any) {
     correct_count: body.correctCount ?? 0,
     wrong_count: body.wrongCount ?? 0,
     skipped_count: body.skippedCount ?? 0,
+    question_snapshot: body.questionSnapshot ?? [],
     time_taken_seconds: body.timeTakenSeconds ?? 0,
     submitted_at: new Date().toISOString(),
   }]).select();
@@ -602,7 +616,7 @@ async function getAttempt(attemptId: string) {
   );
   const { data, error } = await admin
     .from("quiz_attempts")
-    .select("id, exam_id, exam_name, user_id, user_name, answers, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
+    .select("id, exam_id, exam_name, user_id, user_name, answers, question_snapshot, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
     .eq("id", attemptId)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -618,6 +632,7 @@ async function getAttempt(attemptId: string) {
     examName: data.exam_name ?? null,
     userName: nameById.get(String(data.user_id)) ?? maskName(String(data.user_name ?? "Student")),
     answers: data.answers ?? {},
+    questionSnapshot: Array.isArray(data.question_snapshot) ? data.question_snapshot : [],
     score: Number(data.score ?? 0),
     totalMarks: Number(data.total_marks ?? 0),
     correctCount: Number(data.correct_count ?? 0),
@@ -980,6 +995,7 @@ Deno.serve(async (req) => {
       const userName = String(body.userName ?? user.user_metadata?.name ?? "Student");
       const saved = await saveAttempt({
         examId, examName: exam.name, userId: user.id, userName, answers,
+        questionSnapshot: exam.questions,
         score, totalMarks: exam.maxMarks, correctCount: correct, wrongCount: wrong,
         skippedCount: skipped, timeTakenSeconds,
       });
@@ -1044,8 +1060,9 @@ Deno.serve(async (req) => {
       const attempt = await getAttempt(String(attemptId));
       if (!attempt) return json({ error: "Not found" }, 404);
       const exam = await getTest(attempt.examId);
-      if (!exam) return json({ error: "Not found" }, 404);
-      const review = exam.questions.map((q) => ({
+      if (!exam && !attempt.questionSnapshot.length) return json({ error: "Not found" }, 404);
+      const questions = attempt.questionSnapshot.length ? attempt.questionSnapshot : exam!.questions;
+      const review = questions.map((q: any) => ({
         rowId: q.rowId,
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,

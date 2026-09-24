@@ -83,9 +83,10 @@ const TncSharedResult = () => {
         // The public quiz payload no longer includes answer keys; merge in the
         // review data (correct answers + explanations) for this submitted attempt.
         const map = new Map(rev.review.map((r) => [r.rowId, r]));
+        const snapshot = a.questionSnapshot?.length ? a.questionSnapshot : e.questions;
         setExam({
           ...e,
-          questions: e.questions.map((q) => {
+          questions: snapshot.map((q) => {
             const r = map.get(q.rowId);
             return r ? { ...q, correctAnswer: r.correctAnswer, explanation: r.explanation } : q;
           }),
