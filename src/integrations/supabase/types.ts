@@ -404,6 +404,7 @@ export type Database = {
           exam_id: string
           exam_name: string | null
           id: number
+          question_snapshot: Json
           score: number
           skipped_count: number
           submitted_at: string
@@ -420,6 +421,7 @@ export type Database = {
           exam_id: string
           exam_name?: string | null
           id?: number
+          question_snapshot?: Json
           score?: number
           skipped_count?: number
           submitted_at?: string
@@ -436,6 +438,7 @@ export type Database = {
           exam_id?: string
           exam_name?: string | null
           id?: number
+          question_snapshot?: Json
           score?: number
           skipped_count?: number
           submitted_at?: string
