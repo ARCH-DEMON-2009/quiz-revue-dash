@@ -13,12 +13,16 @@ import { ArrowLeft, Trophy, Medal, AlertCircle, RefreshCw, Crown, Star, Shield, 
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import { fetchTncLeaderboard, type TncLeaderboardRow } from "@/lib/tncApi";
 import { TncBotPopup } from "@/components/TncBotPopup";
+import PublicProfileLink from "@/components/PublicProfileLink";
+import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
+import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
 interface ExtendedTncRow extends TncLeaderboardRow {
   isPremium?: boolean;
   isAdmin?: boolean;
   avatarUrl?: string | null;
   planType?: string;
+  milestoneBadgeIds?: string[];
 }
 
 const SITE = "https://test.shashanksv.com";
@@ -52,7 +56,11 @@ const TncLeaderboard = () => {
       .then((res) => {
         // The edge function already resolves display names, avatars, premium
         // and admin status with service-role access (client RLS hides roles).
-        setRows(res.rows as ExtendedTncRow[]);
+        const milestoneProfiles = await fetchPublicMilestoneProfiles(res.rows.map((row) => row.userId));
+        setRows(res.rows.map((row) => ({
+          ...row,
+          milestoneBadgeIds: milestoneProfiles.get(row.userId)?.badge_ids ?? [],
+        })) as ExtendedTncRow[]);
         setExamName(res.examName);
       })
       .catch((e) => {
@@ -143,7 +151,10 @@ const TncLeaderboard = () => {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className={`truncate font-semibold ${getNameColor(r)}`}>{toDisplayName(r.userName)}</p>
+                    <PublicProfileLink userId={r.userId} className={`truncate font-semibold hover:underline ${getNameColor(r)}`}>
+                      {toDisplayName(r.userName)}
+                    </PublicProfileLink>
+                    <MilestoneBadgeStrip badgeIds={r.milestoneBadgeIds} />
                   </div>
                   <p className="text-xs text-muted-foreground">
                     <span className="text-green-600">{r.correctCount} correct</span> ·{" "}

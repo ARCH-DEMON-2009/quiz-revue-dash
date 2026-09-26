@@ -12,6 +12,9 @@ import Footer from "@/components/Footer";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import LeaderboardIdentityAvatar, { identityNameClass } from "@/components/LeaderboardIdentityAvatar";
 import { toDisplayName } from "@/lib/displayName";
+import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
+import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
+import PublicProfileLink from "@/components/PublicProfileLink";
 
 
 interface LeaderboardEntry {
@@ -25,6 +28,7 @@ interface LeaderboardEntry {
   is_premium?: boolean;
   plan_duration_type?: string;
   is_admin?: boolean;
+  milestone_badge_ids?: string[];
 }
 
 /** Leaderboard avatar that resolves the stored profile avatar, then applies tier art. */
@@ -111,7 +115,7 @@ const Leaderboard = () => {
       // Fetch premium status and admin status for these users
       const userIds = (data || []).map((e: any) => e.user_id).filter(Boolean);
       
-      const [premiumResponse, adminResponse] = await Promise.all([
+      const [premiumResponse, adminResponse, milestoneProfiles] = await Promise.all([
         supabase
           .from('premium_users')
           .select('user_id, plan_duration_type')
@@ -119,7 +123,8 @@ const Leaderboard = () => {
           .eq('status', 'active')
           .gt('expiry_date', new Date().toISOString()),
         // RLS hides other users' roles, so use the security-definer helper.
-        supabase.rpc('get_admin_user_ids')
+        supabase.rpc('get_admin_user_ids'),
+        fetchPublicMilestoneProfiles(userIds)
       ]);
 
       const premiumMap = new Map(premiumResponse.data?.map(p => [p.user_id, p.plan_duration_type || 'standard']) || []);
@@ -136,7 +141,8 @@ const Leaderboard = () => {
         global_rank: Number(entry.global_rank) || 0,
         is_premium: premiumMap.has(entry.user_id),
         plan_duration_type: premiumMap.get(entry.user_id),
-        is_admin: adminSet.has(entry.user_id)
+        is_admin: adminSet.has(entry.user_id),
+        milestone_badge_ids: milestoneProfiles.get(entry.user_id)?.badge_ids ?? []
       }));
 
       setLeaderboard(leaderboardData);
@@ -268,9 +274,10 @@ const Leaderboard = () => {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                          <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(entry)}`}>
+                          <PublicProfileLink userId={entry.user_id} className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none hover:underline ${getNameColor(entry)}`}>
                             {toDisplayName(entry.name)}
-                          </p>
+                          </PublicProfileLink>
+                          <MilestoneBadgeStrip badgeIds={entry.milestone_badge_ids} />
 
                           {isCurrentUser(entry.user_id) && (
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
@@ -335,9 +342,10 @@ const Leaderboard = () => {
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                            <p className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none ${getNameColor(currentUserEntry)}`}>
+                            <PublicProfileLink userId={currentUserEntry.user_id} className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none hover:underline ${getNameColor(currentUserEntry)}`}>
                               {toDisplayName(currentUserEntry.name)}
-                            </p>
+                            </PublicProfileLink>
+                            <MilestoneBadgeStrip badgeIds={currentUserEntry.milestone_badge_ids} />
 
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">
                               <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />

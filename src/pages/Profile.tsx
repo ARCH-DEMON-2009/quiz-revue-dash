@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import IdentityPreviewCard from "@/components/IdentityPreviewCard";
 import MilestoneBadges from "@/components/MilestoneBadges";
+import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
 
 import {
@@ -82,6 +83,7 @@ interface AccessStatus {
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showAvatarSelector, setShowAvatarSelector] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<{url: string, premium: boolean} | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -103,6 +105,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [accessStatus, setAccessStatus] = useState<AccessStatus | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+    const [earnedBadgeIds, setEarnedBadgeIds] = useState<string[] | null>(null);
   const { 
     config,
     getAdminFrameStyles, 
@@ -117,6 +120,16 @@ const Profile = () => {
     fetchUserDetails();
     checkAdmin();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("chooseAvatar") !== "1") return;
+    setShowAvatarSelector(true);
+    if (!userDetails) return;
+    const scrollTimer = window.setTimeout(() => {
+      document.getElementById("avatar-selector")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 0);
+    return () => window.clearTimeout(scrollTimer);
+  }, [searchParams, userDetails]);
 
   const checkAdmin = async () => {
     const { data } = await supabase.rpc('is_admin');
@@ -258,12 +271,27 @@ const Profile = () => {
 
   const fetchProfileData = async () => {
     try {
-      const { data: results, error } = await supabase
-        .from("test_results")
-        .select("*")
-        .order("completed_at", { ascending: false });
+      const [userResult, resultsResult] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from("test_results").select("*").order("completed_at", { ascending: false }),
+      ]);
+      const { data: { user } } = userResult;
+      const { data: results, error } = resultsResult;
 
       if (error) throw error;
+
+      if (user) {
+        try {
+          const publicProfiles = await fetchPublicMilestoneProfiles([user.id]);
+          setEarnedBadgeIds(publicProfiles.get(user.id)?.badge_ids ?? []);
+        } catch (badgeError) {
+          console.error("Failed to load earned milestone badges:", badgeError);
+        }
+      }
+            <MilestoneBadges
+              stats={{ totalTests: stats.totalTests, overallAccuracy: stats.overallAccuracy, bestScore, streakDays }}
+              earnedIds={earnedBadgeIds ?? undefined}
+            />
 
       if (results && results.length > 0) {
         const totalTests = results.length;
@@ -455,7 +483,7 @@ const Profile = () => {
             <CardContent className="p-3 sm:p-4 lg:p-6 pt-4">
               <div className="space-y-4">
                 {showAvatarSelector && (
-                  <div className="space-y-4">
+                  <div id="avatar-selector" className="space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                       <p className="text-sm font-semibold text-muted-foreground">Select Avatar</p>
                       {accessStatus?.type !== 'premium' && (

@@ -13,6 +13,7 @@ import QuizRedirect from "./pages/QuizRedirect";
 import Results from "./pages/Results";
 import Review from "./pages/Review";
 import Profile from "./pages/Profile";
+import PublicUserProfile from "./pages/PublicUserProfile";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import Analytics from "./pages/Analytics";
@@ -43,6 +44,7 @@ import { BypassBlockGuard } from "./components/BypassBlockGuard";
 import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
 
 import AppErrorBoundary from "./components/AppErrorBoundary";
+import AvatarOnboardingPrompt from "./components/AvatarOnboardingPrompt";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +87,7 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AvatarOnboardingPrompt />
         
         <MaintenanceModeGuard>
           <BypassBlockGuard />
@@ -99,6 +102,7 @@ const App = () => {
             <Route path="/results/:resultId" element={<Results />} />
             <Route path="/review/:resultId" element={<Review />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/users/:userId" element={<PublicUserProfile />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/comparison" element={<AttemptComparison />} />
 

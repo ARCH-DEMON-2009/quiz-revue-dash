@@ -20,6 +20,9 @@ import {
   type TncLeaderboardPeriod,
 } from "@/lib/tncApi";
 import { toast } from "sonner";
+import PublicProfileLink from "@/components/PublicProfileLink";
+import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
+import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
 const SITE = "https://test.shashanksv.com";
 const CACHE_KEY = "tnc_global_leaderboard_cache";
@@ -38,7 +41,7 @@ const fmtTime = (sec: number) => {
 
 const TncGlobalLeaderboard = () => {
   const [period, setPeriod] = useState<TncLeaderboardPeriod>("all");
-  const [rows, setRows] = useState<(TncGlobalLeaderboardRow & { isAdmin?: boolean; avatarUrl?: string | null; planType?: string })[]>([]);
+  const [rows, setRows] = useState<(TncGlobalLeaderboardRow & { isAdmin?: boolean; avatarUrl?: string | null; planType?: string; milestoneBadgeIds?: string[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [meId, setMeId] = useState<string | null>(null);
@@ -77,7 +80,11 @@ const TncGlobalLeaderboard = () => {
       const res = await fetchTncGlobalLeaderboard(p);
       // Names, avatars, premium and admin status come from the edge function
       // (service-role) because client RLS hides roles from other users.
-      const enhancedRows = res.rows;
+      const milestoneProfiles = await fetchPublicMilestoneProfiles(res.rows.map((row) => row.userId));
+      const enhancedRows = res.rows.map((row) => ({
+        ...row,
+        milestoneBadgeIds: milestoneProfiles.get(row.userId)?.badge_ids ?? [],
+      }));
 
       setRows(enhancedRows);
 
@@ -289,7 +296,10 @@ const TncGlobalLeaderboard = () => {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    <p className={`truncate font-semibold ${getNameColor(r)}`}>{toDisplayName(r.userName)}</p>
+                    <PublicProfileLink userId={r.userId} className={`truncate font-semibold hover:underline ${getNameColor(r)}`}>
+                      {toDisplayName(r.userName)}
+                    </PublicProfileLink>
+                    <MilestoneBadgeStrip badgeIds={r.milestoneBadgeIds} />
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {r.testsTaken} tests · {r.accuracy.toFixed(1)}% accuracy · {fmtTime(r.timeTakenSeconds)}
