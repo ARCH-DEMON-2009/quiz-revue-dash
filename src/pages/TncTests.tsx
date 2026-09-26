@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Bot,
   Info,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -221,10 +222,16 @@ const TncTests = () => {
 
         {/* Cards */}
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-48 rounded-xl" />
-            ))}
+          <div aria-busy="true" aria-live="polite" className="space-y-5">
+            <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+              <span>Loading test series...</span>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-48 rounded-xl" />
+              ))}
+            </div>
           </div>
         ) : error ? (
           <Card className="flex flex-col items-center gap-3 p-12 text-center">
