@@ -60,35 +60,18 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
   return Array.isArray(data) ? data : [];
 }
 
-async function fetchQuestion(rowId: string) {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const rows = await fetchFromCRM({
-        fn: "common_fn",
-        se: "fe",
-        sch: "t_qu",
-        data: { json: "*", row_id: "*" },
-        cond: { row_id: rowId },
-      });
-      if (rows.length > 0) return rows[0];
-    } catch (e) {
-      if (attempt === 2) console.error(`CRM question fetch failed for ${rowId}`, e);
-    }
-  }
-  return null;
-}
-
 async function fetchQuestions(rowIds: string[]) {
-  const result: any[] = new Array(rowIds.length).fill(null);
-  let next = 0;
-  const worker = async () => {
-    while (next < rowIds.length) {
-      const index = next++;
-      result[index] = await fetchQuestion(rowIds[index]);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(10, rowIds.length) }, worker));
-  return result.filter(Boolean);
+  if (!rowIds.length) return [];
+
+  const rows = await fetchFromCRM({
+    fn: "common_fn",
+    se: "fe",
+    sch: "t_qu",
+    data: { json: "*", row_id: "*" },
+    cond: { row_id: rowIds },
+  });
+  const rowsById = new Map(rows.map((row: any) => [String(row.row_id), row]));
+  return rowIds.map((rowId) => rowsById.get(rowId)).filter(Boolean);
 }
 
 function buildMediaUrl(path: string | null) {
