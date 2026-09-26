@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Crown, ExternalLink, Shield, Clock, CheckCircle2 } from "lucide-react";
+import { Crown, ExternalLink, Shield, Clock, CheckCircle2, LogOut, User } from "lucide-react";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
+import { toast } from "sonner";
 
 interface LinkShortenerGateProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ interface LinkShortenerGateProps {
 export const VERIFY_RETURN_KEY = "verify-return-to";
 
 export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps) => {
+  const navigate = useNavigate();
   const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
 
   // Remember where to resume once verification finishes on /verify.
@@ -38,6 +40,30 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
   const [initiated, setInitiated] = useState(false);
   const [initiatedAt, setInitiatedAt] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(600); // 10 min
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const loadAvatar = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!active || !user) return;
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("avatar_url")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (active) {
+        setAvatarUrl(profile?.avatar_url || user.user_metadata?.avatar_url || null);
+      }
+    };
+
+    void loadAvatar().catch((error) => console.error("Error loading account avatar:", error));
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (premiumLoading) return;
@@ -138,17 +164,48 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
     }
   };
 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Unable to log out. Please try again.");
+      return;
+    }
+    navigate("/auth", { replace: true });
+  };
+
+  const accountActions = (
+    <header className="container mx-auto flex w-full max-w-6xl justify-end gap-2 px-4 py-3">
+      <Button variant="ghost" size="sm" onClick={() => navigate("/profile")} aria-label="Open profile" className="gap-2">
+        <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border border-border bg-muted">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <User className="h-4 w-4" />
+          )}
+        </span>
+        <span>Profile</span>
+      </Button>
+      <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
+        <LogOut className="h-4 w-4" />
+        <span>Logout</span>
+      </Button>
+    </header>
+  );
+
   if (isPremium || accessStatus === 'verified') {
     return <>{children}</>;
   }
 
   if (premiumLoading || accessStatus === 'loading') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Checking access...</p>
-        </div>
+      <div className="flex min-h-screen flex-col bg-background">
+        {accountActions}
+        <main className="flex flex-1 items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Checking access...</p>
+          </div>
+        </main>
       </div>
     );
   }
@@ -160,8 +217,10 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="max-w-md w-full">
+    <div className="flex min-h-screen flex-col bg-background">
+      {accountActions}
+      <main className="flex flex-1 items-center justify-center p-4">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Shield className="h-8 w-8 text-primary" />
@@ -236,6 +295,7 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
           </Link>
         </CardContent>
       </Card>
+      </main>
     </div>
   );
 };
