@@ -33,12 +33,12 @@ interface UserDetails {
   avatarUrl?: string;
 }
 
-const AVATARS = [
+const AVATARS: { id: string; url: string; premium: boolean; adminOnly?: boolean }[] = [
   { id: 'f1', url: 'https://i.pinimg.com/736x/e4/32/12/e43212860a10e5e63c80c2ce5f76f8b3.jpg', premium: false },
   { id: 'f2', url: 'https://i.pinimg.com/736x/9c/f0/81/9cf08115f983cf802fde44e07b62413d.jpg', premium: false },
   { id: 'p1', url: 'https://i.pinimg.com/1200x/dd/f6/46/ddf6466855c93a74ed814ce66860e9a3.jpg', premium: true },
   { id: 'p2', url: 'https://i.pinimg.com/1200x/b1/ea/85/b1ea858dde1f60b3d7ff7ba62c7739f0.jpg', premium: true },
-  { id: 'p3', url: 'https://i.pinimg.com/736x/15/1b/d1/151bd1fb461ab318a3b06a331c9e5d4d.jpg', premium: true },
+  { id: 'p3', url: 'https://i.pinimg.com/736x/15/1b/d1/151bd1fb461ab318a3b06a331c9e5d4d.jpg', premium: false },
   { id: 'p4', url: 'https://i.pinimg.com/736x/b8/81/01/b88101506ac0d03a27325247d1ef88d0.jpg', premium: true },
   { id: 'p5', url: 'https://i.pinimg.com/736x/9f/b1/c6/9fb1c6354e2b4261904d1762a60c2d4e.jpg', premium: true },
   { id: 'p6', url: 'https://i.pinimg.com/736x/02/af/aa/02afaabec94dc7ca657480d44c1eab78.jpg', premium: true },
@@ -49,6 +49,18 @@ const AVATARS = [
   { id: 'p11', url: 'https://i.pinimg.com/736x/46/98/52/469852f2ac6c7ace80f5eb65a61aede2.jpg', premium: true },
   { id: 'p12', url: 'https://i.pinimg.com/736x/b2/48/25/b24825560455f51aad495d5420fd6023.jpg', premium: true },
   { id: 'p13', url: 'https://i.pinimg.com/1200x/0b/7a/44/0b7a4483a82294ecd3d77e703196e4de.jpg', premium: true },
+  { id: 'n1', url: 'https://i.pinimg.com/736x/93/bc/75/93bc75ffd6e50150860b176ad1469faf.jpg', premium: false },
+  { id: 'n2', url: 'https://i.pinimg.com/736x/39/fe/77/39fe776aaf3faacb09568f724d9ca287.jpg', premium: false },
+  { id: 'n3', url: 'https://i.pinimg.com/736x/bd/f4/8b/bdf48bcbbe81fcac56fea648daeca03f.jpg', premium: false },
+  { id: 'n4', url: 'https://i.pinimg.com/736x/b7/cb/86/b7cb86870695c3b60a401d298ef65137.jpg', premium: false },
+  { id: 'n5', url: 'https://i.pinimg.com/1200x/e1/69/b0/e169b07de5e990adf973a2e0a3e29f28.jpg', premium: false },
+  { id: 'n6', url: 'https://i.pinimg.com/originals/87/8c/53/878c5376b10b2f842a06fae2d386c463.gif', premium: false },
+  { id: 'n7', url: 'https://i.pinimg.com/originals/e6/5d/50/e65d50f699ab952ca89c8525058c4a0d.gif', premium: false },
+  { id: 'n8', url: 'https://i.pinimg.com/originals/22/61/c4/2261c4c27623e203d3b8729fd8d667ba.gif', premium: false },
+  { id: 'n9', url: 'https://i.pinimg.com/736x/e2/3e/eb/e23eebb365c985676a4747be4876aea3.jpg', premium: false },
+  { id: 'admin1', url: 'https://i.pinimg.com/736x/d9/29/00/d9290081650be42d78fda3208fc97b8f.jpg', premium: false, adminOnly: true },
+  { id: 'admin2', url: 'https://i.pinimg.com/736x/30/3e/e7/303ee7ab0970b4f16301801e54f802dd.jpg', premium: false, adminOnly: true },
+  { id: 'admin3', url: 'https://i.pinimg.com/originals/50/4a/1f/504a1f0e735c24559529631a62146a4c.gif', premium: false, adminOnly: true },
 ];
 
 interface Stats {
@@ -170,8 +182,12 @@ const Profile = () => {
     }
   };
 
-  const handleAvatarClick = (url: string, isPremiumAvatar: boolean) => {
-    if (isPremiumAvatar && accessStatus?.type !== 'premium') {
+  const handleAvatarClick = (url: string, isPremiumAvatar: boolean, adminOnly = false) => {
+    if (adminOnly && !isAdmin) {
+      toast.error("This avatar is only available to admins.");
+      return;
+    }
+    if (isPremiumAvatar && accessStatus?.type !== 'premium' && !isAdmin) {
       setSelectedAvatar({ url, premium: isPremiumAvatar });
       setShowUpgradeModal(true);
       return;
@@ -453,14 +469,18 @@ const Profile = () => {
                     </div>
                     <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-3">
                       {AVATARS.map((avatar) => (
-                        <div 
+                        <button
                           key={avatar.id}
-                          onClick={() => handleAvatarClick(avatar.url, avatar.premium)}
+                          type="button"
+                          aria-pressed={userDetails.avatarUrl === avatar.url}
+                          aria-label={`Select avatar${avatar.adminOnly ? ", admin only" : avatar.premium ? ", premium" : ""}`}
+                          title={avatar.adminOnly && !isAdmin ? "This avatar is only available to admins." : undefined}
+                          onClick={() => handleAvatarClick(avatar.url, avatar.premium, avatar.adminOnly)}
                           className={`relative cursor-pointer group rounded-full p-0.5 border-2 transition-all duration-300 ${
                             userDetails.avatarUrl === avatar.url 
                               ? 'border-primary shadow-lg shadow-primary/20 scale-105' 
                               : 'border-transparent hover:border-primary/30'
-                          } ${avatar.premium && accessStatus?.type !== 'premium' ? 'opacity-50 grayscale hover:opacity-70' : ''}`}
+                          } ${avatar.premium && accessStatus?.type !== 'premium' && !isAdmin ? 'opacity-50 grayscale hover:opacity-70' : ''} ${avatar.adminOnly && !isAdmin ? 'opacity-70' : ''}`}
                         >
                           <img 
                             src={avatar.url} 
@@ -475,7 +495,12 @@ const Profile = () => {
                               <Crown className="h-3 w-3 text-white" />
                             </div>
                           )}
-                        </div>
+                          {avatar.adminOnly && (
+                            <div className="absolute -bottom-1 -right-1 rounded-full bg-primary p-1 shadow-md" title="Admin only">
+                              <Shield className="h-3 w-3 text-primary-foreground" />
+                            </div>
+                          )}
+                        </button>
                       ))}
                     </div>
                   </div>
