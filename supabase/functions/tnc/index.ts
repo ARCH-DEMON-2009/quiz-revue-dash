@@ -3,6 +3,32 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const CRM_ENDPOINT = Deno.env.get("TNC_CRM_ENDPOINT") ?? "https://crm.tncnursing.in/common/";
 const CRM_BASE = Deno.env.get("TNC_CRM_BASE") ?? "https://crm.tncnursing.in";
+const CRM_REQUEST_INTERVAL_MS = 550;
+let crmRequestQueue: Promise<void> = Promise.resolve();
+let nextCrmRequestAt = 0;
+let crmCooldownUntil = 0;
+
+async function waitForCrmRequestSlot() {
+  while (true) {
+    const previousRequest = crmRequestQueue;
+    let releaseQueue!: () => void;
+    crmRequestQueue = new Promise<void>((resolve) => {
+      releaseQueue = resolve;
+    });
+
+    let requestAt: number;
+    try {
+      requestAt = Math.max(Date.now(), nextCrmRequestAt, crmCooldownUntil);
+      nextCrmRequestAt = requestAt + CRM_REQUEST_INTERVAL_MS;
+    } finally {
+      releaseQueue();
+    }
+
+    const waitMs = requestAt - Date.now();
+    if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
+    if (Date.now() >= crmCooldownUntil && Date.now() >= requestAt) return;
+  }
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -12,12 +38,24 @@ function json(body: unknown, status = 200) {
 }
 
 async function fetchFromCRM(payload: Record<string, unknown>) {
+  await waitForCrmRequestSlot();
   const res = await fetch(CRM_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ payload: JSON.stringify(payload) }),
   });
-  if (!res.ok) throw new Error(`CRM error ${res.status}`);
+  if (!res.ok) {
+    if (res.status === 429) {
+      const retryAfter = res.headers.get("retry-after");
+      const retryAfterMs = retryAfter
+        ? Number.isNaN(Number(retryAfter))
+          ? Math.max(0, Date.parse(retryAfter) - Date.now())
+          : Number(retryAfter) * 1000
+        : 30_000;
+      crmCooldownUntil = Math.max(crmCooldownUntil, Date.now() + Math.min(retryAfterMs, 60_000));
+    }
+    throw new Error(`CRM error ${res.status}`);
+  }
   const data = await res.json();
   return Array.isArray(data) ? data : [];
 }
