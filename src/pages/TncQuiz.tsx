@@ -35,6 +35,7 @@ import {
   LayoutGrid,
   Bot,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import {
   Sheet,
@@ -173,12 +174,14 @@ const TncQuiz = () => {
         console.error(e);
         if (e instanceof TncApiError && (e.code === "verification_required" || e.code === "premium_required")) {
           setAccessRequired(true);
+          toast.error("This test requires premium access. Please upgrade or verify your premium status.");
         } else if (e instanceof TncApiError && e.code === "auth_required") {
           setIsAuthed(false);
           setAuthChecked(true);
+          toast.error("Please log in to access this test.");
         } else {
           setLoadError(true);
-          toast.error("Failed to load this test.");
+          toast.error("Failed to load this test. Please try again.");
         }
       })
       .finally(() => setLoading(false));
@@ -401,7 +404,11 @@ const TncQuiz = () => {
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
-        <div className="container mx-auto max-w-3xl space-y-4 px-4 py-10">
+        <div aria-busy="true" aria-live="polite" className="container mx-auto max-w-3xl space-y-5 px-4 py-10">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+            <span>{loading ? "Loading test questions..." : "Checking your sign-in..."}</span>
+          </div>
           <Skeleton className="h-10 w-2/3" />
           <Skeleton className="h-40 w-full" />
         </div>
@@ -414,7 +421,11 @@ const TncQuiz = () => {
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
-        <div className="container mx-auto max-w-3xl space-y-4 px-4 py-10">
+        <div aria-busy="true" aria-live="polite" className="container mx-auto max-w-3xl space-y-5 px-4 py-10">
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+            <span>Preparing your test...</span>
+          </div>
           <Skeleton className="h-10 w-2/3" />
           <Skeleton className="h-40 w-full" />
         </div>
