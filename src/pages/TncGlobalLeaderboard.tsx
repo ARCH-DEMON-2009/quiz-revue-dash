@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock, Star, Shield, Bot, ExternalLink } from "lucide-react";
+import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock, Star, Shield, Bot, ExternalLink, UserRound, ArrowRight } from "lucide-react";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import { TncBotPopup } from "@/components/TncBotPopup";
 import { supabase } from "@/integrations/supabase/client";
@@ -233,23 +233,31 @@ const TncGlobalLeaderboard = () => {
         </Tabs>
 
         {me && (
-          <Card 
-            className="mb-4 cursor-pointer border-primary/40 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
-            onClick={() => {
-              // Track analytics event for clicking on personal rank card
-              try {
-                (window as any).posthog?.capture('leaderboard_me_card_clicked');
-              } catch (e) { /* ignore analytics errors */ }
-              toast.info("This is your current ranking based on your best performance.");
-            }}
-          >
-            <p className="text-xs font-medium uppercase tracking-wide text-primary">Your Rank</p>
-            <div className="mt-1 flex items-center justify-between gap-3">
-              <span className="text-lg font-bold text-foreground">#{me.rank}</span>
-              <span className="text-sm text-muted-foreground">
-                {me.testsTaken} tests · {me.accuracy.toFixed(1)}% accuracy
-              </span>
-              <span className="font-bold text-primary">{me.totalScore.toFixed(1)} pts</span>
+          <Card className="mb-4 border-primary/30 bg-primary/5 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <LeaderboardIdentityAvatar
+                name={me.userName}
+                avatarUrl={me.avatarUrl}
+                isAdmin={me.isAdmin}
+                isPremium={me.isPremium}
+                adminFrame={config.frame_type}
+                adminBadge={getAdminBadgeIcon(true) || undefined}
+                size="md"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary">Your leaderboard position</p>
+                <p className="mt-1 text-lg font-bold text-foreground">Rank #{me.rank}</p>
+                <p className="text-sm text-muted-foreground">
+                  {me.testsTaken} tests · {me.accuracy.toFixed(1)}% accuracy · {me.totalScore.toFixed(1)} points
+                </p>
+              </div>
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/profile">
+                  <UserRound className="h-4 w-4" />
+                  {me.avatarUrl ? "Edit profile" : "Add your avatar"}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </Card>
         )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
@@ -26,6 +26,7 @@ import {
   Info,
   Loader2,
   Star,
+  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -205,9 +206,31 @@ const TncTests = () => {
               ? "Choose an exam to browse its test series."
               : "Choose a test series to start practicing."}
           </p>
-          <Button variant="outline" className="mt-4 gap-2" onClick={() => navigate("/tnc-tests/leaderboard")}>
-            <Trophy className="h-4 w-4" /> Overall Leaderboard
-          </Button>
+          <Card className="mx-auto mt-5 max-w-3xl border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-card to-primary/5 p-4 text-left sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600">
+                <Trophy className="h-6 w-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-bold text-foreground">Your next result could put you on the leaderboard</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Compare your progress with nursing aspirants across every TNC test. Add an avatar so classmates recognize you.
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                <Button asChild className="gap-2">
+                  <Link to="/tnc-tests/leaderboard">
+                    <Trophy className="h-4 w-4" /> View rankings
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="gap-2">
+                  <Link to="/profile">
+                    <UserRound className="h-4 w-4" /> Update avatar
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
 
         <div className="mb-6 flex justify-center">

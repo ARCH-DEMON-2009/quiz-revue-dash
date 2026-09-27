@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { displayInitial, toDisplayName } from "@/lib/displayName";
 
@@ -46,11 +47,13 @@ export function identityNameClass(props: LeaderboardIdentityProps) {
  * Falls back to initials (never an email) when no avatar/name is available.
  */
 const LeaderboardIdentityAvatar = (props: LeaderboardIdentityProps) => {
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  useEffect(() => setAvatarLoadFailed(false), [props.avatarUrl]);
   const { frameUrl, badgeUrl, tier } = resolveIdentityArt(props);
   const name = toDisplayName(props.name);
   const dim = props.size === "md" ? "h-12 w-12" : "h-10 w-10";
-  const avatarSrc =
-    props.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
+  const fallbackAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`;
+  const avatarSrc = props.avatarUrl && !avatarLoadFailed ? props.avatarUrl : fallbackAvatar;
 
   return (
     <div className={`relative ${dim} flex-shrink-0 ${props.className ?? ""}`} data-tier={tier}>
@@ -69,7 +72,14 @@ const LeaderboardIdentityAvatar = (props: LeaderboardIdentityProps) => {
       </div>
 
       <Avatar className={`${dim} relative bg-background border-2 border-transparent overflow-hidden z-0`}>
-        <AvatarImage src={avatarSrc} className="object-cover" loading="lazy" alt={name} />
+        <AvatarImage
+          key={avatarSrc}
+          src={avatarSrc}
+          className="object-cover"
+          loading="lazy"
+          alt={name}
+          onError={() => setAvatarLoadFailed(true)}
+        />
         <AvatarFallback className="bg-primary/20 text-primary font-semibold">
           {displayInitial(props.name)}
         </AvatarFallback>

@@ -41,6 +41,7 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
   const [initiatedAt, setInitiatedAt] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(600); // 10 min
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [verificationStartError, setVerificationStartError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -149,6 +150,7 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
 
   const handleStartVerification = async () => {
     setInitiating(true);
+    setVerificationStartError("");
     try {
       const { data, error } = await supabase.functions.invoke('generate-verification');
       if (error) throw error;
@@ -156,9 +158,14 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
         setInitiatedAt(new Date(data.initiated_at));
         setInitiated(true);
         setCountdown(600);
+      } else {
+        throw new Error(data?.error || "The verification session could not be started. Please retry.");
       }
     } catch (error) {
       console.error("Error starting verification:", error);
+      const message = error instanceof Error ? error.message : "The verification session could not be started. Please retry.";
+      setVerificationStartError(message);
+      toast.error(message);
     } finally {
       setInitiating(false);
     }
@@ -232,24 +239,29 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
         </CardHeader>
         <CardContent className="space-y-4">
           {!initiated ? (
-            <Button
-              className="w-full gap-2"
-              size="lg"
-              onClick={handleStartVerification}
-              disabled={initiating}
-            >
-              {initiating ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
-                  Starting...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-5 w-5" />
-                  Start Verification (Free)
-                </>
+            <>
+              <Button
+                className="w-full gap-2"
+                size="lg"
+                onClick={handleStartVerification}
+                disabled={initiating}
+              >
+                {initiating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="h-5 w-5" />
+                    Start Verification (Free)
+                  </>
+                )}
+              </Button>
+              {verificationStartError && (
+                <p role="alert" className="mt-2 text-sm text-destructive">{verificationStartError}</p>
               )}
-            </Button>
+            </>
           ) : (
             <div className="space-y-3">
               <div className="text-center p-3 rounded-lg bg-muted/50 border">

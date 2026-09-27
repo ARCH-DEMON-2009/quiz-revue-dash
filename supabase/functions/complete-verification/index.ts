@@ -10,8 +10,6 @@ const corsHeaders = {
 const MIN_ELAPSED_SECONDS = 60;
 /** Access granted per successful verification. */
 const ACCESS_HOURS = 12;
-/** Device block duration when a bypass is detected. */
-const BLOCK_HOURS = 24;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -61,24 +59,10 @@ Deno.serve(async (req) => {
     const elapsed = (Date.now() - new Date(pending.initiated_at).getTime()) / 1000;
 
     if (elapsed < MIN_ELAPSED_SECONDS) {
-      const blockedUntil = new Date(Date.now() + BLOCK_HOURS * 60 * 60 * 1000);
-      await admin.from("bypass_blocks").insert({
-        user_id: user.id,
-        blocked_until: blockedUntil.toISOString(),
-        reason: `Bypass attempt: completed in ${Math.round(elapsed)}s (min ${MIN_ELAPSED_SECONDS}s required)`,
-        sms_status: "not_sent",
-      });
-      // Best-effort SMS warning (never block the response on it).
-      try {
-        await admin.functions.invoke("send-sms", {
-          body: { mode: "bypass_warning", user_id: user.id },
-        });
-      } catch (_) { /* ignore */ }
-
       return json({
-        status: "blocked",
-        blockedUntil: blockedUntil.toISOString(),
-        error: "Bypass detected. You have been blocked for 24 hours.",
+        status: "too_early",
+        retryAfterSeconds: Math.ceil(MIN_ELAPSED_SECONDS - elapsed),
+        error: "Your verification link returned before the minimum wait time. Please wait, then retry.",
       });
     }
 

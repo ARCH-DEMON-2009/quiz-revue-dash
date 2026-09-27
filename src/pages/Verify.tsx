@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Clock3 } from "lucide-react";
 import { toast } from "sonner";
 import { blockDevice, isDeviceBlockedFor } from "@/components/BypassBlockGuard";
 import { VERIFY_RETURN_KEY } from "@/components/LinkShortenerGate";
@@ -17,8 +17,9 @@ const safeReturnPath = (raw: string | null): string => {
 
 const Verify = () => {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying');
+  const [status, setStatus] = useState<'verifying' | 'success' | 'error' | 'waiting'>('verifying');
   const [errorMessage, setErrorMessage] = useState('');
+  const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
 
   // Where to send the user after a successful verification. Prefer an explicit
   // ?redirect= param, then the path saved when the gate started verification.
@@ -93,6 +94,13 @@ const Verify = () => {
         return;
       }
 
+      if (result?.status === "too_early") {
+        setRetryAfterSeconds(Math.max(1, Number(result.retryAfterSeconds) || 1));
+        setErrorMessage(result.error || "Please wait briefly, then check your verification again.");
+        setStatus('waiting');
+        return;
+      }
+
       if (result?.status === "no_pending") {
         setStatus('error');
         setErrorMessage('No pending verification found. Please start verification from the dashboard first.');
@@ -116,10 +124,17 @@ const Verify = () => {
     } catch (error) {
       console.error("Verification error:", error);
       setStatus('error');
-      clearReturnPath();
       setErrorMessage('Something went wrong. Please try again.');
     }
   };
+
+  useEffect(() => {
+    if (status !== 'waiting' || retryAfterSeconds <= 0) return;
+    const timer = window.setTimeout(() => {
+      setRetryAfterSeconds((remaining) => Math.max(0, remaining - 1));
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [status, retryAfterSeconds]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -132,6 +147,9 @@ const Verify = () => {
             {status === 'success' && (
               <CheckCircle2 className="h-8 w-8 text-success" />
             )}
+            {status === 'waiting' && (
+              <Clock3 className="h-8 w-8 text-primary" />
+            )}
             {status === 'error' && (
               <XCircle className="h-8 w-8 text-destructive" />
             )}
@@ -139,16 +157,42 @@ const Verify = () => {
           <CardTitle className="text-2xl">
             {status === 'verifying' && 'Verifying...'}
             {status === 'success' && 'Verification Complete!'}
+            {status === 'waiting' && 'Almost there'}
             {status === 'error' && 'Verification Failed'}
           </CardTitle>
           <CardDescription>
             {status === 'verifying' && 'Please wait while we verify your access.'}
             {status === 'success' && 'You now have 12 hours of full access. Redirecting...'}
+            {status === 'waiting' && `${errorMessage} ${retryAfterSeconds > 0 ? `Retry available in ${retryAfterSeconds}s.` : 'You can retry now.'}`}
             {status === 'error' && errorMessage}
           </CardDescription>
         </CardHeader>
+        {status === 'waiting' && (
+          <CardContent className="space-y-3">
+            <Button
+              className="w-full"
+              disabled={retryAfterSeconds > 0}
+              onClick={() => {
+                setStatus('verifying');
+                void handleVerification();
+              }}
+            >
+              {retryAfterSeconds > 0 ? `Wait ${retryAfterSeconds}s` : 'Check verification again'}
+            </Button>
+          </CardContent>
+        )}
         {status === 'error' && (
           <CardContent className="space-y-3">
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={() => {
+                setStatus('verifying');
+                void handleVerification();
+              }}
+            >
+              Try verification again
+            </Button>
             <Button className="w-full" onClick={() => navigate("/")}>
               Back to Dashboard
             </Button>

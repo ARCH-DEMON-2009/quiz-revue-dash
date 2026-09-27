@@ -216,12 +216,23 @@ const Profile = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
+      const { data: updatedProfile, error } = await supabase
         .from('user_profiles')
         .update({ avatar_url: selectedAvatar.url })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select('user_id')
+        .maybeSingle();
 
       if (error) throw error;
+      if (!updatedProfile) {
+        const { error: insertError } = await supabase.from('user_profiles').insert({
+          user_id: user.id,
+          email: user.email ?? '',
+          name: userDetails?.name || user.user_metadata?.full_name || user.user_metadata?.name || 'User',
+          avatar_url: selectedAvatar.url,
+        });
+        if (insertError) throw insertError;
+      }
       
       setUserDetails(prev => prev ? { ...prev, avatarUrl: selectedAvatar.url } : null);
       
