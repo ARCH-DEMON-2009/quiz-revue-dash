@@ -20,6 +20,7 @@ const Verify = () => {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error' | 'waiting'>('verifying');
   const [errorMessage, setErrorMessage] = useState('');
   const [retryAfterSeconds, setRetryAfterSeconds] = useState(0);
+  const [canRestart, setCanRestart] = useState(false);
 
   // Where to send the user after a successful verification. Prefer an explicit
   // ?redirect= param, then the path saved when the gate started verification.
@@ -103,7 +104,8 @@ const Verify = () => {
 
       if (result?.status === "no_pending") {
         setStatus('error');
-        setErrorMessage('No pending verification found. Please start verification from the dashboard first.');
+        setCanRestart(true);
+        setErrorMessage('This verification session expired. Return to your test and start a new free verification.');
         return;
       }
 
@@ -183,6 +185,14 @@ const Verify = () => {
         )}
         {status === 'error' && (
           <CardContent className="space-y-3">
+            {canRestart && (
+              <Button
+                className="w-full"
+                onClick={() => navigate(resolveReturnPath())}
+              >
+                Restart free verification
+              </Button>
+            )}
             <Button
               className="w-full"
               variant="outline"

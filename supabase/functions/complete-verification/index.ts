@@ -38,21 +38,23 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    // Look up the most recent pending verification created in the last 10 min.
-    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    // Look up a pending verification within its 30-minute completion window.
+    const now = new Date();
+    const pendingCutoff = new Date(now.getTime() - 30 * 60 * 1000).toISOString();
     const { data: pending, error: fetchError } = await admin
       .from("access_verifications")
       .select("*")
       .eq("user_id", user.id)
       .eq("status", "pending")
-      .gt("initiated_at", tenMinAgo)
+      .gt("initiated_at", pendingCutoff)
+      .gt("expires_at", now.toISOString())
       .order("initiated_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (fetchError) throw fetchError;
     if (!pending) {
-      return json({ status: "no_pending", error: "No pending verification found." }, 404);
+      return json({ status: "no_pending", error: "No active verification session found." });
     }
 
     // Server-side timing check using the DB-stored initiated_at (tamper-proof).

@@ -45,9 +45,9 @@ Deno.serve(async (req) => {
       .eq("user_id", user.id)
       .eq("status", "pending");
 
-    // Create new pending verification (10 min expiry)
+    // Allow time for longer ad and shortener redirect chains.
     const now = new Date();
-    const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
+    const expiresAt = new Date(now.getTime() + 30 * 60 * 1000);
 
     const { data, error } = await adminClient
       .from("access_verifications")

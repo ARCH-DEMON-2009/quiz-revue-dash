@@ -18,6 +18,7 @@ interface LinkShortenerGateProps {
 
 /** Shared localStorage key so /verify knows where to send the user back. */
 export const VERIFY_RETURN_KEY = "verify-return-to";
+const VERIFICATION_TIMEOUT_SECONDS = 30 * 60;
 
 export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps) => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
   const [initiating, setInitiating] = useState(false);
   const [initiated, setInitiated] = useState(false);
   const [initiatedAt, setInitiatedAt] = useState<Date | null>(null);
-  const [countdown, setCountdown] = useState(600); // 10 min
+  const [countdown, setCountdown] = useState(VERIFICATION_TIMEOUT_SECONDS);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [verificationStartError, setVerificationStartError] = useState("");
 
@@ -88,7 +89,7 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
     if (!initiated || !initiatedAt) return;
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - initiatedAt.getTime()) / 1000);
-      const remaining = 600 - elapsed;
+      const remaining = VERIFICATION_TIMEOUT_SECONDS - elapsed;
       setCountdown(Math.max(0, remaining));
       if (remaining <= 0) {
         setInitiated(false);
@@ -157,7 +158,7 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
       if (data?.initiated_at) {
         setInitiatedAt(new Date(data.initiated_at));
         setInitiated(true);
-        setCountdown(600);
+        setCountdown(VERIFICATION_TIMEOUT_SECONDS);
       } else {
         throw new Error(data?.error || "The verification session could not be started. Please retry.");
       }
