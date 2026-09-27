@@ -27,10 +27,13 @@ import {
   Loader2,
   Star,
   UserRound,
+  Award,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { TncBotPopup } from "@/components/TncBotPopup";
+import MilestoneBadgeArt from "@/components/MilestoneBadgeArt";
+import { MILESTONE_DEFINITIONS } from "@/components/MilestoneBadges";
 import {
   fetchTncTests,
   examCategoryOf,
@@ -43,6 +46,7 @@ const SITE = "https://test.shashanksv.com";
 const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/09/89/d4/0989d4b9b55e6c4d33ec4a5f459e9e22.jpg";
 const FAVORITE_GROUPS_KEY = "tnc_favorite_exam_groups";
 const BROWSE_ALL_TESTS_KEY = "tnc_browse_all_tests";
+const FEATURED_MILESTONE_IDS = ["first", "streak3", "scorePerfect"];
 
 const TncTests = () => {
   const navigate = useNavigate();
@@ -144,6 +148,7 @@ const TncTests = () => {
       const latestB = Date.parse(examGroupLatest[nameB] ?? "") || 0;
       return latestB - latestA || Number(countB) - Number(countA);
     });
+  const featuredMilestones = MILESTONE_DEFINITIONS.filter((milestone) => FEATURED_MILESTONE_IDS.includes(milestone.id));
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
   const startIdx = total === 0 ? 0 : (page - 1) * LIMIT + 1;
@@ -231,6 +236,26 @@ const TncTests = () => {
               </div>
             </div>
           </Card>
+          <div className="mx-auto mt-4 flex max-w-3xl flex-col gap-3 border-y border-border/70 py-4 sm:flex-row sm:items-center">
+            <div className="flex min-w-0 flex-1 items-start gap-3">
+              <Award className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <div>
+                <h2 className="font-semibold text-foreground">What will you unlock next?</h2>
+                <p className="text-sm text-muted-foreground">Every completed test builds toward a new achievement.</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {featuredMilestones.map((milestone) => (
+                <span key={milestone.id} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground" title={milestone.description}>
+                  <MilestoneBadgeArt id={milestone.id} icon={milestone.icon} size="sm" locked />
+                  {milestone.title}
+                </span>
+              ))}
+            </div>
+            <Button asChild variant="ghost" size="sm" className="shrink-0 gap-1">
+              <Link to="/profile">My achievements <ArrowRight className="h-4 w-4" /></Link>
+            </Button>
+          </div>
         </div>
 
         <div className="mb-6 flex justify-center">

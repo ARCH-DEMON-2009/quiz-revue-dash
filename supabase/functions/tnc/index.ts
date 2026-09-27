@@ -313,21 +313,55 @@ async function proxyImage(rawUrl: string) {
 /** Derive a user-facing exam group from the CRM quiz-set name. t_ex has no
  * separate parent exam field, so the group must come from its display name. */
 function examGroupName(name = "") {
-  const normalized = String(name).replace(/^\s*\d+\s*\.\s*/, "").replace(/\s+/g, " ").trim();
+  const normalized = String(name)
+    .replace(/^\s*\/?\s*\d+(?:\/\d+)?\s*\.?\s*(?=(?:NEXT\s+)?NORCET\b|RRB\b)/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!normalized) return "Other";
   const withoutDate = normalized
     .replace(/\s*[-(]?\s*\d{1,2}(?:st|nd|rd|th)?[\s-]+(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[^)]*\)?$/i, "")
     .replace(/\s*[-(]?\s*\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\)?$/i, "")
     .replace(/\s*[-(]?\s*\d+\)?$/i, "")
     .trim();
-  const upper = withoutDate.toUpperCase();
-  const knownPrefix = [
-    /^FREE TEST SERIES EVERY SATURDAY DANGAL/i,
-    /^RRB\s+\d{4}\s+FREE\s+SATURDAY/i,
-    /^PREVIOUS\s+YEAR(?:\s*\([^)]*\))?/i,
-  ].find((pattern) => pattern.test(withoutDate));
-  if (knownPrefix) return withoutDate.match(knownPrefix)?.[0]?.trim() ?? withoutDate;
-  if (upper.startsWith("NORCET ")) return withoutDate.split(" ").slice(0, 4).join(" ");
+  const knownGroups: [RegExp, string][] = [
+    [/^FREE\s+TEST\s+SERIES\s+EVERY\s+SATURDAY\s+DANGAL\b/i, "Free Test Series Every Saturday Dangal"],
+    [/^DAILY\s+LIVE\s+TEST\s+SERIES\s+TODAY\s+EXAM\s*[-–]?\s*(20\d{2})?/i, "Daily Live Test Series Today Exam"],
+    [/^FREE\s+NORCET\s+1(?:\.0)?\s+TO\s+9(?:\.0)?\s+PAPER\b/i, "Free NORCET 1.0 to 9.0 Paper"],
+    [/^RRB\s+(20\d{2})\s+FREE\s+SATURDAY\b/i, "RRB"],
+    [/^PREVIOUS\s+YEAR(?:\s*\([^)]*\))?/i, "Previous Year"],
+  ];
+  for (const [pattern, groupName] of knownGroups) {
+    const match = withoutDate.match(pattern);
+    if (match) {
+      const year = match[1] || withoutDate.match(/\b20\d{2}\b/)?.[0];
+      if (groupName === "RRB" && year) return `RRB ${year} Free Saturday`;
+      return groupName.startsWith("Daily Live") && year ? `${groupName} ${year}` : groupName;
+    }
+  }
+  if (/^(?:FREE\s+)?MORNING\s+DOSE\b/i.test(withoutDate)) return "Free Morning Dose";
+
+  const dateRangeNorcet = withoutDate.match(/^(?:Next\s+)?NORCET\s+(\d+(?:\.\d+)?)\s*\(\s*1\s*(?:st)?\s+MAY\s+TO\s+12\s*(?:th)?\s+SEPTEMBER(?:\s+(20\d{2}))?/i);
+  if (dateRangeNorcet) {
+    const year = dateRangeNorcet[2] ? ` ${dateRangeNorcet[2]}` : "";
+    return `NORCET ${dateRangeNorcet[1]} (1st May to 12th September${year})`;
+  }
+
+  const norcet = withoutDate.match(/^(Next\s+)?NORCET\s+(\d+(?:\.\d+)?)(?:\s+(.+))?$/i);
+  if (norcet) {
+    const prefix = norcet[1] ? "Next " : "";
+    const version = norcet[2];
+    const descriptor = (norcet[3] ?? "")
+      .replace(/[()]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ")
+      .replace(/\b(Chn|Obg|Fon|Pyq|Cpr|Msby)\b/g, (word) => word.toUpperCase());
+    const launchLabel = /^New Launching$/i.test(descriptor) ? " (New Launching)" : descriptor ? ` ${descriptor}` : "";
+    return `${prefix}NORCET ${version}${launchLabel}`;
+  }
+
   return withoutDate.split(" ").slice(0, 4).join(" ") || normalized;
 }
 
