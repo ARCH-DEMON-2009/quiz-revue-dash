@@ -39,6 +39,7 @@ import {
 const CATEGORIES = ["All", "NORCET", "AIIMS", "SGPGI", "BTSC", "CHO", "CHN", "Daily Dose", "Other"];
 const LIMIT = 20;
 const SITE = "https://test.shashanksv.com";
+const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/09/89/d4/0989d4b9b55e6c4d33ec4a5f459e9e22.jpg";
 
 const TncTests = () => {
   const navigate = useNavigate();
@@ -261,6 +262,12 @@ const TncTests = () => {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((q) => (
               <Card key={q.examId} className="flex flex-col p-5 card-hover group">
+                <img
+                  src={EXAM_CARD_IMAGE}
+                  alt="TNC nursing test series"
+                  className="mb-4 h-40 w-full rounded-lg object-cover"
+                  loading="lazy"
+                />
                 <div className="mb-3 flex items-start justify-between gap-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
