@@ -53,7 +53,7 @@ const TncLeaderboard = () => {
     setLoading(true);
     setError(false);
     fetchTncLeaderboard(examId)
-      .then((res) => {
+      .then(async (res) => {
         // The edge function already resolves display names, avatars, premium
         // and admin status with service-role access (client RLS hides roles).
         const milestoneProfiles = await fetchPublicMilestoneProfiles(res.rows.map((row) => row.userId));
