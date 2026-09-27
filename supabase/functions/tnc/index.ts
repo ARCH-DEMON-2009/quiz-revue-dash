@@ -434,6 +434,18 @@ function countByExamGroup(exams: any[]) {
   return counts;
 }
 
+function latestByExamGroup(exams: any[]) {
+  const latest: Record<string, string | null> = {};
+  for (const exam of exams) {
+    const group = exam.groupName ?? examGroupName(exam.name);
+    const current = latest[group];
+    const candidateTime = exam.createdAt ? Date.parse(exam.createdAt) : 0;
+    const currentTime = current ? Date.parse(current) : 0;
+    if (!current || candidateTime > currentTime) latest[group] = exam.createdAt ?? null;
+  }
+  return latest;
+}
+
 const EXAM_NUMBER_BATCH_SIZE = 1000;
 
 async function fetchExamsByNumbers(examNumbers: number[]) {
@@ -486,7 +498,12 @@ async function listTestsLive(page: number, limit: number, search = "", category 
 
   const data = [...allById.values()];
   const valid = data.filter((row: any) => (row.qu_refid ?? []).length > 0);
-  valid.sort((a: any, b: any) => (b.examno ?? 0) - (a.examno ?? 0));
+  valid.sort((a: any, b: any) => {
+    const dateDifference = Date.parse(b.cr_on ?? "") - Date.parse(a.cr_on ?? "");
+    return Number.isNaN(dateDifference) || dateDifference === 0
+      ? (b.examno ?? 0) - (a.examno ?? 0)
+      : dateDifference;
+  });
   const all = valid.map(parseExam);
 
   const q = search.trim().toLowerCase();
@@ -504,6 +521,7 @@ async function listTestsLive(page: number, limit: number, search = "", category 
     limit,
     categoryCounts: countByCategory(all),
     examGroups: countByExamGroup(all),
+    examGroupLatest: latestByExamGroup(all),
     all,
   };
 }
@@ -627,6 +645,32 @@ async function cachedCategoryCounts() {
   return counts;
 }
 
+async function cachedExamGroupStats() {
+  const admin = adminClient();
+  const rows: any[] = [];
+  const pageSize = 1000;
+  for (let from = 0; from < 20_000; from += pageSize) {
+    const { data, error } = await admin
+      .from("tnc_exam_cache")
+      .select("group_name, crm_created_at")
+      .range(from, from + pageSize - 1);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if (!data || data.length < pageSize) break;
+  }
+  const examGroups: Record<string, number> = {};
+  const examGroupLatest: Record<string, string | null> = {};
+  for (const row of rows) {
+    const group = row.group_name ?? "Other";
+    examGroups[group] = (examGroups[group] ?? 0) + 1;
+    const current = examGroupLatest[group];
+    if (!current || (row.crm_created_at && Date.parse(row.crm_created_at) > Date.parse(current))) {
+      examGroupLatest[group] = row.crm_created_at ?? null;
+    }
+  }
+  return { examGroups, examGroupLatest };
+}
+
 async function listTests(page: number, limit: number, search = "", category = "All", group = "") {
   try {
     const live = await listTestsLive(page, limit, search, category, group);
@@ -644,6 +688,7 @@ async function listTests(page: number, limit: number, search = "", category = "A
     if (category !== "All") query = query.eq("category", category);
     if (group) query = query.eq("group_name", group);
     const { data, count } = await query
+      .order("crm_created_at", { ascending: false, nullsFirst: false })
       .order("exam_no", { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
     if (!data) throw e;
@@ -651,13 +696,19 @@ async function listTests(page: number, limit: number, search = "", category = "A
     try {
       categoryCounts = await cachedCategoryCounts();
     } catch { /* counts are non-critical */ }
+    let examGroups: Record<string, number> = {};
+    let examGroupLatest: Record<string, string | null> = {};
+    try {
+      ({ examGroups, examGroupLatest } = await cachedExamGroupStats());
+    } catch { /* group metadata is non-critical */ }
     return {
       quizzes: data.map(rowToExam),
       total: count ?? data.length,
       page,
       limit,
       categoryCounts,
-      examGroups: {},
+      examGroups,
+      examGroupLatest,
       cached: true,
     };
   }

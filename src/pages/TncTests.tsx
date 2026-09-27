@@ -25,6 +25,7 @@ import {
   Bot,
   Info,
   Loader2,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -39,6 +40,8 @@ import {
 const LIMIT = 20;
 const SITE = "https://test.shashanksv.com";
 const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/09/89/d4/0989d4b9b55e6c4d33ec4a5f459e9e22.jpg";
+const FAVORITE_GROUPS_KEY = "tnc_favorite_exam_groups";
+const BROWSE_ALL_TESTS_KEY = "tnc_browse_all_tests";
 
 const TncTests = () => {
   const navigate = useNavigate();
@@ -47,12 +50,41 @@ const TncTests = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [examSearch, setExamSearch] = useState("");
   const [selectedGroup, setSelectedGroup] = useState("");
+  const [browseAll, setBrowseAll] = useState(() => {
+    try {
+      return window.localStorage.getItem(BROWSE_ALL_TESTS_KEY) === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [favoriteGroups, setFavoriteGroups] = useState<string[]>(() => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(FAVORITE_GROUPS_KEY) ?? "[]");
+      return Array.isArray(stored) ? stored.filter((group): group is string => typeof group === "string") : [];
+    } catch {
+      return [];
+    }
+  });
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [cached, setCached] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [examGroups, setExamGroups] = useState<Record<string, number>>({});
+  const [examGroupLatest, setExamGroupLatest] = useState<Record<string, string | null>>({});
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(FAVORITE_GROUPS_KEY, JSON.stringify(favoriteGroups));
+    } catch { /* storage may be unavailable */ }
+  }, [favoriteGroups]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(BROWSE_ALL_TESTS_KEY, String(browseAll));
+    } catch { /* storage may be unavailable */ }
+  }, [browseAll]);
 
   // Debounce typing so each keystroke doesn't hit the provider.
   useEffect(() => {
@@ -72,6 +104,7 @@ const TncTests = () => {
         setTotal(res.total);
         setCached(!!res.cached);
         if (res.examGroups) setExamGroups(res.examGroups);
+        if (res.examGroupLatest) setExamGroupLatest(res.examGroupLatest);
       })
       .catch((e) => {
         console.error(e);
@@ -99,7 +132,17 @@ const TncTests = () => {
   // Filtering now happens on the server across the entire catalogue, so the
   // page already contains exactly the tests that match.
   const filtered = quizzes;
-  const examGroupCards = Object.entries(examGroups).sort(([, countA], [, countB]) => Number(countB) - Number(countA));
+  const showingExamDirectory = !selectedGroup && !browseAll;
+  const query = examSearch.trim().toLowerCase();
+  const examGroupCards = Object.entries(examGroups)
+    .filter(([name]) => !query || name.toLowerCase().includes(query))
+    .sort(([nameA, countA], [nameB, countB]) => {
+      const favoriteDifference = Number(favoriteGroups.includes(nameB)) - Number(favoriteGroups.includes(nameA));
+      if (favoriteDifference !== 0) return favoriteDifference;
+      const latestA = Date.parse(examGroupLatest[nameA] ?? "") || 0;
+      const latestB = Date.parse(examGroupLatest[nameB] ?? "") || 0;
+      return latestB - latestA || Number(countB) - Number(countA);
+    });
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
   const startIdx = total === 0 ? 0 : (page - 1) * LIMIT + 1;
@@ -155,21 +198,62 @@ const TncTests = () => {
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl text-gradient">
-            🎯 {selectedGroup ? `${selectedGroup} Test Series` : "TNC Exams"}
+            🎯 {selectedGroup ? `${selectedGroup} Test Series` : browseAll ? "All Test Series" : "TNC Exams"}
           </h1>
           <p className="mt-2 text-muted-foreground">
-            {selectedGroup
-              ? "Choose a test series to start practicing."
-              : "Choose an exam to browse its test series."}
+            {showingExamDirectory
+              ? "Choose an exam to browse its test series."
+              : "Choose a test series to start practicing."}
           </p>
           <Button variant="outline" className="mt-4 gap-2" onClick={() => navigate("/tnc-tests/leaderboard")}>
             <Trophy className="h-4 w-4" /> Overall Leaderboard
           </Button>
         </div>
 
-        {selectedGroup && (
-          <>
+        <div className="mb-6 flex justify-center">
+          <div role="group" aria-label="Test series browsing mode" className="inline-flex rounded-md border border-border p-1">
             <Button
+              size="sm"
+              variant={!browseAll ? "default" : "ghost"}
+              onClick={() => {
+                setBrowseAll(false);
+                setSelectedGroup("");
+                setSearch("");
+                setPage(1);
+              }}
+            >
+              By exam
+            </Button>
+            <Button
+              size="sm"
+              variant={browseAll ? "default" : "ghost"}
+              onClick={() => {
+                setBrowseAll(true);
+                setSelectedGroup("");
+                setSearch("");
+                setPage(1);
+              }}
+            >
+              All test series
+            </Button>
+          </div>
+        </div>
+
+        {showingExamDirectory && (
+          <div className="relative mb-5">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search exams..."
+              value={examSearch}
+              onChange={(event) => setExamSearch(event.target.value)}
+              className="pl-9"
+            />
+          </div>
+        )}
+
+        {(selectedGroup || browseAll) && (
+          <>
+            {selectedGroup && <Button
               variant="ghost"
               className="mb-4 gap-2 px-0 text-muted-foreground hover:text-foreground"
               onClick={() => {
@@ -179,15 +263,15 @@ const TncTests = () => {
               }}
             >
               <ArrowLeft className="h-4 w-4" /> Back to exams
-            </Button>
+            </Button>}
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-bold text-foreground">{selectedGroup} Test Series</h2>
+                <h2 className="text-2xl font-bold text-foreground">{selectedGroup ? `${selectedGroup} Test Series` : "All Test Series"}</h2>
                 <p className="text-sm text-muted-foreground">
                   Choose a test series to start practicing.
                 </p>
               </div>
-              <Badge variant="secondary">{examGroups[selectedGroup] ?? 0} tests</Badge>
+              {selectedGroup && <Badge variant="secondary">{examGroups[selectedGroup] ?? 0} tests</Badge>}
             </div>
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -202,7 +286,7 @@ const TncTests = () => {
         )}
 
         {/* Results meta */}
-        {!loading && selectedGroup && (
+        {!loading && (selectedGroup || browseAll) && (
           <p className="mb-4 text-sm text-muted-foreground">
             Showing {startIdx}–{endIdx} of {total.toLocaleString()} tests
           </p>
@@ -231,7 +315,7 @@ const TncTests = () => {
               <RefreshCw className="h-4 w-4" /> Retry
             </Button>
           </Card>
-        ) : selectedGroup && filtered.length === 0 ? (
+        ) : !showingExamDirectory && filtered.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground">No tests found.</div>
         ) : (
           <>
@@ -246,7 +330,10 @@ const TncTests = () => {
             </Card>
           )}
 
-          {!selectedGroup ? (
+          {showingExamDirectory ? (
+            examGroupCards.length === 0 ? (
+              <div className="py-16 text-center text-muted-foreground">No exams match your search.</div>
+            ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {examGroupCards.map(([exam, count]) => (
                 <Card key={exam} className="flex flex-col overflow-hidden p-0 card-hover group">
@@ -257,9 +344,24 @@ const TncTests = () => {
                     loading="lazy"
                   />
                   <div className="flex flex-1 flex-col p-5">
-                    <h2 className="mb-2 text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                      {exam}
-                    </h2>
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <h2 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                        {exam}
+                      </h2>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="-mr-2 -mt-2 shrink-0"
+                        aria-label={favoriteGroups.includes(exam) ? `Remove ${exam} from favorites` : `Add ${exam} to favorites`}
+                        aria-pressed={favoriteGroups.includes(exam)}
+                        onClick={() => setFavoriteGroups((current) => current.includes(exam)
+                          ? current.filter((favorite) => favorite !== exam)
+                          : [...current, exam])}
+                      >
+                        <Star className={`h-4 w-4 ${favoriteGroups.includes(exam) ? "fill-amber-400 text-amber-500" : ""}`} />
+                      </Button>
+                    </div>
                     <p className="mb-5 text-sm text-muted-foreground">
                       {count.toLocaleString()} test series available
                     </p>
@@ -267,6 +369,7 @@ const TncTests = () => {
                       className="mt-auto w-full gap-2 btn-glow shadow-sm"
                       onClick={() => {
                         setSelectedGroup(exam);
+                        setBrowseAll(false);
                         setPage(1);
                         setSearch("");
                       }}
@@ -277,6 +380,7 @@ const TncTests = () => {
                 </Card>
               ))}
             </div>
+            )
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((q) => (
@@ -336,7 +440,7 @@ const TncTests = () => {
 
 
         {/* Pagination */}
-        {!loading && selectedGroup && totalPages > 1 && (
+        {!loading && !showingExamDirectory && totalPages > 1 && (
           <div className="mt-8 flex items-center justify-center gap-4">
             <Button
               variant="outline"

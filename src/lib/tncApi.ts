@@ -47,6 +47,8 @@ export interface TncListResponse {
   categoryCounts?: Record<string, number>;
   /** Counts per CRM-derived exam group across the whole catalogue. */
   examGroups?: Record<string, number>;
+  /** Latest CRM creation date for a test in each group. */
+  examGroupLatest?: Record<string, string | null>;
   /** True when the list came from the offline backup because the provider was unreachable. */
   cached?: boolean;
 }
