@@ -28,6 +28,7 @@ import {
   Star,
   UserRound,
   Award,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -46,6 +47,9 @@ const SITE = "https://test.shashanksv.com";
 const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/09/89/d4/0989d4b9b55e6c4d33ec4a5f459e9e22.jpg";
 const FAVORITE_GROUPS_KEY = "tnc_favorite_exam_groups";
 const BROWSE_ALL_TESTS_KEY = "tnc_browse_all_tests";
+const LEADERBOARD_PROMO_LAST_SHOWN_KEY = "tnc_leaderboard_promo_last_shown";
+const LEADERBOARD_PROMO_SESSION_KEY = "tnc_leaderboard_promo_checked";
+const LEADERBOARD_PROMO_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const FEATURED_MILESTONE_IDS = ["first", "streak3", "scorePerfect"];
 
 const TncTests = () => {
@@ -78,6 +82,23 @@ const TncTests = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [examGroups, setExamGroups] = useState<Record<string, number>>({});
   const [examGroupLatest, setExamGroupLatest] = useState<Record<string, string | null>>({});
+  const [showLeaderboardPromo, setShowLeaderboardPromo] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem(LEADERBOARD_PROMO_SESSION_KEY)) return;
+      window.sessionStorage.setItem(LEADERBOARD_PROMO_SESSION_KEY, "1");
+
+      const now = Date.now();
+      const lastShown = Number(window.localStorage.getItem(LEADERBOARD_PROMO_LAST_SHOWN_KEY) ?? 0);
+      if (now - lastShown >= LEADERBOARD_PROMO_INTERVAL_MS) {
+        window.localStorage.setItem(LEADERBOARD_PROMO_LAST_SHOWN_KEY, String(now));
+        setShowLeaderboardPromo(true);
+      }
+    } catch {
+      setShowLeaderboardPromo(true);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -211,7 +232,15 @@ const TncTests = () => {
               ? "Choose an exam to browse its test series."
               : "Choose a test series to start practicing."}
           </p>
-          <Card className="mx-auto mt-5 max-w-3xl border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-card to-primary/5 p-4 text-left sm:p-5">
+          {showLeaderboardPromo && <Card className="mx-auto mt-5 max-w-3xl border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-card to-primary/5 p-4 text-left sm:p-5">
+            <button
+              type="button"
+              aria-label="Dismiss leaderboard invitation"
+              onClick={() => setShowLeaderboardPromo(false)}
+              className="float-right ml-3 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600">
                 <Trophy className="h-6 w-6" />
@@ -235,7 +264,7 @@ const TncTests = () => {
                 </Button>
               </div>
             </div>
-          </Card>
+          </Card>}
           <div className="mx-auto mt-4 flex max-w-3xl flex-col gap-3 border-y border-border/70 py-4 sm:flex-row sm:items-center">
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <Award className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
