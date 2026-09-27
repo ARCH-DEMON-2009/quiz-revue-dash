@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 import PublicProfileLink from "@/components/PublicProfileLink";
 import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
+import AdminNameBadge from "@/components/AdminNameBadge";
 import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
 const SITE = "https://test.shashanksv.com";
@@ -307,6 +308,7 @@ const TncGlobalLeaderboard = () => {
                     <PublicProfileLink userId={r.userId} className={`truncate font-semibold hover:underline ${getNameColor(r)}`}>
                       {toDisplayName(r.userName)}
                     </PublicProfileLink>
+                    {r.isAdmin && <AdminNameBadge badgeIcon={getAdminBadgeIcon(true)} />}
                     <MilestoneBadgeStrip badgeIds={r.milestoneBadgeIds} />
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">

@@ -49,6 +49,8 @@ const FAVORITE_GROUPS_KEY = "tnc_favorite_exam_groups";
 const BROWSE_ALL_TESTS_KEY = "tnc_browse_all_tests";
 const LEADERBOARD_PROMO_LAST_SHOWN_KEY = "tnc_leaderboard_promo_last_shown";
 const LEADERBOARD_PROMO_SESSION_KEY = "tnc_leaderboard_promo_checked";
+const ACHIEVEMENT_PROMO_LAST_SHOWN_KEY = "tnc_achievement_promo_last_shown";
+const ACHIEVEMENT_PROMO_SESSION_KEY = "tnc_achievement_promo_checked";
 const LEADERBOARD_PROMO_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const FEATURED_MILESTONE_IDS = ["first", "streak3", "scorePerfect"];
 
@@ -83,6 +85,7 @@ const TncTests = () => {
   const [examGroups, setExamGroups] = useState<Record<string, number>>({});
   const [examGroupLatest, setExamGroupLatest] = useState<Record<string, string | null>>({});
   const [showLeaderboardPromo, setShowLeaderboardPromo] = useState(false);
+  const [showAchievementPromo, setShowAchievementPromo] = useState(false);
 
   useEffect(() => {
     try {
@@ -97,6 +100,22 @@ const TncTests = () => {
       }
     } catch {
       setShowLeaderboardPromo(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem(ACHIEVEMENT_PROMO_SESSION_KEY)) return;
+      window.sessionStorage.setItem(ACHIEVEMENT_PROMO_SESSION_KEY, "1");
+
+      const now = Date.now();
+      const lastShown = Number(window.localStorage.getItem(ACHIEVEMENT_PROMO_LAST_SHOWN_KEY) ?? 0);
+      if (now - lastShown >= LEADERBOARD_PROMO_INTERVAL_MS) {
+        window.localStorage.setItem(ACHIEVEMENT_PROMO_LAST_SHOWN_KEY, String(now));
+        setShowAchievementPromo(true);
+      }
+    } catch {
+      setShowAchievementPromo(true);
     }
   }, []);
 
@@ -265,7 +284,15 @@ const TncTests = () => {
               </div>
             </div>
           </Card>}
-          <div className="mx-auto mt-4 flex max-w-3xl flex-col gap-3 border-y border-border/70 py-4 sm:flex-row sm:items-center">
+          {showAchievementPromo && <div className="relative mx-auto mt-4 flex max-w-3xl flex-col gap-3 border-y border-border/70 py-4 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              aria-label="Dismiss achievement invitation"
+              onClick={() => setShowAchievementPromo(false)}
+              className="absolute right-0 top-3 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:static"
+            >
+              <X className="h-4 w-4" />
+            </button>
             <div className="flex min-w-0 flex-1 items-start gap-3">
               <Award className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
               <div>
@@ -284,7 +311,7 @@ const TncTests = () => {
             <Button asChild variant="ghost" size="sm" className="shrink-0 gap-1">
               <Link to="/profile">My achievements <ArrowRight className="h-4 w-4" /></Link>
             </Button>
-          </div>
+          </div>}
         </div>
 
         <div className="mb-6 flex justify-center">

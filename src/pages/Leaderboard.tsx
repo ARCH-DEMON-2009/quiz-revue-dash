@@ -15,6 +15,7 @@ import { toDisplayName } from "@/lib/displayName";
 import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
 import PublicProfileLink from "@/components/PublicProfileLink";
+import AdminNameBadge from "@/components/AdminNameBadge";
 
 
 interface LeaderboardEntry {
@@ -277,6 +278,7 @@ const Leaderboard = () => {
                           <PublicProfileLink userId={entry.user_id} className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none hover:underline ${getNameColor(entry)}`}>
                             {toDisplayName(entry.name)}
                           </PublicProfileLink>
+                          {entry.is_admin && <AdminNameBadge badgeIcon={getAdminBadgeIcon(true)} />}
                           <MilestoneBadgeStrip badgeIds={entry.milestone_badge_ids} />
 
                           {isCurrentUser(entry.user_id) && (
@@ -345,6 +347,7 @@ const Leaderboard = () => {
                             <PublicProfileLink userId={currentUserEntry.user_id} className={`font-semibold text-sm sm:text-base truncate max-w-[100px] sm:max-w-[150px] md:max-w-none hover:underline ${getNameColor(currentUserEntry)}`}>
                               {toDisplayName(currentUserEntry.name)}
                             </PublicProfileLink>
+                            {currentUserEntry.is_admin && <AdminNameBadge badgeIcon={getAdminBadgeIcon(true)} />}
                             <MilestoneBadgeStrip badgeIds={currentUserEntry.milestone_badge_ids} />
 
                             <Badge variant="secondary" className="text-[10px] sm:text-xs bg-primary/20 text-primary shrink-0">

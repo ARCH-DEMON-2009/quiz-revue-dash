@@ -268,6 +268,84 @@
   left: 100%;
 }
 
+.admin-name-badge {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid rgb(233 174 49 / 75%);
+  border-radius: 9999px;
+  padding: 2px 7px;
+  color: #563500;
+  background: linear-gradient(105deg, #fff4c4 0%, #f2c14e 28%, #ffdf83 52%, #e5a832 76%, #fff3bd 100%);
+  background-size: 220% 100%;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 45%), 0 2px 8px rgb(169 106 13 / 25%);
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1.2;
+  animation: admin-badge-sheen 4s ease-in-out infinite;
+}
+
+.dark .admin-name-badge {
+  border-color: rgb(255 220 120 / 80%);
+  color: #3b2600;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 12%), 0 0 12px rgb(245 184 61 / 35%);
+}
+
+.admin-name-badge--md {
+  padding: 4px 10px;
+  font-size: 10px;
+}
+
+.admin-name-badge__content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.admin-name-badge__icon {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+}
+
+.admin-name-badge--md .admin-name-badge__icon {
+  width: 14px;
+  height: 14px;
+}
+
+.admin-name-badge::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform: translateX(-140%);
+  background: linear-gradient(105deg, transparent 25%, rgb(255 255 255 / 75%) 50%, transparent 75%);
+  content: "";
+  animation: admin-badge-glint 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes admin-badge-sheen {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes admin-badge-glint {
+  0%, 58% { transform: translateX(-140%); }
+  82%, 100% { transform: translateX(140%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-name-badge,
+  .admin-name-badge::after {
+    animation: none;
+  }
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

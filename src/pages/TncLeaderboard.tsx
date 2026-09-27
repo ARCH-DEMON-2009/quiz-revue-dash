@@ -15,6 +15,7 @@ import { fetchTncLeaderboard, type TncLeaderboardRow } from "@/lib/tncApi";
 import { TncBotPopup } from "@/components/TncBotPopup";
 import PublicProfileLink from "@/components/PublicProfileLink";
 import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
+import AdminNameBadge from "@/components/AdminNameBadge";
 import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
 interface ExtendedTncRow extends TncLeaderboardRow {
@@ -154,6 +155,7 @@ const TncLeaderboard = () => {
                     <PublicProfileLink userId={r.userId} className={`truncate font-semibold hover:underline ${getNameColor(r)}`}>
                       {toDisplayName(r.userName)}
                     </PublicProfileLink>
+                    {r.isAdmin && <AdminNameBadge badgeIcon={getAdminBadgeIcon(true)} />}
                     <MilestoneBadgeStrip badgeIds={r.milestoneBadgeIds} />
                   </div>
                   <p className="text-xs text-muted-foreground">

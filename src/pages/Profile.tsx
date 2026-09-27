@@ -12,6 +12,7 @@ import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import IdentityPreviewCard from "@/components/IdentityPreviewCard";
 import MilestoneBadges from "@/components/MilestoneBadges";
+import AdminNameBadge from "@/components/AdminNameBadge";
 import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
 
@@ -464,7 +465,10 @@ const Profile = () => {
                       ) : null}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h2 className={`text-lg sm:text-xl font-bold truncate ${isAdmin ? getAdminNameColor(true) : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <h2 className={`min-w-0 truncate text-lg font-bold sm:text-xl ${isAdmin ? getAdminNameColor(true) : accessStatus?.type === 'premium' ? 'text-amber-500' : ''}`}>{userDetails.name}</h2>
+                        {isAdmin && <AdminNameBadge badgeIcon={getAdminBadgeIcon(true)} size="md" />}
+                      </div>
                       <p className="text-xs sm:text-sm text-muted-foreground truncate">{userDetails.email}</p>
                     </div>
                   </div>
