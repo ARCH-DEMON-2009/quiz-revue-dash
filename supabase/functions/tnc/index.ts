@@ -63,13 +63,18 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
 async function fetchQuestions(rowIds: string[]) {
   if (!rowIds.length) return [];
 
-  const rows = await fetchFromCRM({
-    fn: "common_fn",
-    se: "fe",
-    sch: "t_qu",
-    data: { json: "*", row_id: "*" },
-    cond: { row_id: rowIds },
-  });
+  const BATCH_SIZE = 50;
+  const batches = [];
+  for (let i = 0; i < rowIds.length; i += BATCH_SIZE) {
+    batches.push(fetchFromCRM({
+      fn: "common_fn",
+      se: "fe",
+      sch: "t_qu",
+      data: { json: "*", row_id: "*" },
+      cond: { row_id: rowIds.slice(i, i + BATCH_SIZE) },
+    }));
+  }
+  const rows = (await Promise.all(batches)).flat();
   const rowsById = new Map(rows.map((row: any) => [String(row.row_id), row]));
   return rowIds.map((rowId) => rowsById.get(rowId)).filter(Boolean);
 }
@@ -305,6 +310,27 @@ async function proxyImage(rawUrl: string) {
   return { dataUrl: `data:${contentType};base64,${base64}`, contentType };
 }
 
+/** Derive a user-facing exam group from the CRM quiz-set name. t_ex has no
+ * separate parent exam field, so the group must come from its display name. */
+function examGroupName(name = "") {
+  const normalized = String(name).replace(/^\s*\d+\s*\.\s*/, "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "Other";
+  const withoutDate = normalized
+    .replace(/\s*[-(]?\s*\d{1,2}(?:st|nd|rd|th)?[\s-]+(?:JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[^)]*\)?$/i, "")
+    .replace(/\s*[-(]?\s*\d{1,2}[./-]\d{1,2}[./-]\d{2,4}\)?$/i, "")
+    .replace(/\s*[-(]?\s*\d+\)?$/i, "")
+    .trim();
+  const upper = withoutDate.toUpperCase();
+  const knownPrefix = [
+    /^FREE TEST SERIES EVERY SATURDAY DANGAL/i,
+    /^RRB\s+\d{4}\s+FREE\s+SATURDAY/i,
+    /^PREVIOUS\s+YEAR(?:\s*\([^)]*\))?/i,
+  ].find((pattern) => pattern.test(withoutDate));
+  if (knownPrefix) return withoutDate.match(knownPrefix)?.[0]?.trim() ?? withoutDate;
+  if (upper.startsWith("NORCET ")) return withoutDate.split(" ").slice(0, 4).join(" ");
+  return withoutDate.split(" ").slice(0, 4).join(" ") || normalized;
+}
+
 function parseExam(row: any) {
   const j = row.json ?? {};
   const name = j._ex_na ?? "Quiz";
@@ -319,6 +345,9 @@ function parseExam(row: any) {
     questionCount: (row.qu_refid ?? []).length,
     allowForPremium: j._al_fo_pr === 1,
     createdAt: row.cr_on ?? null,
+    startDate: j._st_da ?? null,
+    endDate: j._en_da ?? null,
+    groupName: examGroupName(name),
     // Explicit category fields so clients never have to re-guess from the name.
     category: cls.category,
     categoryReason: cls.reason,
@@ -396,6 +425,15 @@ function countByCategory(exams: any[]) {
   return counts;
 }
 
+function countByExamGroup(exams: any[]) {
+  const counts: Record<string, number> = {};
+  for (const exam of exams) {
+    const group = exam.groupName ?? examGroupName(exam.name);
+    counts[group] = (counts[group] ?? 0) + 1;
+  }
+  return counts;
+}
+
 const EXAM_NUMBER_BATCH_SIZE = 1000;
 
 async function fetchExamsByNumbers(examNumbers: number[]) {
@@ -413,7 +451,7 @@ async function fetchExamsByNumbers(examNumbers: number[]) {
   return exams;
 }
 
-async function listTestsLive(page: number, limit: number, search = "", category = "All") {
+async function listTestsLive(page: number, limit: number, search = "", category = "All", group = "") {
   const initial = await fetchFromCRM({
     fn: "common_fn",
     se: "fe",
@@ -455,6 +493,7 @@ async function listTestsLive(page: number, limit: number, search = "", category 
   const matched = all.filter(
     (e: any) =>
       (!q || String(e.name).toLowerCase().includes(q)) &&
+        (!group || e.groupName === group) &&
       (category === "All" || examCategory(e.name) === category),
   );
 
@@ -464,6 +503,7 @@ async function listTestsLive(page: number, limit: number, search = "", category 
     page,
     limit,
     categoryCounts: countByCategory(all),
+    examGroups: countByExamGroup(all),
     all,
   };
 }
@@ -511,6 +551,7 @@ function examRow(exam: any) {
     question_count: exam.questionCount ?? 0,
     allow_for_premium: !!exam.allowForPremium,
     crm_created_at: exam.createdAt ?? null,
+      group_name: exam.groupName ?? examGroupName(exam.name),
     // Stored explicitly so the offline mirror can filter/count by category
     // without re-parsing test names.
     category: cls.category,
@@ -534,6 +575,7 @@ function rowToExam(row: any) {
     questionCount: row.question_count ?? 0,
     allowForPremium: !!row.allow_for_premium,
     createdAt: row.crm_created_at ?? null,
+      groupName: row.group_name ?? examGroupName(name),
     category: cls.category,
     categoryReason: cls.reason,
   };
@@ -585,9 +627,9 @@ async function cachedCategoryCounts() {
   return counts;
 }
 
-async function listTests(page: number, limit: number, search = "", category = "All") {
+async function listTests(page: number, limit: number, search = "", category = "All", group = "") {
   try {
-    const live = await listTestsLive(page, limit, search, category);
+    const live = await listTestsLive(page, limit, search, category, group);
     // Mirror the full list so the offline fallback stays complete and fresh.
     await syncExams(live.all ?? []);
     const { all: _all, ...rest } = live as any;
@@ -600,6 +642,7 @@ async function listTests(page: number, limit: number, search = "", category = "A
     if (q) query = query.ilike("name", `%${q}%`);
     // Filtering now uses the stored category column instead of name matching.
     if (category !== "All") query = query.eq("category", category);
+    if (group) query = query.eq("group_name", group);
     const { data, count } = await query
       .order("exam_no", { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
@@ -614,6 +657,7 @@ async function listTests(page: number, limit: number, search = "", category = "A
       page,
       limit,
       categoryCounts,
+      examGroups: {},
       cached: true,
     };
   }
@@ -987,7 +1031,8 @@ Deno.serve(async (req) => {
       const limit = Math.min(50, Math.max(1, parseInt(String(body.limit ?? url.searchParams.get("limit") ?? "20")) || 20));
       const search = String(body.search ?? url.searchParams.get("search") ?? "").slice(0, 100);
       const category = String(body.category ?? url.searchParams.get("category") ?? "All").slice(0, 40);
-      return json(await listTests(page, limit, search, category));
+      const group = String(body.group ?? url.searchParams.get("group") ?? "").slice(0, 100);
+      return json(await listTests(page, limit, search, category, group));
     }
 
     if (action === "test") {

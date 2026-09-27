@@ -10,6 +10,9 @@ export interface TncExam {
   questionCount: number;
   allowForPremium: boolean;
   createdAt: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  groupName?: string;
   /** Category resolved on the server (explicit field, not guessed in the UI). */
   category?: string;
   /** Human-readable explanation of why this category was chosen. */
@@ -42,6 +45,8 @@ export interface TncListResponse {
   limit: number;
   /** Counts per category across the WHOLE catalogue (not just this page). */
   categoryCounts?: Record<string, number>;
+  /** Counts per CRM-derived exam group across the whole catalogue. */
+  examGroups?: Record<string, number>;
   /** True when the list came from the offline backup because the provider was unreachable. */
   cached?: boolean;
 }
@@ -82,8 +87,8 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
-export function fetchTncTests(page: number, limit = 20, search = "", category = "All") {
-  return call<TncListResponse>({ action: "tests", page, limit, search, category });
+export function fetchTncTests(page: number, limit = 20, search = "", category = "All", group = "") {
+  return call<TncListResponse>({ action: "tests", page, limit, search, category, group });
 }
 
 export function fetchTncTest(examId: string) {

@@ -31,13 +31,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { TncBotPopup } from "@/components/TncBotPopup";
 import {
   fetchTncTests,
-  CATEGORY_RULES,
   examCategoryOf,
   examCategoryReason,
   type TncExam,
 } from "@/lib/tncApi";
 
-const CATEGORIES = ["All", "NORCET", "AIIMS", "SGPGI", "BTSC", "CHO", "CHN", "Daily Dose", "Other"];
 const LIMIT = 20;
 const SITE = "https://test.shashanksv.com";
 const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/09/89/d4/0989d4b9b55e6c4d33ec4a5f459e9e22.jpg";
@@ -49,12 +47,12 @@ const TncTests = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [cached, setCached] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [serverCounts, setServerCounts] = useState<Record<string, number>>({});
+  const [examGroups, setExamGroups] = useState<Record<string, number>>({});
 
   // Debounce typing so each keystroke doesn't hit the provider.
   useEffect(() => {
@@ -68,12 +66,12 @@ const TncTests = () => {
   const loadTests = () => {
     setLoading(true);
     setError(false);
-    fetchTncTests(page, LIMIT, debouncedSearch, category)
+    fetchTncTests(page, LIMIT, debouncedSearch, "All", selectedGroup)
       .then((res) => {
         setQuizzes(res.quizzes);
         setTotal(res.total);
         setCached(!!res.cached);
-        if (res.categoryCounts) setServerCounts(res.categoryCounts);
+        if (res.examGroups) setExamGroups(res.examGroups);
       })
       .catch((e) => {
         console.error(e);
@@ -96,13 +94,12 @@ const TncTests = () => {
       .finally(() => setLoading(false));
   };
 
-  useEffect(loadTests, [page, debouncedSearch, category]);
+  useEffect(loadTests, [page, debouncedSearch, selectedGroup]);
 
   // Filtering now happens on the server across the entire catalogue, so the
   // page already contains exactly the tests that match.
   const filtered = quizzes;
-  const categoryCounts = serverCounts;
-  const examGroups = CATEGORIES.filter((exam) => exam !== "All" && (categoryCounts[exam] ?? 0) > 0);
+  const examGroupCards = Object.entries(examGroups).sort(([, countA], [, countB]) => Number(countB) - Number(countA));
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
   const startIdx = total === 0 ? 0 : (page - 1) * LIMIT + 1;
@@ -157,22 +154,26 @@ const TncTests = () => {
       <NavigationHeader />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground sm:text-4xl text-gradient">🎯 TNC Test Series</h1>
+          <h1 className="text-3xl font-bold text-foreground sm:text-4xl text-gradient">
+            🎯 {selectedGroup ? `${selectedGroup} Test Series` : "TNC Exams"}
+          </h1>
           <p className="mt-2 text-muted-foreground">
-            6,800+ Free Mock Tests — NORCET · AIIMS · SGPGI · BTSC · CHO
+            {selectedGroup
+              ? "Choose a test series to start practicing."
+              : "Choose an exam to browse its test series."}
           </p>
           <Button variant="outline" className="mt-4 gap-2" onClick={() => navigate("/tnc-tests/leaderboard")}>
             <Trophy className="h-4 w-4" /> Overall Leaderboard
           </Button>
         </div>
 
-        {category !== "All" && (
+        {selectedGroup && (
           <>
             <Button
               variant="ghost"
               className="mb-4 gap-2 px-0 text-muted-foreground hover:text-foreground"
               onClick={() => {
-                setCategory("All");
+                setSelectedGroup("");
                 setSearch("");
                 setPage(1);
               }}
@@ -181,12 +182,12 @@ const TncTests = () => {
             </Button>
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-bold text-foreground">{category} Test Series</h2>
+                <h2 className="text-2xl font-bold text-foreground">{selectedGroup} Test Series</h2>
                 <p className="text-sm text-muted-foreground">
                   Choose a test series to start practicing.
                 </p>
               </div>
-              <Badge variant="secondary">{categoryCounts[category] ?? 0} tests</Badge>
+              <Badge variant="secondary">{examGroups[selectedGroup] ?? 0} tests</Badge>
             </div>
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -201,7 +202,7 @@ const TncTests = () => {
         )}
 
         {/* Results meta */}
-        {!loading && category !== "All" && (
+        {!loading && selectedGroup && (
           <p className="mb-4 text-sm text-muted-foreground">
             Showing {startIdx}–{endIdx} of {total.toLocaleString()} tests
           </p>
@@ -230,7 +231,7 @@ const TncTests = () => {
               <RefreshCw className="h-4 w-4" /> Retry
             </Button>
           </Card>
-        ) : category !== "All" && filtered.length === 0 ? (
+        ) : selectedGroup && filtered.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground">No tests found.</div>
         ) : (
           <>
@@ -245,9 +246,9 @@ const TncTests = () => {
             </Card>
           )}
 
-          {category === "All" ? (
+          {!selectedGroup ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {examGroups.map((exam) => (
+              {examGroupCards.map(([exam, count]) => (
                 <Card key={exam} className="flex flex-col overflow-hidden p-0 card-hover group">
                   <img
                     src={EXAM_CARD_IMAGE}
@@ -260,12 +261,12 @@ const TncTests = () => {
                       {exam}
                     </h2>
                     <p className="mb-5 text-sm text-muted-foreground">
-                      {categoryCounts[exam].toLocaleString()} test series available
+                      {count.toLocaleString()} test series available
                     </p>
                     <Button
                       className="mt-auto w-full gap-2 btn-glow shadow-sm"
                       onClick={() => {
-                        setCategory(exam);
+                        setSelectedGroup(exam);
                         setPage(1);
                         setSearch("");
                       }}
@@ -335,7 +336,7 @@ const TncTests = () => {
 
 
         {/* Pagination */}
-        {!loading && category !== "All" && totalPages > 1 && (
+        {!loading && selectedGroup && totalPages > 1 && (
           <div className="mt-8 flex items-center justify-center gap-4">
             <Button
               variant="outline"
