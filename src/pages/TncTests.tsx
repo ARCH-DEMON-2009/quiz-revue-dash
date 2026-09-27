@@ -15,6 +15,7 @@ import {
   Trophy,
   Minus,
   ArrowRight,
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Crown,
@@ -101,6 +102,7 @@ const TncTests = () => {
   // page already contains exactly the tests that match.
   const filtered = quizzes;
   const categoryCounts = serverCounts;
+  const examGroups = CATEGORIES.filter((exam) => exam !== "All" && (categoryCounts[exam] ?? 0) > 0);
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
   const startIdx = total === 0 ? 0 : (page - 1) * LIMIT + 1;
@@ -164,58 +166,42 @@ const TncTests = () => {
           </Button>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search test series by name..."
-            value={search}
-            onChange={(e) => resetAndFilter(() => setSearch(e.target.value))}
-            className="pl-9"
-          />
-        </div>
-
-        {/* Category chips */}
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          {CATEGORIES.map((cat) => {
-            const rule = CATEGORY_RULES.find((r) => r.category === cat);
-            const tip = rule
-              ? `Tests whose name contains: ${rule.keywords.map((k) => k.trim()).join(", ")}`
-              : cat === "All"
-                ? "Every test in the series."
-                : "Tests whose name matches none of the exam keywords.";
-            return (
-              <Tooltip key={cat}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => resetAndFilter(() => setCategory(cat))}
-                    className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                      category === cat
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-card text-muted-foreground hover:bg-muted"
-                    }`}
-                  >
-                    {cat}
-                    {categoryCounts[cat] ? (
-                      <span className="ml-1.5 opacity-70">({categoryCounts[cat]})</span>
-                    ) : null}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p className="text-xs">{tip}</p>
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
-        <p className="mb-6 flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Info className="h-3.5 w-3.5" />
-          Groups are decided by keywords in the test name — hover a group or a test's badge to see the
-          exact rule that placed it there.
-        </p>
+        {category !== "All" && (
+          <>
+            <Button
+              variant="ghost"
+              className="mb-4 gap-2 px-0 text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                setCategory("All");
+                setSearch("");
+                setPage(1);
+              }}
+            >
+              <ArrowLeft className="h-4 w-4" /> Back to exams
+            </Button>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-bold text-foreground">{category} Test Series</h2>
+                <p className="text-sm text-muted-foreground">
+                  Choose a test series to start practicing.
+                </p>
+              </div>
+              <Badge variant="secondary">{categoryCounts[category] ?? 0} tests</Badge>
+            </div>
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search test series by name..."
+                value={search}
+                onChange={(e) => resetAndFilter(() => setSearch(e.target.value))}
+                className="pl-9"
+              />
+            </div>
+          </>
+        )}
 
         {/* Results meta */}
-        {!loading && (
+        {!loading && category !== "All" && (
           <p className="mb-4 text-sm text-muted-foreground">
             Showing {startIdx}–{endIdx} of {total.toLocaleString()} tests
           </p>
@@ -244,7 +230,7 @@ const TncTests = () => {
               <RefreshCw className="h-4 w-4" /> Retry
             </Button>
           </Card>
-        ) : filtered.length === 0 ? (
+        ) : category !== "All" && filtered.length === 0 ? (
           <div className="py-16 text-center text-muted-foreground">No tests found.</div>
         ) : (
           <>
@@ -259,64 +245,97 @@ const TncTests = () => {
             </Card>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filtered.map((q) => (
-              <Card key={q.examId} className="flex flex-col p-5 card-hover group">
-                <img
-                  src={EXAM_CARD_IMAGE}
-                  alt="TNC nursing test series"
-                  className="mb-4 h-40 w-full rounded-lg object-cover"
-                  loading="lazy"
-                />
-                <div className="mb-3 flex items-start justify-between gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="secondary" className="cursor-help gap-1">
-                        {examCategoryOf(q)} <Info className="h-3 w-3 opacity-70" />
+          {category === "All" ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {examGroups.map((exam) => (
+                <Card key={exam} className="flex flex-col overflow-hidden p-0 card-hover group">
+                  <img
+                    src={EXAM_CARD_IMAGE}
+                    alt={`${exam} exam`}
+                    className="h-44 w-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="flex flex-1 flex-col p-5">
+                    <h2 className="mb-2 text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                      {exam}
+                    </h2>
+                    <p className="mb-5 text-sm text-muted-foreground">
+                      {categoryCounts[exam].toLocaleString()} test series available
+                    </p>
+                    <Button
+                      className="mt-auto w-full gap-2 btn-glow shadow-sm"
+                      onClick={() => {
+                        setCategory(exam);
+                        setPage(1);
+                        setSearch("");
+                      }}
+                    >
+                      View Test Series <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((q) => (
+                <Card key={q.examId} className="flex flex-col p-5 card-hover group">
+                  <img
+                    src={EXAM_CARD_IMAGE}
+                    alt="TNC nursing test series"
+                    className="mb-4 h-40 w-full rounded-lg object-cover"
+                    loading="lazy"
+                  />
+                  <div className="mb-3 flex items-start justify-between gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="secondary" className="cursor-help gap-1">
+                          {examCategoryOf(q)} <Info className="h-3 w-3 opacity-70" />
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-xs">{examCategoryReason(q)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    {q.allowForPremium && (
+                      <Badge className="gap-1 bg-amber-500 text-white hover:bg-amber-500">
+                        <Crown className="h-3 w-3" /> Premium
                       </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
-                      <p className="text-xs">{examCategoryReason(q)}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  {q.allowForPremium && (
-                    <Badge className="gap-1 bg-amber-500 text-white hover:bg-amber-500">
-                      <Crown className="h-3 w-3" /> Premium
-                    </Badge>
-                  )}
-                </div>
-                <h3 className="mb-4 line-clamp-2 min-h-[3rem] font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {q.name}
-                </h3>
-                <div className="mb-5 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5">
-                    <FileText className="h-4 w-4" /> {q.questionCount} Qs
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="h-4 w-4" /> {parseInt(q.durationMinutes)} min
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Trophy className="h-4 w-4" /> {q.maxMarks} Marks
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Minus className="h-4 w-4" /> -{q.negativeMarks}
-                  </span>
-                </div>
-                <Button
-                  className="mt-auto w-full gap-2 btn-glow shadow-sm"
-                  onClick={() => navigate(`/tnc-tests/${q.examId}`)}
-                >
-                  Attempt Now <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Card>
-            ))}
-          </div>
+                    )}
+                  </div>
+                  <h3 className="mb-4 line-clamp-2 min-h-[3rem] font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {q.name}
+                  </h3>
+                  <div className="mb-5 grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="h-4 w-4" /> {q.questionCount} Qs
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="h-4 w-4" /> {parseInt(q.durationMinutes)} min
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Trophy className="h-4 w-4" /> {q.maxMarks} Marks
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Minus className="h-4 w-4" /> -{q.negativeMarks}
+                    </span>
+                  </div>
+                  <Button
+                    className="mt-auto w-full gap-2 btn-glow shadow-sm"
+                    onClick={() => navigate(`/tnc-tests/${q.examId}`)}
+                  >
+                    Attempt Now <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          )}
           </>
         )}
 
 
         {/* Pagination */}
-        {!loading && totalPages > 1 && (
+        {!loading && category !== "All" && totalPages > 1 && (
           <div className="mt-8 flex items-center justify-center gap-4">
             <Button
               variant="outline"
