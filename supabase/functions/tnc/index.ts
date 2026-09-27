@@ -396,14 +396,57 @@ function countByCategory(exams: any[]) {
   return counts;
 }
 
+const EXAM_NUMBER_BATCH_SIZE = 1000;
+
+async function fetchExamsByNumbers(examNumbers: number[]) {
+  const exams: any[] = [];
+  for (let i = 0; i < examNumbers.length; i += EXAM_NUMBER_BATCH_SIZE) {
+    const batch = await fetchFromCRM({
+      fn: "common_fn",
+      se: "fe",
+      sch: "t_ex",
+      data: { json: "*", qu_refid: "*", examno: "*", row_id: "*", cr_on: "*" },
+      cond: { examno: examNumbers.slice(i, i + EXAM_NUMBER_BATCH_SIZE) },
+    });
+    exams.push(...batch);
+  }
+  return exams;
+}
+
 async function listTestsLive(page: number, limit: number, search = "", category = "All") {
-  const data = await fetchFromCRM({
+  const initial = await fetchFromCRM({
     fn: "common_fn",
     se: "fe",
     sch: "t_ex",
     data: { json: "*", qu_refid: "*", examno: "*", row_id: "*", cr_on: "*" },
     cond: {},
   });
+  const allById = new Map(initial.map((row: any) => [String(row.row_id ?? row.examno), row]));
+  const seenExamNumbers = new Set(initial.map((row: any) => Number(row.examno)));
+  const maxExamNumber = Math.max(0, ...seenExamNumbers);
+  const missingExamNumbers: number[] = [];
+  for (let examNo = 1; examNo <= maxExamNumber; examNo++) {
+    if (!seenExamNumbers.has(examNo)) missingExamNumbers.push(examNo);
+  }
+  for (const row of await fetchExamsByNumbers(missingExamNumbers)) {
+    allById.set(String(row.row_id ?? row.examno), row);
+  }
+
+  let nextExamNumber = maxExamNumber + 1;
+  while (true) {
+    const examNumbers = Array.from(
+      { length: EXAM_NUMBER_BATCH_SIZE },
+      (_, index) => nextExamNumber + index,
+    );
+    const additional = await fetchExamsByNumbers(examNumbers);
+    if (additional.length === 0) break;
+    for (const row of additional) {
+      allById.set(String(row.row_id ?? row.examno), row);
+    }
+    nextExamNumber += EXAM_NUMBER_BATCH_SIZE;
+  }
+
+  const data = [...allById.values()];
   const valid = data.filter((row: any) => (row.qu_refid ?? []).length > 0);
   valid.sort((a: any, b: any) => (b.examno ?? 0) - (a.examno ?? 0));
   const all = valid.map(parseExam);
