@@ -119,8 +119,6 @@ const App = () => {
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/verify" element={<Verify />} />
-          <StudyFeaturesWelcome />
-          <SiteHelpLink />
             <Route path="/tnc-tests" element={<TncTests />} />
             <Route path="/tnc-tests/leaderboard" element={<TncGlobalLeaderboard />} />
             <Route path="/tnc-study" element={<TncStudyPlan />} />
@@ -135,6 +133,8 @@ const App = () => {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <StudyFeaturesWelcome />
+          <SiteHelpLink />
         </MaintenanceModeGuard>
       </BrowserRouter>
     </TooltipProvider>
