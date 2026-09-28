@@ -89,8 +89,8 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
-export function fetchTncTests(page: number, limit = 20, search = "", category = "All", group = "") {
-  return call<TncListResponse>({ action: "tests", page, limit, search, category, group });
+export function fetchTncTests(page: number, limit = 20, search = "", category = "All", group = "", includeExamGroups = true) {
+  return call<TncListResponse>({ action: "tests", page, limit, search, category, group, includeExamGroups });
 }
 
 export function fetchTncTest(examId: string) {

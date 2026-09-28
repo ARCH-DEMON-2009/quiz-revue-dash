@@ -4,9 +4,12 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 const CRM_ENDPOINT = Deno.env.get("TNC_CRM_ENDPOINT") ?? "https://crm.tncnursing.in/common/";
 const CRM_BASE = Deno.env.get("TNC_CRM_BASE") ?? "https://crm.tncnursing.in";
 const CRM_REQUEST_INTERVAL_MS = 550;
+const CATALOG_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
 let crmRequestQueue: Promise<void> = Promise.resolve();
 let nextCrmRequestAt = 0;
 let crmCooldownUntil = 0;
+let catalogRefreshStartedAt = 0;
+let catalogRefreshPromise: Promise<void> | null = null;
 
 async function waitForCrmRequestSlot() {
   while (true) {
@@ -497,7 +500,7 @@ async function fetchExamsByNumbers(examNumbers: number[]) {
   return exams;
 }
 
-async function listTestsLive(page: number, limit: number, search = "", category = "All", group = "") {
+async function listTestsLive(page: number, limit: number, search = "", category = "All", group = "", includeExamGroups = true) {
   const initial = await fetchFromCRM({
     fn: "common_fn",
     se: "fe",
@@ -554,8 +557,10 @@ async function listTestsLive(page: number, limit: number, search = "", category 
     page,
     limit,
     categoryCounts: countByCategory(all),
-    examGroups: countByExamGroup(all),
-    examGroupLatest: latestByExamGroup(all),
+    ...(includeExamGroups ? {
+      examGroups: countByExamGroup(all),
+      examGroupLatest: latestByExamGroup(all),
+    } : {}),
     all,
   };
 }
@@ -705,11 +710,86 @@ async function cachedExamGroupStats() {
   return { examGroups, examGroupLatest };
 }
 
-async function listTests(page: number, limit: number, search = "", category = "All", group = "") {
+function keepAlive(promise: Promise<unknown>) {
+  const edgeRuntime = (globalThis as any).EdgeRuntime;
+  if (typeof edgeRuntime?.waitUntil === "function") edgeRuntime.waitUntil(promise);
+  else void promise;
+}
+
+function refreshCatalogInBackground() {
+  if (catalogRefreshPromise || Date.now() - catalogRefreshStartedAt < CATALOG_REFRESH_INTERVAL_MS) return;
+
+  catalogRefreshStartedAt = Date.now();
+  catalogRefreshPromise = listTestsLive(1, 20)
+    .then(({ all }) => syncExams(all ?? []))
+    .catch((error) => {
+      catalogRefreshStartedAt = 0;
+      console.error("TNC catalogue refresh failed", error);
+    })
+    .finally(() => {
+      catalogRefreshPromise = null;
+    });
+  keepAlive(catalogRefreshPromise);
+}
+
+async function listTestsFromCache(page: number, limit: number, search: string, category: string, group: string, includeExamGroups: boolean) {
+  const admin = adminClient();
+  let query = admin
+    .from("tnc_exam_cache")
+    .select("exam_id, exam_no, name, max_marks, negative_marks, duration_minutes, question_count, allow_for_premium, crm_created_at, group_name, category, category_reason", { count: "exact" });
+  if (search.trim()) query = query.ilike("name", `%${search.trim()}%`);
+  if (category !== "All") query = query.eq("category", category);
+  if (group) query = query.eq("group_name", group);
+
+  const { data, count, error } = await query
+    .order("crm_created_at", { ascending: false, nullsFirst: false })
+    .order("exam_no", { ascending: false })
+    .range((page - 1) * limit, page * limit - 1);
+  if (error) throw error;
+
+  if (!data?.length && !count) {
+    const { count: catalogueCount, error: countError } = await admin
+      .from("tnc_exam_cache")
+      .select("exam_id", { count: "exact", head: true });
+    if (countError) throw countError;
+    if (!catalogueCount) return null;
+  }
+
+  let examGroups: Record<string, number> | undefined;
+  let examGroupLatest: Record<string, string | null> | undefined;
+  if (includeExamGroups) {
+    try {
+      ({ examGroups, examGroupLatest } = await cachedExamGroupStats());
+    } catch (error) {
+      console.error("TNC exam group stats unavailable", error);
+    }
+  }
+
+  return {
+    quizzes: (data ?? []).map(rowToExam),
+    total: count ?? data?.length ?? 0,
+    page,
+    limit,
+    examGroups,
+    examGroupLatest,
+    cached: false,
+  };
+}
+
+async function listTests(page: number, limit: number, search = "", category = "All", group = "", includeExamGroups = true) {
   try {
-    const live = await listTestsLive(page, limit, search, category, group);
-    // Mirror the full list so the offline fallback stays complete and fresh.
-    await syncExams(live.all ?? []);
+    const cached = await listTestsFromCache(page, limit, search, category, group, includeExamGroups);
+    if (cached) {
+      refreshCatalogInBackground();
+      return cached;
+    }
+  } catch (error) {
+    console.error("TNC catalogue mirror unavailable", error);
+  }
+
+  try {
+    const live = await listTestsLive(page, limit, search, category, group, includeExamGroups);
+    keepAlive(syncExams(live.all ?? []));
     const { all: _all, ...rest } = live as any;
     return { ...rest, cached: false };
   } catch (e) {
@@ -730,11 +810,13 @@ async function listTests(page: number, limit: number, search = "", category = "A
     try {
       categoryCounts = await cachedCategoryCounts();
     } catch { /* counts are non-critical */ }
-    let examGroups: Record<string, number> = {};
-    let examGroupLatest: Record<string, string | null> = {};
-    try {
-      ({ examGroups, examGroupLatest } = await cachedExamGroupStats());
-    } catch { /* group metadata is non-critical */ }
+    let examGroups: Record<string, number> | undefined;
+    let examGroupLatest: Record<string, string | null> | undefined;
+    if (includeExamGroups) {
+      try {
+        ({ examGroups, examGroupLatest } = await cachedExamGroupStats());
+      } catch { /* group metadata is non-critical */ }
+    }
     return {
       quizzes: data.map(rowToExam),
       total: count ?? data.length,
@@ -1117,7 +1199,8 @@ Deno.serve(async (req) => {
       const search = String(body.search ?? url.searchParams.get("search") ?? "").slice(0, 100);
       const category = String(body.category ?? url.searchParams.get("category") ?? "All").slice(0, 40);
       const group = String(body.group ?? url.searchParams.get("group") ?? "").slice(0, 100);
-      return json(await listTests(page, limit, search, category, group));
+      const includeExamGroups = body.includeExamGroups !== false;
+      return json(await listTests(page, limit, search, category, group, includeExamGroups));
     }
 
     if (action === "test") {

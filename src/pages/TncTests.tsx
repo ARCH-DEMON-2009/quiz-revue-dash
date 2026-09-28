@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import NavigationHeader from "@/components/NavigationHeader";
@@ -16,8 +16,6 @@ import {
   Minus,
   ArrowRight,
   ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
   Crown,
   AlertCircle,
   RefreshCw,
@@ -26,7 +24,6 @@ import {
   Info,
   Loader2,
   Star,
-  UserRound,
   Award,
   X,
 } from "lucide-react";
@@ -47,11 +44,9 @@ const SITE = "https://test.shashanksv.com";
 const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/09/89/d4/0989d4b9b55e6c4d33ec4a5f459e9e22.jpg";
 const FAVORITE_GROUPS_KEY = "tnc_favorite_exam_groups";
 const BROWSE_ALL_TESTS_KEY = "tnc_browse_all_tests";
-const LEADERBOARD_PROMO_LAST_SHOWN_KEY = "tnc_leaderboard_promo_last_shown";
-const LEADERBOARD_PROMO_SESSION_KEY = "tnc_leaderboard_promo_checked";
 const ACHIEVEMENT_PROMO_LAST_SHOWN_KEY = "tnc_achievement_promo_last_shown";
 const ACHIEVEMENT_PROMO_SESSION_KEY = "tnc_achievement_promo_checked";
-const LEADERBOARD_PROMO_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+const ACHIEVEMENT_PROMO_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const FEATURED_MILESTONE_IDS = ["first", "streak3", "scorePerfect"];
 
 const TncTests = () => {
@@ -84,24 +79,11 @@ const TncTests = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [examGroups, setExamGroups] = useState<Record<string, number>>({});
   const [examGroupLatest, setExamGroupLatest] = useState<Record<string, string | null>>({});
-  const [showLeaderboardPromo, setShowLeaderboardPromo] = useState(false);
   const [showAchievementPromo, setShowAchievementPromo] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const requestId = useRef(0);
 
-  useEffect(() => {
-    try {
-      if (window.sessionStorage.getItem(LEADERBOARD_PROMO_SESSION_KEY)) return;
-      window.sessionStorage.setItem(LEADERBOARD_PROMO_SESSION_KEY, "1");
-
-      const now = Date.now();
-      const lastShown = Number(window.localStorage.getItem(LEADERBOARD_PROMO_LAST_SHOWN_KEY) ?? 0);
-      if (now - lastShown >= LEADERBOARD_PROMO_INTERVAL_MS) {
-        window.localStorage.setItem(LEADERBOARD_PROMO_LAST_SHOWN_KEY, String(now));
-        setShowLeaderboardPromo(true);
-      }
-    } catch {
-      setShowLeaderboardPromo(true);
-    }
-  }, []);
+  const showingExamDirectory = !selectedGroup && !browseAll;
 
   useEffect(() => {
     try {
@@ -110,7 +92,7 @@ const TncTests = () => {
 
       const now = Date.now();
       const lastShown = Number(window.localStorage.getItem(ACHIEVEMENT_PROMO_LAST_SHOWN_KEY) ?? 0);
-      if (now - lastShown >= LEADERBOARD_PROMO_INTERVAL_MS) {
+      if (now - lastShown >= ACHIEVEMENT_PROMO_INTERVAL_MS) {
         window.localStorage.setItem(ACHIEVEMENT_PROMO_LAST_SHOWN_KEY, String(now));
         setShowAchievementPromo(true);
       }
@@ -140,18 +122,23 @@ const TncTests = () => {
     return () => clearTimeout(t);
   }, [search]);
 
-  const loadTests = () => {
-    setLoading(true);
+  const loadTests = useCallback(() => {
+    const currentRequestId = ++requestId.current;
+    const appendPage = page > 1;
+    setLoading(!appendPage);
+    setLoadingMore(appendPage);
     setError(false);
-    fetchTncTests(page, LIMIT, debouncedSearch, "All", selectedGroup)
+    fetchTncTests(page, LIMIT, debouncedSearch, "All", selectedGroup, !browseAll)
       .then((res) => {
-        setQuizzes(res.quizzes);
+        if (currentRequestId !== requestId.current) return;
+        setQuizzes((current) => appendPage ? [...current, ...res.quizzes] : res.quizzes);
         setTotal(res.total);
         setCached(!!res.cached);
         if (res.examGroups) setExamGroups(res.examGroups);
         if (res.examGroupLatest) setExamGroupLatest(res.examGroupLatest);
       })
       .catch((e) => {
+        if (currentRequestId !== requestId.current) return;
         console.error(e);
         const raw = String(e?.message ?? "");
         // Distinguish a TNC provider outage from a local network problem so the
@@ -169,15 +156,23 @@ const TncTests = () => {
             : "Failed to load tests. Please try again."
         );
       })
-      .finally(() => setLoading(false));
-  };
+      .finally(() => {
+        if (currentRequestId !== requestId.current) return;
+        setLoading(false);
+        setLoadingMore(false);
+      });
+  }, [browseAll, debouncedSearch, page, selectedGroup]);
 
-  useEffect(loadTests, [page, debouncedSearch, selectedGroup]);
+  useEffect(() => {
+    loadTests();
+    return () => {
+      requestId.current += 1;
+    };
+  }, [loadTests]);
 
   // Filtering now happens on the server across the entire catalogue, so the
   // page already contains exactly the tests that match.
   const filtered = quizzes;
-  const showingExamDirectory = !selectedGroup && !browseAll;
   const query = examSearch.trim().toLowerCase();
   const examGroupCards = Object.entries(examGroups)
     .filter(([name]) => !query || name.toLowerCase().includes(query))
@@ -191,8 +186,6 @@ const TncTests = () => {
   const featuredMilestones = MILESTONE_DEFINITIONS.filter((milestone) => FEATURED_MILESTONE_IDS.includes(milestone.id));
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
-  const startIdx = total === 0 ? 0 : (page - 1) * LIMIT + 1;
-  const endIdx = Math.min(page * LIMIT, total);
 
   const resetAndFilter = (fn: () => void) => {
     fn();
@@ -251,39 +244,17 @@ const TncTests = () => {
               ? "Choose an exam to browse its test series."
               : "Choose a test series to start practicing."}
           </p>
-          {showLeaderboardPromo && <Card className="mx-auto mt-5 max-w-3xl border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-card to-primary/5 p-4 text-left sm:p-5">
-            <button
-              type="button"
-              aria-label="Dismiss leaderboard invitation"
-              onClick={() => setShowLeaderboardPromo(false)}
-              className="float-right ml-3 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          <div className="mt-5 flex flex-col items-center gap-1.5">
+            <Button
+              asChild
+              className="h-12 gap-2 rounded-full border border-amber-400/50 bg-gradient-to-r from-amber-500 via-yellow-400 to-lime-400 px-6 font-bold text-slate-950 shadow-[0_8px_24px_-8px_rgba(245,158,11,0.65)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_28px_-8px_rgba(245,158,11,0.75)]"
             >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600">
-                <Trophy className="h-6 w-6" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="font-bold text-foreground">Your next result could put you on the leaderboard</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Compare your progress with nursing aspirants across every TNC test. Add an avatar so classmates recognize you.
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                <Button asChild className="gap-2">
-                  <Link to="/tnc-tests/leaderboard">
-                    <Trophy className="h-4 w-4" /> View rankings
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="gap-2">
-                  <Link to="/profile">
-                    <UserRound className="h-4 w-4" /> Update avatar
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </Card>}
+              <Link to="/tnc-tests/leaderboard">
+                <Trophy className="h-5 w-5" /> View Overall Leaderboard <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <span className="text-xs text-muted-foreground">See where you rank across every TNC test</span>
+          </div>
           {showAchievementPromo && <div className="relative mx-auto mt-4 flex max-w-3xl flex-col gap-3 border-y border-border/70 py-4 sm:flex-row sm:items-center">
             <button
               type="button"
@@ -392,7 +363,7 @@ const TncTests = () => {
         {/* Results meta */}
         {!loading && (selectedGroup || browseAll) && (
           <p className="mb-4 text-sm text-muted-foreground">
-            Showing {startIdx}–{endIdx} of {total.toLocaleString()} tests
+            Showing {quizzes.length.toLocaleString()} of {total.toLocaleString()} tests
           </p>
         )}
 
@@ -544,26 +515,15 @@ const TncTests = () => {
 
 
         {/* Pagination */}
-        {!loading && !showingExamDirectory && totalPages > 1 && (
+        {!loading && !showingExamDirectory && page < totalPages && (
           <div className="mt-8 flex items-center justify-center gap-4">
             <Button
               variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={loadingMore}
+              onClick={() => setPage((currentPage) => currentPage + 1)}
             >
-              <ChevronLeft className="h-4 w-4" /> Prev
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Page {page} of {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Next <ChevronRight className="h-4 w-4" />
+              {loadingMore ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+              {loadingMore ? "Loading tests..." : "Load more tests"}
             </Button>
           </div>
         )}
