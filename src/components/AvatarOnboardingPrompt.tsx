@@ -41,6 +41,11 @@ const AvatarOnboardingPrompt = () => {
         supabase.auth.getUser(),
         supabase.from("user_profiles").select("avatar_url").eq("user_id", userId).maybeSingle(),
       ]);
+      try {
+        if (sessionStorage.getItem("tnc_study_features_welcome_session") === "1") return;
+      } catch {
+        // Continue with avatar onboarding when session storage is unavailable.
+      }
       if (active && user?.id === userId && !profile?.avatar_url && !user.user_metadata?.avatar_url) {
         setOpen(true);
       }

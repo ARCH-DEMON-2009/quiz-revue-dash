@@ -15,6 +15,7 @@ import {
   Download,
   Trophy,
   RefreshCw,
+  RotateCcw,
 } from "lucide-react";
 import {
   fetchTncAttempt,
@@ -282,11 +283,17 @@ const TncSharedResult = () => {
 
 
           <div className="mt-4 flex flex-wrap justify-center gap-3">
+            {(attempt.wrongCount > 0 || attempt.skippedCount > 0) && (
+              <Button className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/retry/${attemptId}`)}>
+                <RotateCcw className="h-4 w-4" /> Retry missed questions
+              </Button>
+            )}
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/tnc-tests/${examId}/leaderboard`)}>
               <Trophy className="h-4 w-4" /> Leaderboard
             </Button>
             <Button onClick={() => navigate(`/tnc-tests/${examId}`)}>Take This Test</Button>
           </div>
+          <Button variant="link" className="mt-2" onClick={() => navigate("/tnc-study")}>View my study plan and weekly progress</Button>
         </Card>
 
         <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Answer Review</h2>

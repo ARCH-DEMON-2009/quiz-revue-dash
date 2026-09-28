@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" fill="none">
+  <defs>
+    <linearGradient id="paper" x1="54" y1="40" x2="1134" y2="864" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F1FAF6"/>
+      <stop offset="1" stop-color="#FFF9ED"/>
+    </linearGradient>
+    <linearGradient id="banner" x1="89" y1="93" x2="1112" y2="314" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B766A"/>
+      <stop offset="1" stop-color="#145A55"/>
+    </linearGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.5" fill="#B8D9CD" fill-opacity=".45"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="900" rx="36" fill="url(#paper)"/>
+  <rect width="1200" height="900" rx="36" fill="url(#dots)"/>
+  <path d="M0 0h1200v44H0z" fill="#E9B949"/>
+
+  <rect x="60" y="72" width="1080" height="252" rx="28" fill="url(#banner)"/>
+  <circle cx="1030" cy="106" r="105" fill="#E9B949" fill-opacity=".13"/>
+  <circle cx="1091" cy="273" r="71" fill="#F28B66" fill-opacity=".22"/>
+  <path d="M944 173h109m-55-55v109" stroke="#E9B949" stroke-width="3" stroke-linecap="round" stroke-opacity=".8"/>
+  <rect x="96" y="106" width="204" height="34" rx="17" fill="#E7F4EC" fill-opacity=".17"/>
+  <text x="198" y="129" text-anchor="middle" fill="#F2D37A" font-family="Arial,sans-serif" font-size="16" font-weight="700" letter-spacing="1.2">TEST SAGAR · TNC</text>
+  <text x="96" y="202" fill="#FFFFFF" font-family="Georgia,serif" font-size="49" font-weight="700">Turn every test</text>
+  <text x="96" y="259" fill="#FFFFFF" font-family="Georgia,serif" font-size="49" font-weight="700">into a smarter plan.</text>
+  <text x="99" y="294" fill="#D8EEE6" font-family="Arial,sans-serif" font-size="18">Three new tools help you learn from every attempt.</text>
+  <g transform="translate(1004 128)">
+    <rect x="0" y="0" width="88" height="112" rx="18" fill="#F8F5EA" transform="rotate(8 0 0)"/>
+    <path d="m26 41 11 11 24-27M26 72h40M26 91h31" stroke="#0B766A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="67" cy="23" r="10" fill="#F28B66"/>
+  </g>
+
+  <text x="72" y="382" fill="#17443F" font-family="Georgia,serif" font-size="30" font-weight="700">Your new study tools</text>
+  <text x="72" y="411" fill="#54716A" font-family="Arial,sans-serif" font-size="16">Pick up right where your result leaves off.</text>
+
+  <g>
+    <rect x="64" y="444" width="340" height="248" rx="18" fill="#FFFFFF" stroke="#D4E8DF" stroke-width="2"/>
+    <circle cx="108" cy="492" r="23" fill="#FCE8DF"/>
+    <path d="M108 480v12l9 6m-9-29a23 23 0 1 0 23 23" stroke="#B9553C" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="82" y="544" fill="#9B513C" font-family="Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="1">01 · RETRY MISSES</text>
+    <text x="82" y="578" fill="#183C38" font-family="Georgia,serif" font-size="24" font-weight="700">Practice what tripped</text>
+    <text x="82" y="608" fill="#183C38" font-family="Georgia,serif" font-size="24" font-weight="700">you up.</text>
+    <text x="82" y="649" fill="#54716A" font-family="Arial,sans-serif" font-size="15">Open a test result → Retry missed questions</text>
+    <rect x="82" y="665" width="195" height="6" rx="3" fill="#F4D9CF"/>
+    <rect x="82" y="665" width="124" height="6" rx="3" fill="#E99579"/>
+  </g>
+
+  <g>
+    <rect x="430" y="444" width="340" height="248" rx="18" fill="#FFFFFF" stroke="#D4E8DF" stroke-width="2"/>
+    <circle cx="474" cy="492" r="23" fill="#E1F2E9"/>
+    <path d="M474 478v14l10 7m-10-30a23 23 0 1 0 23 23" stroke="#0B766A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="448" y="544" fill="#0B766A" font-family="Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="1">02 · BUILD YOUR PLAN</text>
+    <text x="448" y="578" fill="#183C38" font-family="Georgia,serif" font-size="24" font-weight="700">Make study time</text>
+    <text x="448" y="608" fill="#183C38" font-family="Georgia,serif" font-size="24" font-weight="700">work for you.</text>
+    <text x="448" y="649" fill="#54716A" font-family="Arial,sans-serif" font-size="15">Set your exam date + daily minutes</text>
+    <rect x="448" y="665" width="195" height="6" rx="3" fill="#D8E9E1"/>
+    <rect x="448" y="665" width="156" height="6" rx="3" fill="#58A999"/>
+  </g>
+
+  <g>
+    <rect x="796" y="444" width="340" height="248" rx="18" fill="#FFFFFF" stroke="#D4E8DF" stroke-width="2"/>
+    <circle cx="840" cy="492" r="23" fill="#FFF1CE"/>
+    <path d="M828 501v-12m12 12v-22m12 22v-16m-29 24h37" stroke="#9E6C12" stroke-width="3.5" stroke-linecap="round"/>
+    <text x="814" y="544" fill="#9E6C12" font-family="Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="1">03 · CHECK YOUR WEEK</text>
+    <text x="814" y="578" fill="#183C38" font-family="Georgia,serif" font-size="24" font-weight="700">See your progress</text>
+    <text x="814" y="608" fill="#183C38" font-family="Georgia,serif" font-size="24" font-weight="700">take shape.</text>
+    <text x="814" y="649" fill="#54716A" font-family="Arial,sans-serif" font-size="15">Review scores, misses + active days</text>
+    <rect x="814" y="665" width="195" height="6" rx="3" fill="#F2E6C8"/>
+    <rect x="814" y="665" width="105" height="6" rx="3" fill="#E9B949"/>
+  </g>
+
+  <path d="M68 739h1064" stroke="#C5DDD3" stroke-width="2"/>
+  <circle cx="87" cy="792" r="19" fill="#0B766A"/>
+  <path d="m78 792 6 6 12-13" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="122" y="789" fill="#183C38" font-family="Arial,sans-serif" font-size="18" font-weight="700">Start here</text>
+  <text x="122" y="818" fill="#54716A" font-family="Arial,sans-serif" font-size="16">Open “My study plan” from the TNC Tests page. Your progress is private to your account.</text>
+  <rect x="902" y="770" width="225" height="58" rx="29" fill="#E9B949"/>
+  <text x="1014" y="806" text-anchor="middle" fill="#213A32" font-family="Arial,sans-serif" font-size="16" font-weight="700">PRACTICE · REVIEW · GROW</text>
+</svg>

@@ -20,6 +20,7 @@ const TELEGRAM_BOT_URL = "https://t.me/Tnccontentbot";
 export const TncBotPopup = () => {
   const [show, setShow] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
+const FEATURE_GUIDE_SESSION_KEY = "tnc_study_features_welcome_session";
 
   useEffect(() => {
     const dontShow = localStorage.getItem(POPUP_DONT_SHOW_KEY) === "true";
@@ -27,6 +28,7 @@ export const TncBotPopup = () => {
 
     // Show popup after 2 seconds
     const timer = setTimeout(() => {
+      if (sessionStorage.getItem(FEATURE_GUIDE_SESSION_KEY) === "1") return;
       setShow(true);
       // Track analytics: Popup shown
       try {

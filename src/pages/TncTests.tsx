@@ -26,6 +26,7 @@ import {
   Star,
   Award,
   X,
+  CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -254,6 +255,9 @@ const TncTests = () => {
               </Link>
             </Button>
             <span className="text-xs text-muted-foreground">See where you rank across every TNC test</span>
+            <Button asChild variant="outline" size="sm" className="mt-2 gap-2">
+              <Link to="/tnc-study"><CalendarDays className="h-4 w-4" /> Build my study plan</Link>
+            </Button>
           </div>
           {showAchievementPromo && <div className="relative mx-auto mt-4 flex max-w-3xl flex-col gap-3 border-y border-border/70 py-4 sm:flex-row sm:items-center">
             <button
