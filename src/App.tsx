@@ -33,7 +33,10 @@ import TncQuiz from "./pages/TncQuiz";
 import TncLeaderboard from "./pages/TncLeaderboard";
 import TncGlobalLeaderboard from "./pages/TncGlobalLeaderboard";
 import TncSharedResult from "./pages/TncSharedResult";
+import TncRetry from "./pages/TncRetry";
+import TncStudyPlan from "./pages/TncStudyPlan";
 import AttemptComparison from "./pages/AttemptComparison";
+import StudyFeaturesWelcome, { SiteHelpLink } from "./components/StudyFeaturesWelcome";
 import RoutesIndex from "./routes/index";
 
 
@@ -116,8 +119,12 @@ const App = () => {
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/verify" element={<Verify />} />
+          <StudyFeaturesWelcome />
+          <SiteHelpLink />
             <Route path="/tnc-tests" element={<TncTests />} />
             <Route path="/tnc-tests/leaderboard" element={<TncGlobalLeaderboard />} />
+            <Route path="/tnc-study" element={<TncStudyPlan />} />
+            <Route path="/tnc-tests/:examId/retry/:attemptId" element={<TncRetry />} />
             <Route path="/tnc-tests/:examId" element={<TncQuiz />} />
             <Route path="/tnc-tests/:examId/result/:attemptId" element={<TncSharedResult />} />
             <Route path="/tnc-tests/:examId/leaderboard" element={<TncLeaderboard />} />
