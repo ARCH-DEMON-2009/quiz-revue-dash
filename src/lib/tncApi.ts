@@ -205,6 +205,46 @@ export interface TncSharedAttempt {
   submittedAt: string | null;
 }
 
+export interface TncAttemptSummary {
+  attemptId: number;
+  examId: string;
+  examName: string | null;
+  score: number;
+  totalMarks: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
+  timeTakenSeconds: number;
+  submittedAt: string;
+}
+
+export async function fetchMyTncAttempts(limit = 100): Promise<TncAttemptSummary[]> {
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("quiz_attempts")
+    .select("id, exam_id, exam_name, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
+    .eq("user_id", user.id)
+    .order("submitted_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+
+  return (data ?? []).map((attempt) => ({
+    attemptId: attempt.id,
+    examId: attempt.exam_id,
+    examName: attempt.exam_name,
+    score: Number(attempt.score),
+    totalMarks: Number(attempt.total_marks),
+    correctCount: attempt.correct_count,
+    wrongCount: attempt.wrong_count,
+    skippedCount: attempt.skipped_count,
+    timeTakenSeconds: attempt.time_taken_seconds,
+    submittedAt: attempt.submitted_at,
+  }));
+}
+
 export function fetchTncAttempt(attemptId: string) {
   return call<TncSharedAttempt>({ action: "getAttempt", attemptId });
 }
