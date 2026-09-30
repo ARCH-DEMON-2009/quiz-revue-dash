@@ -112,6 +112,10 @@ Admins can toggle maintenance mode from the Admin Panel:
 
 **Note:** The maintenance mode check now works for all users (including non-logged-in visitors).
 
+## Password Reset Emails
+
+In the Supabase Dashboard, open **Authentication → URL Configuration** and set the Site URL to `https://test.tncnursing.site`. Add `https://test.tncnursing.site/forgot-password` to the Redirect URLs allowlist. Admins can then enter an account email in the Admin Panel's **Send Password Reset** section; the user follows the email link to choose a new password.
+
 ## Features Included
 
 - ✅ SPA routing via .htaccess
