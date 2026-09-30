@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,18 +62,28 @@ const StudyFeaturesWelcome = () => {
   );
 };
 
-export const SiteHelpLink = () => (
-  <a
-    href="https://t.me/Tncnursingbot"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Need help? Open the TNC Nursing Telegram help bot in a new tab"
-    title="Need help? Chat with the TNC Nursing help bot"
-    className="fixed bottom-20 right-4 z-40 inline-flex h-11 items-center gap-2 rounded-full border border-emerald-800/20 bg-emerald-800 px-4 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 sm:bottom-5"
-  >
-    <span aria-hidden="true" className="text-base">?</span>
-    Need help?
-  </a>
-);
+export const SiteHelpLink = () => {
+  const { pathname } = useLocation();
+  const isTakingTest =
+    /^\/quiz\/[^/]+$/.test(pathname) ||
+    (/^\/tnc-tests\/[^/]+$/.test(pathname) && pathname !== "/tnc-tests/leaderboard") ||
+    /^\/tnc-tests\/[^/]+\/retry\/[^/]+$/.test(pathname);
+
+  if (isTakingTest) return null;
+
+  return (
+    <a
+      href="https://t.me/Tncnursingbot"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Need help? Open the TNC Nursing Telegram help bot in a new tab"
+      title="Need help? Chat with the TNC Nursing help bot"
+      className="fixed bottom-20 right-4 z-40 inline-flex h-11 items-center gap-2 rounded-full border border-emerald-800/20 bg-emerald-800 px-4 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 sm:bottom-5"
+    >
+      <span aria-hidden="true" className="text-base">?</span>
+      Need help?
+    </a>
+  );
+};
 
 export default StudyFeaturesWelcome;

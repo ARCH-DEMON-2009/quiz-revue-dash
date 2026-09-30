@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import FloatingBackground from "@/components/FloatingBackground";
 
+const PASSWORD_RESET_REDIRECT_URL = "https://test.tncnursing.site/forgot-password";
+
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -45,10 +47,8 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/forgot-password`;
-      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
+        redirectTo: PASSWORD_RESET_REDIRECT_URL,
       });
 
       if (error) {

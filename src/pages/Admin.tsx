@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X, Link2, ShieldCheck, Star } from "lucide-react";
+import { Search, Users, Crown, Clock, LogOut, ChevronLeft, ChevronRight, Send, Settings, Wrench, CalendarIcon, X, Link2, ShieldCheck, Star, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AddPremiumUserDialog } from "@/components/AddPremiumUserDialog";
@@ -42,6 +42,7 @@ export interface UserData {
 }
 
 const ITEMS_PER_PAGE = 20;
+const PASSWORD_RESET_REDIRECT_URL = "https://test.tncnursing.site/forgot-password";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -76,6 +77,8 @@ const Admin = () => {
     anti_extraction: true,
   });
   const [badgeConfigLoading, setBadgeConfigLoading] = useState(false);
+  const [passwordResetEmail, setPasswordResetEmail] = useState("");
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
 
   const checkAdminAuth = async () => {
     try {
@@ -113,6 +116,27 @@ const Admin = () => {
       navigate("/", { replace: true });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const sendPasswordResetEmail = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPasswordResetLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(passwordResetEmail.trim(), {
+        redirectTo: PASSWORD_RESET_REDIRECT_URL,
+      });
+
+      if (error) throw error;
+
+      toast.success("If an account exists for this email, password reset instructions have been sent.");
+      setPasswordResetEmail("");
+    } catch (error) {
+      console.error("Failed to send password reset email:", error);
+      toast.error("Unable to send the password reset email. Please try again.");
+    } finally {
+      setPasswordResetLoading(false);
     }
   };
 
@@ -746,6 +770,32 @@ const Admin = () => {
         <AdminAnalyticsSection />
         <AdminGiftLogsSection />
 
+        <Card className="mb-4">
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-primary" />
+              Send Password Reset
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <form onSubmit={sendPasswordResetEmail} className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="email"
+                value={passwordResetEmail}
+                onChange={(event) => setPasswordResetEmail(event.target.value)}
+                placeholder="Account email address"
+                aria-label="Account email address"
+                autoComplete="email"
+                required
+                className="min-w-0 flex-1"
+              />
+              <Button type="submit" disabled={passwordResetLoading}>
+                <Send className="h-4 w-4 mr-2" />
+                {passwordResetLoading ? "Sending..." : "Send reset link"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6 lg:mb-8">
           <Card>
