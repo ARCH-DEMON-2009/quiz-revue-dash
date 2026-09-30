@@ -134,7 +134,11 @@ const Admin = () => {
       setPasswordResetEmail("");
     } catch (error) {
       console.error("Failed to send password reset email:", error);
-      toast.error("Unable to send the password reset email. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const message = /rate.?limit|too many requests/i.test(errorMessage)
+        ? "Supabase's default email limit has been reached. Wait for it to reset, then try again."
+        : `Unable to send the password reset email: ${errorMessage}`;
+      toast.error(message);
     } finally {
       setPasswordResetLoading(false);
     }
