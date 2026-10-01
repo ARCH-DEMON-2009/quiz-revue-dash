@@ -35,6 +35,7 @@ import TncGlobalLeaderboard from "./pages/TncGlobalLeaderboard";
 import TncSharedResult from "./pages/TncSharedResult";
 import TncRetry from "./pages/TncRetry";
 import TncStudyPlan from "./pages/TncStudyPlan";
+import InstitutionTests from "./pages/InstitutionTests";
 import AttemptComparison from "./pages/AttemptComparison";
 import StudyFeaturesWelcome from "./components/StudyFeaturesWelcome";
 import RoutesIndex from "./routes/index";
@@ -119,6 +120,7 @@ const App = () => {
             <Route path="/disclaimer" element={<Disclaimer />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/verify" element={<Verify />} />
+            <Route path="/institutions" element={<InstitutionTests />} />
             <Route path="/tnc-tests" element={<TncTests />} />
             <Route path="/tnc-tests/leaderboard" element={<TncGlobalLeaderboard />} />
             <Route path="/tnc-study" element={<TncStudyPlan />} />
