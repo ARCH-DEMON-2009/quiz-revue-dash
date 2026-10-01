@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, BookOpenCheck, Building2, Search, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,8 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const SEEN_KEY = "tnc_study_features_welcome_v1";
-const SESSION_KEY = "tnc_study_features_welcome_session";
+const SEEN_KEY = "institution_quiz_welcome_v1";
 
 const StudyFeaturesWelcome = () => {
   const [open, setOpen] = useState(false);
@@ -24,11 +23,6 @@ const StudyFeaturesWelcome = () => {
     } catch {
       // The in-memory dialog still works when browser storage is disabled.
     }
-    try {
-      sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      // Skip suppressing other session prompts when storage is unavailable.
-    }
     setOpen(true);
   }, []);
 
@@ -36,27 +30,56 @@ const StudyFeaturesWelcome = () => {
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && dismiss()}>
-      <DialogContent className="max-h-[94dvh] w-[calc(100%-1rem)] max-w-3xl overflow-y-auto p-3 sm:p-5">
-        <DialogHeader className="px-1 pt-1 text-left">
-          <DialogTitle className="text-xl font-bold sm:text-2xl">A smarter way to study starts here</DialogTitle>
-          <DialogDescription>See what’s new in your TNC study tools.</DialogDescription>
-        </DialogHeader>
-        <img
-          src="/tnc-study-features.svg"
-          alt="Three new TNC study features: retry missed questions from results, build a daily study plan with your exam date, and review your weekly progress. Open My Study Plan from the TNC Tests page."
-          className="h-auto w-full rounded-md border border-border"
-          fetchPriority="high"
-        />
-        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <Button variant="ghost" className="gap-2" onClick={dismiss}>
-            <X className="h-4 w-4" /> Maybe later
-          </Button>
-          <Button asChild className="gap-2">
-            <Link to="/tnc-study" onClick={dismiss}>
-              Open my study plan <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </DialogFooter>
+      <DialogContent className="max-h-[94dvh] w-[calc(100%-1rem)] max-w-4xl overflow-y-auto p-0">
+        <div className="grid md:grid-cols-[0.95fr_1.05fr]">
+          <div className="relative min-h-52 overflow-hidden bg-muted md:min-h-[390px]">
+            <img
+              src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=85"
+              alt="Students studying together in a library"
+              className="absolute inset-0 h-full w-full object-cover"
+              fetchPriority="high"
+            />
+            <div className="absolute inset-0 bg-black/20" />
+            <div className="absolute inset-x-5 bottom-5 flex items-center gap-3 text-white sm:inset-x-7 sm:bottom-7">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-white/15 ring-1 ring-white/30 backdrop-blur-sm">
+                <Building2 className="h-5 w-5" />
+              </span>
+              <span>
+                <span className="block text-sm font-semibold">Institution quiz library</span>
+                <span className="mt-0.5 block text-xs text-white/85">One directory. Real question banks.</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-center px-5 py-7 sm:px-8 sm:py-9">
+            <DialogHeader className="text-left">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-700">New on Test Sagar</p>
+              <DialogTitle className="max-w-sm text-2xl font-bold leading-tight sm:text-3xl">
+                Practice with institutions you trust.
+              </DialogTitle>
+              <DialogDescription className="mt-2 max-w-md text-sm leading-relaxed">
+                Explore live test series and question-based quizzes from learning institutions, all in one place.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-6 grid gap-3 text-sm text-foreground sm:grid-cols-3">
+              <div className="flex items-center gap-2"><Search className="h-4 w-4 shrink-0 text-emerald-700" /><span>Find a provider</span></div>
+              <div className="flex items-center gap-2"><Star className="h-4 w-4 shrink-0 text-amber-500" /><span>Save favorites</span></div>
+              <div className="flex items-center gap-2"><BookOpenCheck className="h-4 w-4 shrink-0 text-emerald-700" /><span>Take a quiz</span></div>
+            </div>
+
+            <DialogFooter className="mt-8 flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <Button variant="ghost" className="gap-2" onClick={dismiss}>
+                <X className="h-4 w-4" /> Maybe later
+              </Button>
+              <Button asChild className="gap-2">
+                <Link to="/institutions" onClick={dismiss}>
+                  Explore institutions <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </DialogFooter>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
