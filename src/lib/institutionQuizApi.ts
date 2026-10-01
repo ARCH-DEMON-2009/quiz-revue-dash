@@ -30,6 +30,10 @@ export interface InstitutionQuestion {
 async function getJson<T>(url: URL | string): Promise<T> {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Request failed with HTTP ${response.status}`);
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!/(application\/json|\+json)(;|$)/i.test(contentType)) {
+    throw new Error("The institution API is not available on this deployment. Please try again after the site has been updated.");
+  }
   return response.json() as Promise<T>;
 }
 
