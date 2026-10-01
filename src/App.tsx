@@ -36,7 +36,7 @@ import TncSharedResult from "./pages/TncSharedResult";
 import TncRetry from "./pages/TncRetry";
 import TncStudyPlan from "./pages/TncStudyPlan";
 import AttemptComparison from "./pages/AttemptComparison";
-import StudyFeaturesWelcome, { SiteHelpLink } from "./components/StudyFeaturesWelcome";
+import StudyFeaturesWelcome from "./components/StudyFeaturesWelcome";
 import RoutesIndex from "./routes/index";
 
 
@@ -134,7 +134,6 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
           <StudyFeaturesWelcome />
-          <SiteHelpLink />
         </MaintenanceModeGuard>
       </BrowserRouter>
     </TooltipProvider>
