@@ -76,9 +76,10 @@ function idOf(row: InstitutionRow, field: "id" | "subjectid") {
 
 function subjectLabel(subject: InstitutionRow | null, series: InstitutionRow | null) {
   const subjectName = typeof subject?.subject_name === "string" ? subject.subject_name.trim() : "";
-  if (subjectName && subjectName.toLowerCase() !== "uncategorized") return subjectName;
+  const isPlaceholder = (value: string) => /^un[\s_-]*categori[sz]ed$/i.test(value);
+  if (subjectName && !isPlaceholder(subjectName)) return subjectName;
   const examName = typeof series?.examname === "string" ? series.examname.trim() : "";
-  return examName || subjectName || "Subject";
+  return examName && !isPlaceholder(examName) ? examName : "General";
 }
 
 function choicesFor(question: InstitutionQuestion) {
