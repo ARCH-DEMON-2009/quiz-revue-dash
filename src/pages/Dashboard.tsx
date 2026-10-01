@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, FileText, BookOpen } from "lucide-react";
+import { Clock, FileText, BookOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import NavigationHeader from "@/components/NavigationHeader";
@@ -97,7 +97,12 @@ const Dashboard = () => {
               <p className="text-sm sm:text-base text-muted-foreground">Choose your class to view available tests</p>
             </div>
 
-            {loading ? <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+            {loading ? <div aria-busy="true" aria-live="polite">
+                <div className="mb-4 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+                  <span>Loading test series...</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
                 {[...Array(6)].map((_, i) => <Card key={i} className="overflow-hidden">
                     <CardContent className="p-4 sm:p-6 lg:p-8">
                       <div className="space-y-3">
@@ -106,6 +111,7 @@ const Dashboard = () => {
                       </div>
                     </CardContent>
                   </Card>)}
+                </div>
               </div> : availableClasses.length === 0 ? <Card>
                 <CardContent className="py-8 sm:py-12 text-center">
                   <FileText className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-4" />
