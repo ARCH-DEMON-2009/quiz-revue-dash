@@ -1,6 +1,7 @@
 import {
   fetchTrustedJson,
   RESPONSE_LIMITS,
+  safeErrorCode,
   sendJson,
   sendMethodNotAllowed,
   validQuestionUrl,
@@ -28,6 +29,6 @@ export default async function handler(request, response) {
     return sendJson(response, 200, { source_url: sourceUrl, questions, raw: payload });
   } catch (error) {
     console.error("Question file request failed:", error);
-    return sendJson(response, 502, { error: "The question file is temporarily unavailable." });
+    return sendJson(response, 502, { error: "The question file is temporarily unavailable.", code: safeErrorCode(error) });
   }
 }

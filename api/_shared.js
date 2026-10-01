@@ -31,6 +31,17 @@ export function sendMethodNotAllowed(response) {
   sendJson(response, 405, { error: "Method not allowed." });
 }
 
+export function safeErrorCode(error) {
+  if (error?.name === "AbortError") return "upstream_timeout";
+  const message = error instanceof Error ? error.message : "";
+  const status = message.match(/HTTP (\d{3})/);
+  if (status) return `upstream_http_${status[1]}`;
+  if (/did not return JSON|invalid JSON|was not a list/.test(message)) return "upstream_invalid_response";
+  if (/size limit/.test(message)) return "upstream_response_too_large";
+  if (error instanceof TypeError || error?.cause?.code) return "upstream_network_error";
+  return "proxy_error";
+}
+
 function secureUrl(value, allowedHosts) {
   if (typeof value !== "string") return null;
   try {

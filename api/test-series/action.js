@@ -5,6 +5,7 @@ import {
   getRegistry,
   isRegisteredInstitution,
   RESPONSE_LIMITS,
+  safeErrorCode,
   sendJson,
   sendMethodNotAllowed,
 } from "../_shared.js";
@@ -49,6 +50,6 @@ export default async function handler(request, response) {
     return sendJson(response, 200, { action, api_url: apiUrl, data: payload });
   } catch (error) {
     console.error("Institution action request failed:", error);
-    return sendJson(response, 502, { error: "The institution test provider is temporarily unavailable." });
+    return sendJson(response, 502, { error: "The institution test provider is temporarily unavailable.", code: safeErrorCode(error) });
   }
 }
