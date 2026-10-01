@@ -1,4 +1,5 @@
 import {
+  ALLOWED_UPSTREAM_HOSTS,
   fetchTrustedJson,
   RESPONSE_LIMITS,
   safeErrorCode,
@@ -23,7 +24,7 @@ export default async function handler(request, response) {
   }
 
   try {
-    const { payload, sourceUrl } = await fetchTrustedJson(questionUrl, new Set(["appxcontent.kaxa.in"]), RESPONSE_LIMITS.questions);
+    const { payload, sourceUrl } = await fetchTrustedJson(questionUrl, ALLOWED_UPSTREAM_HOSTS.questions, RESPONSE_LIMITS.questions);
     const questions = extractQuestions(payload);
     if (!questions) return sendJson(response, 502, { error: "The question provider returned an unexpected format." });
     return sendJson(response, 200, { source_url: sourceUrl, questions, raw: payload });
