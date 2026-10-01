@@ -2,7 +2,7 @@ export const REGISTRY_URL = "https://studyuk.online/appxapis.json";
 export const APPX_URL = "https://studyuk.online/appx.php";
 
 const APPX_HOSTS = new Set(["studyuk.online"]);
-const QUESTION_HOSTS = new Set(["appxcontent.kaxa.in"]);
+const QUESTION_HOSTS = new Set(["appxcontent.kaxa.in", "testseries-assets-v3.classx.co.in"]);
 const REGISTRY_MAX_BYTES = 5 * 1024 * 1024;
 const ACTION_MAX_BYTES = 5 * 1024 * 1024;
 const QUESTIONS_MAX_BYTES = 20 * 1024 * 1024;
