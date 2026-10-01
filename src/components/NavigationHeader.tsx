@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2, Star, BookOpen } from "lucide-react";
+import { BarChart, Trophy, User, Sparkles, Shield, Crown, Target, Loader2, Star, BookOpen, Building2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
@@ -107,6 +107,10 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               <Target className="h-4 w-4 mr-1 sm:mr-2 text-emerald-600" />
               <span className="hidden xs:inline sm:inline">TNC Tests</span>
             </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/institutions")} className="hidden sm:flex">
+              <Building2 className="mr-2 h-4 w-4 text-emerald-700" />
+              <span>Institutions</span>
+            </Button>
 
 
             <Button 
@@ -165,6 +169,10 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
           <Button variant="ghost" size="sm" onClick={() => navigate("/tnc-tests")} className="flex-col h-auto py-1">
             <Target className="h-4 w-4 text-emerald-600" />
             <span className="text-xs font-semibold">TNC</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/institutions")} className="flex-col h-auto py-1">
+            <Building2 className="h-4 w-4 text-emerald-700" />
+            <span className="text-xs">Institutes</span>
           </Button>
           <Button variant="ghost" size="sm" onClick={handleAIQuiz} className="flex-col h-auto py-1">
             <Sparkles className="h-4 w-4 text-primary" />
