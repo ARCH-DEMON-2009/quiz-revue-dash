@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Clock, FileText, Maximize2, Minimize2 } from "lucide-react";
+import { Clock, FileText, Maximize2, Minimize2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -351,10 +351,10 @@ const Quiz = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading quiz...</p>
+      <div aria-busy="true" aria-live="polite" className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+          <span>Loading test series...</span>
         </div>
       </div>
     );
