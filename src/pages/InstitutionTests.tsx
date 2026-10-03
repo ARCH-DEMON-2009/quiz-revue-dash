@@ -76,9 +76,10 @@ function idOf(row: InstitutionRow, field: "id" | "subjectid") {
 
 function subjectLabel(subject: InstitutionRow | null, series: InstitutionRow | null) {
   const subjectName = typeof subject?.subject_name === "string" ? subject.subject_name.trim() : "";
-  if (subjectName && subjectName.toLowerCase() !== "uncategorized") return subjectName;
+  const isPlaceholder = (value: string) => /^un[\s_-]*categori[sz]ed$/i.test(value);
+  if (subjectName && !isPlaceholder(subjectName)) return subjectName;
   const examName = typeof series?.examname === "string" ? series.examname.trim() : "";
-  return examName || subjectName || "Subject";
+  return examName && !isPlaceholder(examName) ? examName : "General";
 }
 
 function choicesFor(question: InstitutionQuestion) {
@@ -117,6 +118,7 @@ export default function InstitutionTests() {
   });
   const [search, setSearch] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [emptySeriesApis, setEmptySeriesApis] = useState<Set<string>>(() => new Set());
   const [institution, setInstitution] = useState<Institution | null>(null);
   const [series, setSeries] = useState<InstitutionRow[]>([]);
   const [selectedSeries, setSelectedSeries] = useState<InstitutionRow | null>(null);
@@ -171,7 +173,15 @@ export default function InstitutionTests() {
     setLoading(true);
     try {
       const rows = await fetchSeries(next.api);
-      if (request === requestId.current) setSeries(rows);
+      if (request === requestId.current) {
+        setSeries(rows);
+        setEmptySeriesApis((current) => {
+          const updated = new Set(current);
+          if (rows.length === 0) updated.add(next.api);
+          else updated.delete(next.api);
+          return updated;
+        });
+      }
     } catch (reason) {
       if (request === requestId.current) setError(reason instanceof Error ? reason.message : "Couldn't load test series.");
     } finally {
@@ -259,7 +269,9 @@ export default function InstitutionTests() {
   };
 
   const visibleInstitutions = institutions.filter((item) =>
-    (!favoritesOnly || favorites.includes(item.api)) && item.name.toLowerCase().includes(search.trim().toLowerCase()),
+    !emptySeriesApis.has(item.api)
+      && (!favoritesOnly || favorites.includes(item.api))
+      && item.name.toLowerCase().includes(search.trim().toLowerCase()),
   );
   const question = questions[currentQuestion];
   const questionChoices = question ? choicesFor(question) : [];
