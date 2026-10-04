@@ -8,8 +8,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import FloatingBackground from "@/components/FloatingBackground";
 
-const PASSWORD_RESET_REDIRECT_URL = "https://test.tncnursing.site/forgot-password";
-
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -76,7 +74,7 @@ const ForgotPassword = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: PASSWORD_RESET_REDIRECT_URL,
+        redirectTo: new URL("/forgot-password", window.location.origin).toString(),
       });
 
       if (error) {
@@ -85,8 +83,8 @@ const ForgotPassword = () => {
       }
 
       toast.success("Password reset link sent! Check your email.");
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -119,8 +117,8 @@ const ForgotPassword = () => {
 
       toast.success("Password updated successfully!");
       navigate("/auth");
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setLoading(false);
     }
