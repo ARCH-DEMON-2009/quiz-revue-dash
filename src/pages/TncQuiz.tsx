@@ -55,11 +55,13 @@ import {
   type TncQuestion,
 } from "@/lib/tncApi";
 import TncQuestionImage from "@/components/TncQuestionImage";
+import TncExplanation from "@/components/TncExplanation";
 import { LinkShortenerGate } from "@/components/LinkShortenerGate";
 import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { downloadTncResultPdf } from "@/lib/tncPdf";
 import { handleMobilePdfDownload } from "@/lib/mobilePdf";
 import { getPdfIdentity } from "@/lib/userIdentity";
+import { withTimeout } from "@/lib/withTimeout";
 
 type Phase = "instructions" | "quiz" | "results";
 
@@ -149,6 +151,8 @@ const TncQuiz = () => {
   const [pdfProgress, setPdfProgress] = useState(0);
   const [pdfStage, setPdfStage] = useState<"idle" | "queued" | "rendering" | "saving" | "done" | "error">("idle");
   const [authChecked, setAuthChecked] = useState(false);
+  const [authError, setAuthError] = useState(false);
+  const [authRetry, setAuthRetry] = useState(0);
   const [isAuthed, setIsAuthed] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [accessRequired, setAccessRequired] = useState(false);
@@ -194,18 +198,29 @@ const TncQuiz = () => {
   useEffect(() => {
     let active = true;
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!active) return;
-      
-      // If no user is logged in, immediately redirect to /auth
-      if (!user) {
-        const redirect = `/tnc-tests/${examId ?? ""}`;
-        navigate(`/auth?redirect=${encodeURIComponent(redirect)}`, { replace: true });
-        return;
+      setAuthError(false);
+      try {
+        const { data: { user } } = await withTimeout(
+          supabase.auth.getUser(),
+          10_000,
+          "Sign-in check timed out",
+        );
+        if (!active) return;
+
+        if (!user) {
+          const redirect = `/tnc-tests/${examId ?? ""}`;
+          navigate(`/auth?redirect=${encodeURIComponent(redirect)}`, { replace: true });
+          return;
+        }
+
+        setIsAuthed(true);
+      } catch (error) {
+        if (!active) return;
+        console.error("TNC sign-in check failed", error);
+        setAuthError(true);
+      } finally {
+        if (active) setAuthChecked(true);
       }
-      
-      setIsAuthed(true);
-      setAuthChecked(true);
     };
 
     checkAuth();
@@ -214,6 +229,7 @@ const TncQuiz = () => {
       if (!active) return;
       if (session?.user) {
         setIsAuthed(true);
+        setAuthError(false);
         setAuthChecked(true);
       } else {
         // If user signs out during quiz, redirect to auth
@@ -226,7 +242,7 @@ const TncQuiz = () => {
       active = false;
       sub.subscription.unsubscribe();
     };
-  }, [examId, navigate]);
+  }, [authRetry, examId, navigate]);
 
   // ---- Resume an in-progress attempt from localStorage ----
   useEffect(() => {
@@ -332,7 +348,12 @@ const TncQuiz = () => {
                 questions: prev.questions.map((q) => {
                   const r = map.get(q.rowId);
                   return r
-                    ? { ...q, correctAnswer: r.correctAnswer, explanation: r.explanation }
+                    ? {
+                        ...q,
+                        correctAnswer: r.correctAnswer,
+                        explanation: r.explanation,
+                        videoUrl: r.videoUrl ?? q.videoUrl,
+                      }
                     : q;
                 }),
               }
@@ -400,6 +421,22 @@ const TncQuiz = () => {
     else handleSubmit();
   };
 
+  if (authError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <NavigationHeader />
+        <main className="container mx-auto flex max-w-xl flex-col items-center gap-4 px-4 py-16 text-center">
+          <AlertCircle className="h-10 w-10 text-destructive" />
+          <p className="text-muted-foreground">We couldn’t verify your sign-in. Check your connection and try again.</p>
+          <Button onClick={() => {
+            setAuthChecked(false);
+            setAuthRetry((attempt) => attempt + 1);
+          }}>Retry sign-in check</Button>
+        </main>
+      </div>
+    );
+  }
+
   if (loading || !authChecked) {
     return (
       <div className="min-h-screen bg-background">
@@ -417,18 +454,16 @@ const TncQuiz = () => {
   }
 
   // ---- Login required to access TNC quizzes ----
-  if (!isAuthed || !authChecked) {
+  if (!isAuthed && authChecked) {
     return (
       <div className="min-h-screen bg-background">
         <NavigationHeader />
-        <div aria-busy="true" aria-live="polite" className="container mx-auto max-w-3xl space-y-5 px-4 py-10">
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-            <span>Preparing your test...</span>
-          </div>
-          <Skeleton className="h-10 w-2/3" />
-          <Skeleton className="h-40 w-full" />
-        </div>
+        <main className="container mx-auto flex max-w-xl flex-col items-center gap-4 px-4 py-16 text-center">
+          <p className="text-muted-foreground">Sign in to access this test.</p>
+          <Button onClick={() => navigate(`/auth?redirect=${encodeURIComponent(`/tnc-tests/${examId ?? ""}`)}`)}>
+            Sign in
+          </Button>
+        </main>
       </div>
     );
   }
@@ -543,7 +578,7 @@ const TncQuiz = () => {
           <Button variant="ghost" className="mb-4 gap-2" onClick={() => navigate("/tnc-tests")}>
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
-          <Card className="p-8">
+          <Card className="p-4 sm:p-8">
             <h1 className="text-2xl font-bold text-foreground">
               <Html html={exam.name} />
             </h1>
@@ -840,7 +875,7 @@ const TncQuiz = () => {
       </Helmet>
       <NavigationHeader />
       <main className="container mx-auto max-w-3xl px-4 py-10">
-        <Card className="p-8 text-center">
+        <Card className="p-4 text-center sm:p-8">
           <p className="text-sm text-muted-foreground">
             <Html html={exam.name} />
           </p>
@@ -848,7 +883,7 @@ const TncQuiz = () => {
           <p className="text-muted-foreground">out of {exam.maxMarks} marks</p>
           <p className={`mt-1 text-lg font-semibold ${g.color}`}>{g.label}</p>
 
-          <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
             <ResultStat label="Correct" value={r.correct} color="text-green-600" icon={<CheckCircle2 />} />
             <ResultStat label="Wrong" value={r.wrong} color="text-red-600" icon={<XCircle />} />
             <ResultStat label="Skipped" value={r.skipped} color="text-amber-600" icon={<MinusCircle />} />
@@ -956,10 +991,7 @@ const TncQuiz = () => {
                   })}
                 </div>
                 {q.explanation && stripHtml(q.explanation) && (
-                  <div className="mt-3 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">Explanation: </span>
-                    <Html html={q.explanation} />
-                  </div>
+                  <TncExplanation html={q.explanation} videoUrl={q.videoUrl} className="mt-3" />
                 )}
               </Card>
             );
@@ -972,7 +1004,7 @@ const TncQuiz = () => {
 };
 
 const Stat = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-  <div className="rounded-lg border bg-card p-4 text-center">
+  <div className="rounded-lg border bg-card p-3 text-center sm:p-4">
     <div className="mx-auto mb-1 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary [&_svg]:h-4 [&_svg]:w-4">
       {icon}
     </div>
@@ -992,7 +1024,7 @@ const ResultStat = ({
   color: string;
   icon: React.ReactNode;
 }) => (
-  <div className="rounded-lg border bg-card p-4">
+  <div className="rounded-lg border bg-card p-3 sm:p-4">
     <div className={`mx-auto mb-1 flex items-center justify-center ${color} [&_svg]:h-5 [&_svg]:w-5`}>
       {icon}
     </div>

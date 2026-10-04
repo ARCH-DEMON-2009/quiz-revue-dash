@@ -29,6 +29,7 @@ import {
 import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { downloadTncResultPdf } from "@/lib/tncPdf";
 import TncQuestionImage from "@/components/TncQuestionImage";
+import TncExplanation from "@/components/TncExplanation";
 
 const OPTS = ["A", "B", "C", "D"] as const;
 const SITE = "https://test.shashanksv.com";
@@ -89,7 +90,14 @@ const TncSharedResult = () => {
           ...e,
           questions: snapshot.map((q) => {
             const r = map.get(q.rowId);
-            return r ? { ...q, correctAnswer: r.correctAnswer, explanation: r.explanation } : q;
+            return r
+              ? {
+                  ...q,
+                  correctAnswer: r.correctAnswer,
+                  explanation: r.explanation,
+                  videoUrl: r.videoUrl ?? q.videoUrl,
+                }
+              : q;
           }),
         });
       })
@@ -230,7 +238,7 @@ const TncSharedResult = () => {
       </Helmet>
       <NavigationHeader />
       <main className="container mx-auto max-w-3xl px-4 py-10">
-        <Card className="p-8 text-center">
+        <Card className="p-4 text-center sm:p-8">
           <p className="text-sm text-muted-foreground">
             <Html html={examName} />
           </p>
@@ -239,7 +247,7 @@ const TncSharedResult = () => {
           <p className="text-muted-foreground">out of {attempt.totalMarks} marks</p>
           <p className={`mt-1 text-lg font-semibold ${g.color}`}>{g.label}</p>
 
-          <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-3 gap-2 sm:gap-3">
             <Stat label="Correct" value={attempt.correctCount} color="text-green-600" icon={<CheckCircle2 />} />
             <Stat label="Wrong" value={attempt.wrongCount} color="text-red-600" icon={<XCircle />} />
             <Stat label="Skipped" value={attempt.skippedCount} color="text-amber-600" icon={<MinusCircle />} />
@@ -338,10 +346,7 @@ const TncSharedResult = () => {
                   })}
                 </div>
                 {q.explanation && stripHtml(q.explanation) && (
-                  <div className="mt-3 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-                    <span className="font-medium text-foreground">Explanation: </span>
-                    <Html html={q.explanation} />
-                  </div>
+                  <TncExplanation html={q.explanation} videoUrl={q.videoUrl} className="mt-3" />
                 )}
               </Card>
             );
@@ -363,7 +368,7 @@ const Stat = ({
   color: string;
   icon: React.ReactNode;
 }) => (
-  <div className="rounded-lg border bg-card p-4">
+  <div className="rounded-lg border bg-card p-3 sm:p-4">
     <div className={`mx-auto mb-1 flex items-center justify-center ${color} [&_svg]:h-5 [&_svg]:w-5`}>{icon}</div>
     <p className={`text-2xl font-bold ${color}`}>{value}</p>
     <p className="text-xs text-muted-foreground">{label}</p>

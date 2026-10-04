@@ -4,6 +4,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 const CRM_ENDPOINT = Deno.env.get("TNC_CRM_ENDPOINT") ?? "https://crm.tncnursing.in/common/";
 const CRM_BASE = Deno.env.get("TNC_CRM_BASE") ?? "https://crm.tncnursing.in";
 const CRM_REQUEST_INTERVAL_MS = 550;
+const CRM_REQUEST_TIMEOUT_MS = 15_000;
 const CATALOG_REFRESH_INTERVAL_MS = 10 * 60 * 1000;
 let crmRequestQueue: Promise<void> = Promise.resolve();
 let nextCrmRequestAt = 0;
@@ -46,6 +47,7 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ payload: JSON.stringify(payload) }),
+    signal: AbortSignal.timeout(CRM_REQUEST_TIMEOUT_MS),
   });
   if (!res.ok) {
     if (res.status === 429) {
@@ -409,6 +411,7 @@ function parseQuestion(row: any) {
     optionD: ops._op_D?._op_ti ?? "",
     correctAnswer: j._an ?? "",
     explanation: soObj._ti ?? null,
+    videoUrl: soObj._vi ?? null,
   };
 }
 
@@ -1265,7 +1268,12 @@ Deno.serve(async (req) => {
         if (!ans) skipped++;
         else if (ans === q.correctAnswer) correct++;
         else wrong++;
-        return { rowId: q.rowId, correctAnswer: q.correctAnswer, explanation: q.explanation };
+        return {
+          rowId: q.rowId,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          videoUrl: q.videoUrl ?? null,
+        };
       });
       const score = Math.max(0, correct * marksPerQ - wrong * exam.negativeMarks);
 
@@ -1339,10 +1347,12 @@ Deno.serve(async (req) => {
       const exam = await getTest(attempt.examId);
       if (!exam && !attempt.questionSnapshot.length) return json({ error: "Not found" }, 404);
       const questions = attempt.questionSnapshot.length ? attempt.questionSnapshot : exam!.questions;
+      const videoUrlByRowId = new Map((exam?.questions ?? []).map((question: any) => [question.rowId, question.videoUrl]));
       const review = questions.map((q: any) => ({
         rowId: q.rowId,
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
+        videoUrl: q.videoUrl ?? videoUrlByRowId.get(q.rowId) ?? null,
       }));
       return json({ examId: attempt.examId, review });
     }

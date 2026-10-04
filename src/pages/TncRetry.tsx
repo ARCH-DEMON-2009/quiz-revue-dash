@@ -8,9 +8,11 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import TncQuestionImage from "@/components/TncQuestionImage";
+import TncExplanation from "@/components/TncExplanation";
 import { supabase } from "@/integrations/supabase/client";
 import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { fetchTncAttempt, fetchTncReview, fetchTncTest, type TncQuestion } from "@/lib/tncApi";
+import { withTimeout } from "@/lib/withTimeout";
 
 const OPTIONS = ["A", "B", "C", "D"] as const;
 
@@ -35,17 +37,25 @@ const TncRetry = () => {
     let active = true;
     const load = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await withTimeout(
+          supabase.auth.getUser(),
+          10_000,
+          "Sign-in check timed out",
+        );
         if (!user) {
           navigate(`/auth?redirect=${encodeURIComponent(`/tnc-tests/${examId}/retry/${attemptId}`)}`, { replace: true });
           return;
         }
 
-        const { data: ownedAttempt, error: ownershipError } = await supabase
-          .from("quiz_attempts")
-          .select("id")
-          .eq("id", Number(attemptId))
-          .maybeSingle();
+        const { data: ownedAttempt, error: ownershipError } = await withTimeout(
+          supabase
+            .from("quiz_attempts")
+            .select("id")
+            .eq("id", Number(attemptId))
+            .maybeSingle(),
+          15_000,
+          "Attempt access check timed out",
+        );
         if (ownershipError) throw ownershipError;
         if (!ownedAttempt) throw new Error("This retry session is only available to the attempt owner.");
 
@@ -65,6 +75,7 @@ const TncRetry = () => {
             ...question,
             correctAnswer: answerKey.correctAnswer,
             explanation: answerKey.explanation,
+            videoUrl: answerKey.videoUrl ?? question.videoUrl,
           };
           return attempt.answers[question.rowId] === answerKey.correctAnswer ? [] : [questionWithKey];
         });
@@ -203,7 +214,9 @@ const TncRetry = () => {
               {checked && (
                 <div className={`mt-5 rounded-md p-4 text-sm ${selected === question.correctAnswer ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-950"}`}>
                   <p className="font-semibold">{selected === question.correctAnswer ? "Correct" : `The correct answer is ${question.correctAnswer}`}</p>
-                  {question.explanation && <Html className="mt-2 block" html={question.explanation} />}
+                  {question.explanation && (
+                    <TncExplanation html={question.explanation} videoUrl={question.videoUrl} bare className="mt-2" />
+                  )}
                 </div>
               )}
               <div className="mt-6 flex justify-end">
