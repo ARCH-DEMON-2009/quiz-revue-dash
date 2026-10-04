@@ -8,8 +8,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import FloatingBackground from "@/components/FloatingBackground";
 
-const PASSWORD_RESET_REDIRECT_URL = "https://test.tncnursing.site/forgot-password";
-
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -18,28 +16,56 @@ const ForgotPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
+  const [recoveryError, setRecoveryError] = useState("");
 
   useEffect(() => {
-    // Check if we have access_token and type=recovery in URL (from email link)
-    const accessToken = searchParams.get("access_token");
-    const type = searchParams.get("type");
-    
-    // Also check hash params (Supabase sometimes uses hash)
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const hashAccessToken = hashParams.get("access_token");
-    const hashType = hashParams.get("type");
-
-    if ((accessToken && type === "recovery") || (hashAccessToken && hashType === "recovery")) {
-      setIsResetMode(true);
-      
-      // If using hash params, we need to set the session
-      if (hashAccessToken) {
-        supabase.auth.setSession({
-          access_token: hashAccessToken,
-          refresh_token: hashParams.get("refresh_token") || "",
-        });
+    let active = true;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsResetMode(true);
+        setRecoveryError("");
       }
+    });
+
+    const searchType = searchParams.get("type");
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const hashType = hashParams.get("type");
+    const accessToken = searchParams.get("access_token") ?? hashParams.get("access_token");
+    const refreshToken = searchParams.get("refresh_token") ?? hashParams.get("refresh_token");
+    if (accessToken && (searchType === "recovery" || hashType === "recovery")) {
+      void supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken ?? "" })
+        .then(({ error }) => {
+          if (!active) return;
+          if (error) setRecoveryError("This reset link is invalid or expired. Request a new one.");
+          else setIsResetMode(true);
+        });
     }
+
+    const code = searchParams.get("code");
+    if (code) {
+      void (async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!active) return;
+        if (session) {
+          setIsResetMode(true);
+          return;
+        }
+
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!active) return;
+        if (error) setRecoveryError("This reset link is invalid or expired. Request a new one.");
+        else setIsResetMode(true);
+      })().catch((error) => {
+        if (active) setRecoveryError(error instanceof Error ? error.message : "Could not verify this reset link.");
+      });
+    }
+
+    if (searchType === "recovery" || hashType === "recovery") setIsResetMode(true);
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, [searchParams]);
 
   const handleSendResetEmail = async (e: React.FormEvent) => {
@@ -48,7 +74,7 @@ const ForgotPassword = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: PASSWORD_RESET_REDIRECT_URL,
+        redirectTo: new URL("/forgot-password", window.location.origin).toString(),
       });
 
       if (error) {
@@ -57,8 +83,8 @@ const ForgotPassword = () => {
       }
 
       toast.success("Password reset link sent! Check your email.");
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -91,8 +117,8 @@ const ForgotPassword = () => {
 
       toast.success("Password updated successfully!");
       navigate("/auth");
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -116,6 +142,7 @@ const ForgotPassword = () => {
         <CardContent>
           {isResetMode ? (
             <form onSubmit={handleResetPassword} className="space-y-4">
+              {recoveryError && <p className="text-sm text-destructive" role="alert">{recoveryError}</p>}
               <div className="space-y-2">
                 <Label htmlFor="newPassword">New Password</Label>
                 <Input

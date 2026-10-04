@@ -13,7 +13,13 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')!;
+    const RESEND_API_KEY = Deno.env.get('resend_api_key') ?? Deno.env.get('RESEND_API_KEY');
+    if (!RESEND_API_KEY) {
+      return new Response(JSON.stringify({ success: false, error: 'Resend API key is not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -140,7 +146,7 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: 'TestSagar <noreply@testsagar.com>',
+            from: 'Test Sagar <team@tncnursing.site>',
             to: [user.email],
             subject: '⏰ Your TestSagar Premium expires in 3 days — Renew Now!',
             html: emailHtml,

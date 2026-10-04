@@ -17,6 +17,13 @@ const Auth = () => {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [confirmationEmail, setConfirmationEmail] = useState("");
+
+  const getEmailRedirectUrl = () => {
+    const url = new URL("/auth", window.location.origin);
+    if (redirectTo !== "/") url.searchParams.set("redirect", redirectTo);
+    return url.toString();
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -55,10 +62,11 @@ const Auth = () => {
         const emailValidation = isValidEmailProvider(email);
         if (!emailValidation.valid) throw new Error(emailValidation.message);
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
+            emailRedirectTo: getEmailRedirectUrl(),
             data: {
               name: name.trim(),
               whatsapp_number: whatsappNumber.trim(),
@@ -66,10 +74,33 @@ const Auth = () => {
           },
         });
         if (error) throw error;
-        toast.success("Check your email to confirm registration!");
+        if (!data.session) {
+          setConfirmationEmail(email.trim());
+          toast.success(`Confirmation email sent to ${email.trim()}. Confirm your email before signing in.`);
+        } else {
+          toast.success("Your account is ready. You are signed in.");
+        }
       }
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendConfirmationEmail = async () => {
+    if (!confirmationEmail || loading) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: confirmationEmail,
+        options: { emailRedirectTo: getEmailRedirectUrl() },
+      });
+      if (error) throw error;
+      toast.success(`A new confirmation email was sent to ${confirmationEmail}.`);
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Could not resend the confirmation email.");
     } finally {
       setLoading(false);
     }
@@ -134,6 +165,14 @@ const Auth = () => {
         {/* ---------- Register form ---------- */}
         <div className="auth-form-box register">
           <h2 className="auth-anim" style={{ ["--li" as any]: 17, ["--S" as any]: 0 }}>Register</h2>
+          {!isLogin && confirmationEmail && (
+            <div className="mx-4 mb-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm" role="status">
+              <p>We sent a confirmation email to <strong className="break-all">{confirmationEmail}</strong>. Confirm your account from that email before signing in.</p>
+              <button type="button" className="mt-2 text-primary underline" onClick={resendConfirmationEmail} disabled={loading}>
+                {loading ? "Sending..." : "Resend confirmation email"}
+              </button>
+            </div>
+          )}
           <form onSubmit={handleAuth}>
             <div className="auth-input auth-anim" style={{ ["--li" as any]: 18, ["--S" as any]: 1 }}>
               <input

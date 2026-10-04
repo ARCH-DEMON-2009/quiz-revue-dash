@@ -1,16 +1,24 @@
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Phone } from "lucide-react";
+import { ArrowLeft, Loader2, Phone, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 const ContactUs = () => {
   const navigate = useNavigate();
   const [userName, setUserName] = useState<string>("");
   const [userEmail, setUserEmail] = useState<string>("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [website, setWebsite] = useState("");
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -36,6 +44,29 @@ const ContactUs = () => {
       ? `Hello, I'm ${userName} (${userEmail}). I need assistance.`
       : "Hello, I need assistance.";
     return `https://wa.me/84522122461?text=${encodeURIComponent(message)}`;
+  };
+
+  const handleContactSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (sending) return;
+
+    setSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-contact-email", {
+        body: { name: userName, email: userEmail, subject, message, website },
+        timeout: 20_000,
+      });
+      if (error) throw error;
+
+      toast.success("Your message was sent. We’ll reply by email.");
+      setSubject("");
+      setMessage("");
+    } catch (error) {
+      console.error("Contact message failed", error);
+      toast.error("Could not send your message. Please try again or use WhatsApp.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -124,6 +155,75 @@ const ContactUs = () => {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="mx-auto mt-8 w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle>Send a message</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleContactSubmit} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="contact-name">Name</Label>
+                  <Input
+                    id="contact-name"
+                    value={userName}
+                    onChange={(event) => setUserName(event.target.value)}
+                    maxLength={100}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-email">Email</Label>
+                  <Input
+                    id="contact-email"
+                    type="email"
+                    value={userEmail}
+                    onChange={(event) => setUserEmail(event.target.value)}
+                    maxLength={254}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact-subject">Subject</Label>
+                <Input
+                  id="contact-subject"
+                  value={subject}
+                  onChange={(event) => setSubject(event.target.value)}
+                  maxLength={120}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact-message">Message</Label>
+                <Textarea
+                  id="contact-message"
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  rows={5}
+                  minLength={10}
+                  maxLength={5000}
+                  required
+                />
+              </div>
+              <div className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+                <Label htmlFor="contact-website">Website</Label>
+                <Input
+                  id="contact-website"
+                  value={website}
+                  onChange={(event) => setWebsite(event.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+              <Button type="submit" className="w-full gap-2 sm:w-auto" disabled={sending}>
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sending ? "Sending…" : "Send message"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
         <Card className="mt-8">
           <CardContent className="pt-6">
