@@ -40,7 +40,7 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const RESEND_API_KEY = Deno.env.get("resend_api_key") ?? Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
       console.error("RESEND_API_KEY not configured");
       return new Response(
@@ -128,7 +128,7 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Test Sagar <noreply@shashanksv.com>",
+        from: "Test Sagar <team@tncnursing.site>",
         to: [email],
         subject: is_admin_activation ? "🎊 Premium Activated!" : "🎉 Welcome to Test Sagar Premium!",
         html: emailHtml,
