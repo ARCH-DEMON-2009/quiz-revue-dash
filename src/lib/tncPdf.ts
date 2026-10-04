@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import { stripHtml } from "./sanitizeHtml";
 import { fetchTncImageDataUrl, type TncQuestion } from "./tncApi";
 import { displayInitial, toDisplayName } from "./displayName";
+import { getTncExplanationVideoUrl } from "./tncYoutube";
 
 
 interface PdfArgs {
@@ -600,11 +601,12 @@ export async function downloadTncResultPdf(args: PdfArgs) {
     // Explanation
     const expl = stripHtml(q.explanation);
     if (expl) {
+      const videoUrl = getTncExplanationVideoUrl(q.explanation, q.videoUrl);
       y += 2;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8.5);
       const explLines = doc.splitTextToSize(expl, maxW - 36);
-      const boxH = explLines.length * 11 + 26;
+      const boxH = explLines.length * 11 + 26 + (videoUrl ? 22 : 0);
       ensure(boxH + 4);
       doc.setFillColor(245, 243, 255);
       doc.setDrawColor(...BRAND);
@@ -622,6 +624,16 @@ export async function downloadTncResultPdf(args: PdfArgs) {
       for (const ln of explLines) {
         doc.text(ln, margin + 24, ey);
         ey += 11;
+      }
+      if (videoUrl) {
+        const buttonText = "WATCH EXPLANATION VIDEO";
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        const buttonW = doc.getTextWidth(buttonText) + 16;
+        doc.setFillColor(239, 246, 255);
+        doc.roundedRect(margin + 24, ey - 7, buttonW, 16, 4, 4, "F");
+        doc.setTextColor(...BRAND);
+        doc.textWithLink(buttonText, margin + 32, ey + 4, { url: videoUrl });
       }
       y += boxH + 6;
     }

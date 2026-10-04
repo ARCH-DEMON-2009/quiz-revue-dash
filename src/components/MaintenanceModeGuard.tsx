@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import MaintenancePage from "@/pages/MaintenancePage";
+import { withTimeout } from "@/lib/withTimeout";
+
+const MAINTENANCE_CHECK_TIMEOUT_MS = 8_000;
 
 interface MaintenanceModeGuardProps {
   children: React.ReactNode;
@@ -36,10 +39,14 @@ export const MaintenanceModeGuard = ({ children }: MaintenanceModeGuardProps) =>
   const checkMaintenanceMode = async () => {
     try {
       // Fetch all maintenance-related config
-      const { data: configData, error } = await supabase
-        .from("system_config")
-        .select("config_key, config_value")
-        .in("config_key", ["maintenance_mode", "maintenance_scheduled_start", "maintenance_scheduled_end"]);
+      const { data: configData, error } = await withTimeout(
+        supabase
+          .from("system_config")
+          .select("config_key, config_value")
+          .in("config_key", ["maintenance_mode", "maintenance_scheduled_start", "maintenance_scheduled_end"]),
+        MAINTENANCE_CHECK_TIMEOUT_MS,
+        "Maintenance status check timed out",
+      );
 
       if (error) {
         console.error("Error fetching maintenance mode:", error);
@@ -81,7 +88,7 @@ export const MaintenanceModeGuard = ({ children }: MaintenanceModeGuardProps) =>
 
       // If maintenance mode is on, check if current user is admin
       if (maintenanceEnabled) {
-        await checkAdminStatus();
+        await withTimeout(checkAdminStatus(), MAINTENANCE_CHECK_TIMEOUT_MS, "Admin status check timed out");
       }
     } catch (error) {
       console.error("Error checking maintenance mode:", error);
@@ -94,10 +101,18 @@ export const MaintenanceModeGuard = ({ children }: MaintenanceModeGuardProps) =>
   const checkAdminStatus = async () => {
     setIsCheckingAdmin(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await withTimeout(
+        supabase.auth.getUser(),
+        MAINTENANCE_CHECK_TIMEOUT_MS,
+        "Sign-in check timed out",
+      );
       
       if (user) {
-        const { data: adminData, error } = await supabase.rpc('is_admin');
+        const { data: adminData, error } = await withTimeout(
+          supabase.rpc('is_admin'),
+          MAINTENANCE_CHECK_TIMEOUT_MS,
+          "Admin status check timed out",
+        );
         if (!error) {
           setIsAdmin(adminData === true);
         } else {

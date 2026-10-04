@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,38 +7,38 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { App as CapacitorApp } from "@capacitor/app";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
-import Dashboard from "./pages/Dashboard";
-import Quiz from "./pages/Quiz";
-import QuizRedirect from "./pages/QuizRedirect";
-import Results from "./pages/Results";
-import Review from "./pages/Review";
-import Profile from "./pages/Profile";
-import PublicUserProfile from "./pages/PublicUserProfile";
-import Auth from "./pages/Auth";
-import ForgotPassword from "./pages/ForgotPassword";
-import Analytics from "./pages/Analytics";
-import Leaderboard from "./pages/Leaderboard";
-import Admin from "./pages/Admin";
-import Pricing from "./pages/Pricing";
-import ContactUs from "./pages/ContactUs";
-import ShippingPolicy from "./pages/ShippingPolicy";
-import TermsAndConditions from "./pages/TermsAndConditions";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import AboutUs from "./pages/AboutUs";
-import Disclaimer from "./pages/Disclaimer";
-import NotFound from "./pages/NotFound";
-import Verify from "./pages/Verify";
-import TncTests from "./pages/TncTests";
-import TncQuiz from "./pages/TncQuiz";
-import TncLeaderboard from "./pages/TncLeaderboard";
-import TncGlobalLeaderboard from "./pages/TncGlobalLeaderboard";
-import TncSharedResult from "./pages/TncSharedResult";
-import TncRetry from "./pages/TncRetry";
-import TncStudyPlan from "./pages/TncStudyPlan";
-import InstitutionTests from "./pages/InstitutionTests";
-import AttemptComparison from "./pages/AttemptComparison";
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Quiz = lazy(() => import("./pages/Quiz"));
+const QuizRedirect = lazy(() => import("./pages/QuizRedirect"));
+const Results = lazy(() => import("./pages/Results"));
+const Review = lazy(() => import("./pages/Review"));
+const Profile = lazy(() => import("./pages/Profile"));
+const PublicUserProfile = lazy(() => import("./pages/PublicUserProfile"));
+const Auth = lazy(() => import("./pages/Auth"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const ContactUs = lazy(() => import("./pages/ContactUs"));
+const ShippingPolicy = lazy(() => import("./pages/ShippingPolicy"));
+const TermsAndConditions = lazy(() => import("./pages/TermsAndConditions"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const AboutUs = lazy(() => import("./pages/AboutUs"));
+const Disclaimer = lazy(() => import("./pages/Disclaimer"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Verify = lazy(() => import("./pages/Verify"));
+const TncTests = lazy(() => import("./pages/TncTests"));
+const TncQuiz = lazy(() => import("./pages/TncQuiz"));
+const TncLeaderboard = lazy(() => import("./pages/TncLeaderboard"));
+const TncGlobalLeaderboard = lazy(() => import("./pages/TncGlobalLeaderboard"));
+const TncSharedResult = lazy(() => import("./pages/TncSharedResult"));
+const TncRetry = lazy(() => import("./pages/TncRetry"));
+const TncStudyPlan = lazy(() => import("./pages/TncStudyPlan"));
+const InstitutionTests = lazy(() => import("./pages/InstitutionTests"));
+const AttemptComparison = lazy(() => import("./pages/AttemptComparison"));
 import StudyFeaturesWelcome from "./components/StudyFeaturesWelcome";
-import RoutesIndex from "./routes/index";
+const RoutesIndex = lazy(() => import("./routes/index"));
 
 
 
@@ -96,6 +96,11 @@ const App = () => {
         <MaintenanceModeGuard>
           <BypassBlockGuard />
           <BlockedUserGuard />
+          <Suspense fallback={(
+            <div className="flex min-h-[50vh] items-center justify-center px-4 text-sm text-muted-foreground" role="status">
+              Loading page...
+            </div>
+          )}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
@@ -135,6 +140,7 @@ const App = () => {
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           <StudyFeaturesWelcome />
         </MaintenanceModeGuard>
       </BrowserRouter>

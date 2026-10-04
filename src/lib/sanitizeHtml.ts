@@ -6,11 +6,11 @@ import DOMPurify from "dompurify";
  * plain text leaks raw tags into the UI, so we sanitize it to a safe subset and
  * render it as real HTML.
  */
-export function cleanHtml(input: string | null | undefined): string {
+export function cleanHtml(input: string | null | undefined, options: { allowLinks?: boolean } = {}): string {
   if (!input) return "";
   const sanitized = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "sub", "sup", "br", "p", "span", "ul", "ol", "li", "table", "thead", "tbody", "tr", "td", "th", "font", "div"],
-    ALLOWED_ATTR: ["style", "color", "face", "size"],
+    ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "sub", "sup", "br", "p", "span", "ul", "ol", "li", "table", "thead", "tbody", "tr", "td", "th", "font", "div", ...(options.allowLinks ? ["a"] : [])],
+    ALLOWED_ATTR: ["style", "color", "face", "size", ...(options.allowLinks ? ["href"] : [])],
   });
   return sanitized;
 }
