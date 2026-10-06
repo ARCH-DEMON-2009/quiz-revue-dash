@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
+import { Switch } from "@/components/ui/switch";
 
 interface UserDetails {
   id?: string;
@@ -106,6 +107,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [accessStatus, setAccessStatus] = useState<AccessStatus | null>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [hideTakenTncTests, setHideTakenTncTests] = useState(false);
+  const [savingTncPreference, setSavingTncPreference] = useState(false);
     const [earnedBadgeIds, setEarnedBadgeIds] = useState<string[] | null>(null);
   const { 
     config,
@@ -178,9 +181,11 @@ const Profile = () => {
         // Fetch from profile table for persistent avatar_url
         const { data: profile } = await supabase
           .from('user_profiles')
-          .select('avatar_url, name')
+          .select('*')
           .eq('user_id', user.id)
           .maybeSingle();
+
+        setHideTakenTncTests(profile?.hide_taken_tnc_tests === true);
 
         setUserDetails({
           id: user.id,
@@ -278,6 +283,44 @@ const Profile = () => {
     } catch (error: any) {
       toast.error("Failed to update name");
       console.error(error);
+    }
+  };
+
+  const handleTncPreferenceChange = async (enabled: boolean) => {
+    if (!userDetails) return;
+    const previousValue = hideTakenTncTests;
+    setHideTakenTncTests(enabled);
+    setSavingTncPreference(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sign in to update this setting.");
+
+      const { data: updatedProfile, error } = await supabase
+        .from("user_profiles")
+        .update({ hide_taken_tnc_tests: enabled })
+        .eq("user_id", user.id)
+        .select("user_id")
+        .maybeSingle();
+      if (error) throw error;
+
+      if (!updatedProfile) {
+        const { error: insertError } = await supabase.from("user_profiles").insert({
+          user_id: user.id,
+          email: user.email ?? "",
+          name: userDetails.name || "User",
+          hide_taken_tnc_tests: enabled,
+        });
+        if (insertError) throw insertError;
+      }
+
+      toast.success("TNC test preference saved.");
+    } catch (error) {
+      setHideTakenTncTests(previousValue);
+      toast.error("Could not save your TNC test preference.");
+      console.error(error);
+    } finally {
+      setSavingTncPreference(false);
     }
   };
 
@@ -593,6 +636,29 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {userDetails && (
+          <Card className="mb-4 sm:mb-6 lg:mb-8">
+            <CardHeader className="p-3 sm:p-4 lg:p-6">
+              <CardTitle className="text-base sm:text-lg">Test series preferences</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between gap-4 p-3 pt-0 sm:p-4 sm:pt-0 lg:p-6 lg:pt-0">
+              <div className="min-w-0">
+                <p id="hide-taken-tnc-label" className="font-medium">Hide completed TNC series from browse</p>
+                <p id="hide-taken-tnc-description" className="mt-1 text-sm text-muted-foreground">
+                  Completed series stay available in Taken test series.
+                </p>
+              </div>
+              <Switch
+                checked={hideTakenTncTests}
+                onCheckedChange={handleTncPreferenceChange}
+                disabled={savingTncPreference}
+                aria-labelledby="hide-taken-tnc-label"
+                aria-describedby="hide-taken-tnc-description"
+              />
             </CardContent>
           </Card>
         )}

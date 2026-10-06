@@ -117,6 +117,36 @@ async function getAuthUser(req: Request) {
   return data.user;
 }
 
+async function getHiddenTakenExamIds(req: Request) {
+  const user = await getAuthUser(req);
+  if (!user) return new Set<string>();
+
+  const admin = adminClient();
+  const { data: profile, error: profileError } = await admin
+    .from("user_profiles")
+    .select("hide_taken_tnc_tests")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (profileError) throw profileError;
+  if (profile?.hide_taken_tnc_tests !== true) return new Set<string>();
+
+  const examIds = new Set<string>();
+  const pageSize = 1000;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await admin
+      .from("quiz_attempts")
+      .select("exam_id")
+      .eq("user_id", user.id)
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    for (const attempt of data ?? []) {
+      if (attempt.exam_id != null) examIds.add(String(attempt.exam_id));
+    }
+    if (!data || data.length < pageSize) break;
+  }
+  return examIds;
+}
+
 /** Returns true if the user currently has an active, non-expired premium plan. */
 async function isPremiumUser(user: { id: string; email?: string | null }) {
   const admin = adminClient();
@@ -503,7 +533,7 @@ async function fetchExamsByNumbers(examNumbers: number[]) {
   return exams;
 }
 
-async function listTestsLive(page: number, limit: number, search = "", category = "All", group = "", includeExamGroups = true) {
+async function listTestsLive(page: number, limit: number, search = "", category = "All", group = "", includeExamGroups = true, hiddenExamIds = new Set<string>()) {
   const initial = await fetchFromCRM({
     fn: "common_fn",
     se: "fe",
@@ -547,7 +577,8 @@ async function listTestsLive(page: number, limit: number, search = "", category 
   const all = valid.map(parseExam);
 
   const q = search.trim().toLowerCase();
-  const matched = all.filter(
+  const available = all.filter((exam: any) => !hiddenExamIds.has(String(exam.examId)));
+  const matched = available.filter(
     (e: any) =>
       (!q || String(e.name).toLowerCase().includes(q)) &&
         (!group || e.groupName === group) &&
@@ -559,10 +590,10 @@ async function listTestsLive(page: number, limit: number, search = "", category 
     total: matched.length,
     page,
     limit,
-    categoryCounts: countByCategory(all),
+    categoryCounts: countByCategory(available),
     ...(includeExamGroups ? {
-      examGroups: countByExamGroup(all),
-      examGroupLatest: latestByExamGroup(all),
+      examGroups: countByExamGroup(available),
+      examGroupLatest: latestByExamGroup(available),
     } : {}),
     all,
   };
@@ -687,14 +718,14 @@ async function cachedCategoryCounts() {
   return counts;
 }
 
-async function cachedExamGroupStats() {
+async function cachedExamGroupStats(hiddenExamIds = new Set<string>()) {
   const admin = adminClient();
   const rows: any[] = [];
   const pageSize = 1000;
   for (let from = 0; from < 20_000; from += pageSize) {
     const { data, error } = await admin
       .from("tnc_exam_cache")
-      .select("group_name, crm_created_at")
+      .select("exam_id, group_name, crm_created_at")
       .range(from, from + pageSize - 1);
     if (error) throw error;
     rows.push(...(data ?? []));
@@ -703,6 +734,7 @@ async function cachedExamGroupStats() {
   const examGroups: Record<string, number> = {};
   const examGroupLatest: Record<string, string | null> = {};
   for (const row of rows) {
+    if (hiddenExamIds.has(String(row.exam_id))) continue;
     const group = row.group_name ?? "Other";
     examGroups[group] = (examGroups[group] ?? 0) + 1;
     const current = examGroupLatest[group];
@@ -735,34 +767,60 @@ function refreshCatalogInBackground() {
   keepAlive(catalogRefreshPromise);
 }
 
-async function listTestsFromCache(page: number, limit: number, search: string, category: string, group: string, includeExamGroups: boolean) {
+async function listTestsFromCache(page: number, limit: number, search: string, category: string, group: string, includeExamGroups: boolean, hiddenExamIds = new Set<string>()) {
   const admin = adminClient();
-  let query = admin
-    .from("tnc_exam_cache")
-    .select("exam_id, exam_no, name, max_marks, negative_marks, duration_minutes, question_count, allow_for_premium, crm_created_at, group_name, category, category_reason", { count: "exact" });
-  if (search.trim()) query = query.ilike("name", `%${search.trim()}%`);
-  if (category !== "All") query = query.eq("category", category);
-  if (group) query = query.eq("group_name", group);
-
-  const { data, count, error } = await query
-    .order("crm_created_at", { ascending: false, nullsFirst: false })
-    .order("exam_no", { ascending: false })
-    .range((page - 1) * limit, page * limit - 1);
-  if (error) throw error;
+  let data: any[] | null = null;
+  let count: number | null = null;
+  if (hiddenExamIds.size) {
+    const matchingRows: any[] = [];
+    const pageSize = 1000;
+    for (let offset = 0; offset < 20_000; offset += pageSize) {
+      let query = admin
+        .from("tnc_exam_cache")
+        .select("exam_id, exam_no, name, max_marks, negative_marks, duration_minutes, question_count, allow_for_premium, crm_created_at, group_name, category, category_reason")
+        .order("crm_created_at", { ascending: false, nullsFirst: false })
+        .order("exam_no", { ascending: false })
+        .range(offset, offset + pageSize - 1);
+      if (search.trim()) query = query.ilike("name", `%${search.trim()}%`);
+      if (category !== "All") query = query.eq("category", category);
+      if (group) query = query.eq("group_name", group);
+      const { data: rows, error } = await query;
+      if (error) throw error;
+      matchingRows.push(...(rows ?? []));
+      if (!rows || rows.length < pageSize) break;
+    }
+    const available = matchingRows.filter((row) => !hiddenExamIds.has(String(row.exam_id)));
+    count = available.length;
+    data = available.slice((page - 1) * limit, page * limit);
+  } else {
+    let query = admin
+      .from("tnc_exam_cache")
+      .select("exam_id, exam_no, name, max_marks, negative_marks, duration_minutes, question_count, allow_for_premium, crm_created_at, group_name, category, category_reason", { count: "exact" });
+    if (search.trim()) query = query.ilike("name", `%${search.trim()}%`);
+    if (category !== "All") query = query.eq("category", category);
+    if (group) query = query.eq("group_name", group);
+    const result = await query
+      .order("crm_created_at", { ascending: false, nullsFirst: false })
+      .order("exam_no", { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+    if (result.error) throw result.error;
+    data = result.data;
+    count = result.count;
+  }
 
   if (!data?.length && !count) {
     const { count: catalogueCount, error: countError } = await admin
       .from("tnc_exam_cache")
       .select("exam_id", { count: "exact", head: true });
     if (countError) throw countError;
-    if (!catalogueCount) return null;
+    if (!catalogueCount || !hiddenExamIds.size) return null;
   }
 
   let examGroups: Record<string, number> | undefined;
   let examGroupLatest: Record<string, string | null> | undefined;
   if (includeExamGroups) {
     try {
-      ({ examGroups, examGroupLatest } = await cachedExamGroupStats());
+      ({ examGroups, examGroupLatest } = await cachedExamGroupStats(hiddenExamIds));
     } catch (error) {
       console.error("TNC exam group stats unavailable", error);
     }
@@ -779,9 +837,9 @@ async function listTestsFromCache(page: number, limit: number, search: string, c
   };
 }
 
-async function listTests(page: number, limit: number, search = "", category = "All", group = "", includeExamGroups = true) {
+async function listTests(page: number, limit: number, search = "", category = "All", group = "", includeExamGroups = true, hiddenExamIds = new Set<string>()) {
   try {
-    const cached = await listTestsFromCache(page, limit, search, category, group, includeExamGroups);
+    const cached = await listTestsFromCache(page, limit, search, category, group, includeExamGroups, hiddenExamIds);
     if (cached) {
       refreshCatalogInBackground();
       return cached;
@@ -791,12 +849,13 @@ async function listTests(page: number, limit: number, search = "", category = "A
   }
 
   try {
-    const live = await listTestsLive(page, limit, search, category, group, includeExamGroups);
+    const live = await listTestsLive(page, limit, search, category, group, includeExamGroups, hiddenExamIds);
     keepAlive(syncExams(live.all ?? []));
     const { all: _all, ...rest } = live as any;
     return { ...rest, cached: false };
   } catch (e) {
     console.error("CRM list failed, falling back to cache", e);
+    if (hiddenExamIds.size) throw e;
     const admin = adminClient();
     let query = admin.from("tnc_exam_cache").select("*", { count: "exact" });
     const q = search.trim();
@@ -1203,7 +1262,8 @@ Deno.serve(async (req) => {
       const category = String(body.category ?? url.searchParams.get("category") ?? "All").slice(0, 40);
       const group = String(body.group ?? url.searchParams.get("group") ?? "").slice(0, 100);
       const includeExamGroups = body.includeExamGroups !== false;
-      return json(await listTests(page, limit, search, category, group, includeExamGroups));
+      const hiddenExamIds = await getHiddenTakenExamIds(req);
+      return json(await listTests(page, limit, search, category, group, includeExamGroups, hiddenExamIds));
     }
 
     if (action === "test") {

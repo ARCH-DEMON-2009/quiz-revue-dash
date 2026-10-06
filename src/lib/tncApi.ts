@@ -225,26 +225,35 @@ export async function fetchMyTncAttempts(limit = 100): Promise<TncAttemptSummary
   if (authError) throw authError;
   if (!user) return [];
 
-  const { data, error } = await supabase
-    .from("quiz_attempts")
-    .select("id, exam_id, exam_name, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
-    .eq("user_id", user.id)
-    .order("submitted_at", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
+  const attempts: TncAttemptSummary[] = [];
+  const pageSize = 1000;
+  for (let offset = 0; offset < limit; offset += pageSize) {
+    const size = Math.min(pageSize, limit - offset);
+    const { data, error } = await supabase
+      .from("quiz_attempts")
+      .select("id, exam_id, exam_name, score, total_marks, correct_count, wrong_count, skipped_count, time_taken_seconds, submitted_at")
+      .eq("user_id", user.id)
+      .order("submitted_at", { ascending: false })
+      .range(offset, offset + size - 1);
+    if (error) throw error;
+    for (const attempt of data ?? []) {
+      attempts.push({
+        attemptId: attempt.id,
+        examId: attempt.exam_id,
+        examName: attempt.exam_name,
+        score: Number(attempt.score),
+        totalMarks: Number(attempt.total_marks),
+        correctCount: attempt.correct_count,
+        wrongCount: attempt.wrong_count,
+        skippedCount: attempt.skipped_count,
+        timeTakenSeconds: attempt.time_taken_seconds,
+        submittedAt: attempt.submitted_at,
+      });
+    }
+    if (!data || data.length < size) break;
+  }
 
-  return (data ?? []).map((attempt) => ({
-    attemptId: attempt.id,
-    examId: attempt.exam_id,
-    examName: attempt.exam_name,
-    score: Number(attempt.score),
-    totalMarks: Number(attempt.total_marks),
-    correctCount: attempt.correct_count,
-    wrongCount: attempt.wrong_count,
-    skippedCount: attempt.skipped_count,
-    timeTakenSeconds: attempt.time_taken_seconds,
-    submittedAt: attempt.submitted_at,
-  }));
+  return attempts;
 }
 
 export function fetchTncAttempt(attemptId: string) {

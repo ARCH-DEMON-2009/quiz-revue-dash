@@ -33,6 +33,7 @@ import TncExplanation from "@/components/TncExplanation";
 
 const OPTS = ["A", "B", "C", "D"] as const;
 const SITE = "https://test.shashanksv.com";
+type AnswerFilter = "all" | "correct" | "wrong" | "skipped";
 
 const pdfStageFromProgress = (p: number): "queued" | "rendering" | "saving" | "done" => {
   if (p >= 1) return "done";
@@ -74,6 +75,7 @@ const TncSharedResult = () => {
   const [pdfBusy, setPdfBusy] = useState(false);
   const [pdfProgress, setPdfProgress] = useState(0);
   const [pdfStage, setPdfStage] = useState<"idle" | "queued" | "rendering" | "saving" | "done" | "error">("idle");
+  const [answerFilter, setAnswerFilter] = useState<AnswerFilter>("all");
 
   const load = () => {
     if (!examId || !attemptId) return;
@@ -143,6 +145,18 @@ const TncSharedResult = () => {
 
   const questions = exam.questions;
   const answers = attempt.answers;
+  const questionStatus = (question: TncQuestion): Exclude<AnswerFilter, "all"> => {
+    const answer = answers[question.rowId];
+    if (!answer) return "skipped";
+    return answer === question.correctAnswer ? "correct" : "wrong";
+  };
+  const answerCounts = questions.reduce((counts, question) => {
+    counts[questionStatus(question)] += 1;
+    return counts;
+  }, { correct: 0, wrong: 0, skipped: 0 });
+  const visibleQuestions = questions
+    .map((question, index) => ({ question, questionNumber: index + 1 }))
+    .filter(({ question }) => answerFilter === "all" || questionStatus(question) === answerFilter);
   const pct = attempt.totalMarks ? (attempt.score / attempt.totalMarks) * 100 : 0;
   const g = grade(pct);
   const examName = attempt.examName ?? exam.name;
@@ -305,16 +319,36 @@ const TncSharedResult = () => {
         </Card>
 
         <h2 className="mb-4 mt-10 text-xl font-bold text-foreground">Answer Review</h2>
+        <div role="group" aria-label="Filter reviewed questions" className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {([
+            ["all", "All", questions.length],
+            ["correct", "Correct", answerCounts.correct],
+            ["wrong", "Wrong", answerCounts.wrong],
+            ["skipped", "Skipped", answerCounts.skipped],
+          ] as const).map(([value, label, count]) => (
+            <Button
+              key={value}
+              type="button"
+              size="sm"
+              variant={answerFilter === value ? "default" : "outline"}
+              aria-pressed={answerFilter === value}
+              onClick={() => setAnswerFilter(value)}
+            >
+              {label} ({count})
+            </Button>
+          ))}
+        </div>
         <div className="space-y-4">
-          {questions.map((q, i) => {
+          {visibleQuestions.map(({ question: q, questionNumber }) => {
             const userAns = answers[q.rowId];
-            const isCorrect = userAns === q.correctAnswer;
-            const skipped = !userAns;
+            const status = questionStatus(q);
+            const isCorrect = status === "correct";
+            const skipped = status === "skipped";
             const border = skipped ? "border-amber-400" : isCorrect ? "border-green-500" : "border-red-500";
             return (
               <Card key={q.rowId} className={`border-l-4 p-5 ${border}`}>
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="text-xs font-medium text-muted-foreground">Q{i + 1}</span>
+                  <span className="text-xs font-medium text-muted-foreground">Q{questionNumber}</span>
                   {skipped ? (
                     <Badge variant="secondary" className="bg-amber-100 text-amber-700">Skipped</Badge>
                   ) : isCorrect ? (
@@ -352,6 +386,11 @@ const TncSharedResult = () => {
             );
           })}
         </div>
+        {visibleQuestions.length === 0 && (
+          <Card className="p-8 text-center text-sm text-muted-foreground">
+            No questions match this filter.
+          </Card>
+        )}
       </main>
     </div>
   );

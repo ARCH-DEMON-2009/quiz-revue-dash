@@ -33,6 +33,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { TncBotPopup } from "@/components/TncBotPopup";
 import MilestoneBadgeArt from "@/components/MilestoneBadgeArt";
 import { MILESTONE_DEFINITIONS } from "@/components/MilestoneBadges";
+import { fetchMyTncAttempts, type TncAttemptSummary } from "@/lib/tncApi";
 import {
   fetchTncTests,
   examCategoryOf,
@@ -81,10 +82,32 @@ const TncTests = () => {
   const [examGroups, setExamGroups] = useState<Record<string, number>>({});
   const [examGroupLatest, setExamGroupLatest] = useState<Record<string, string | null>>({});
   const [showAchievementPromo, setShowAchievementPromo] = useState(false);
+  const [showTakenTests, setShowTakenTests] = useState(false);
+  const [takenAttempts, setTakenAttempts] = useState<TncAttemptSummary[]>([]);
+  const [takenLoading, setTakenLoading] = useState(true);
+  const [takenError, setTakenError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const requestId = useRef(0);
 
-  const showingExamDirectory = !selectedGroup && !browseAll;
+  const showingExamDirectory = !showTakenTests && !selectedGroup && !browseAll;
+
+  useEffect(() => {
+    let active = true;
+    fetchMyTncAttempts(10_000)
+      .then((attempts) => {
+        if (active) setTakenAttempts(attempts);
+      })
+      .catch((loadError) => {
+        console.error("Could not load taken TNC series", loadError);
+        if (active) setTakenError(true);
+      })
+      .finally(() => {
+        if (active) setTakenLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -165,11 +188,11 @@ const TncTests = () => {
   }, [browseAll, debouncedSearch, page, selectedGroup]);
 
   useEffect(() => {
-    loadTests();
+    if (!showTakenTests) loadTests();
     return () => {
       requestId.current += 1;
     };
-  }, [loadTests]);
+  }, [loadTests, showTakenTests]);
 
   // Filtering now happens on the server across the entire catalogue, so the
   // page already contains exactly the tests that match.
@@ -187,6 +210,15 @@ const TncTests = () => {
   const featuredMilestones = MILESTONE_DEFINITIONS.filter((milestone) => FEATURED_MILESTONE_IDS.includes(milestone.id));
 
   const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+  const takenSeries = Array.from(takenAttempts.reduce((series, attempt) => {
+    const existing = series.get(attempt.examId);
+    if (existing) {
+      existing.attemptCount += 1;
+    } else {
+      series.set(attempt.examId, { latestAttempt: attempt, attemptCount: 1 });
+    }
+    return series;
+  }, new Map<string, { latestAttempt: TncAttemptSummary; attemptCount: number }>()).values());
 
   const resetAndFilter = (fn: () => void) => {
     fn();
@@ -290,11 +322,12 @@ const TncTests = () => {
         </div>
 
         <div className="mb-6 flex justify-center">
-          <div role="group" aria-label="Test series browsing mode" className="inline-flex rounded-md border border-border p-1">
+          <div role="group" aria-label="Test series browsing mode" className="inline-flex flex-wrap justify-center rounded-md border border-border p-1">
             <Button
               size="sm"
-              variant={!browseAll ? "default" : "ghost"}
+              variant={!showTakenTests && !browseAll ? "default" : "ghost"}
               onClick={() => {
+                setShowTakenTests(false);
                 setBrowseAll(false);
                 setSelectedGroup("");
                 setSearch("");
@@ -305,8 +338,9 @@ const TncTests = () => {
             </Button>
             <Button
               size="sm"
-              variant={browseAll ? "default" : "ghost"}
+              variant={!showTakenTests && browseAll ? "default" : "ghost"}
               onClick={() => {
+                setShowTakenTests(false);
                 setBrowseAll(true);
                 setSelectedGroup("");
                 setSearch("");
@@ -314,6 +348,16 @@ const TncTests = () => {
               }}
             >
               All test series
+            </Button>
+            <Button
+              size="sm"
+              variant={showTakenTests ? "default" : "ghost"}
+              onClick={() => {
+                setShowTakenTests(true);
+                setSelectedGroup("");
+              }}
+            >
+              Taken test series
             </Button>
           </div>
         </div>
@@ -330,7 +374,7 @@ const TncTests = () => {
           </div>
         )}
 
-        {(selectedGroup || browseAll) && (
+        {!showTakenTests && (selectedGroup || browseAll) && (
           <>
             {selectedGroup && <Button
               variant="ghost"
@@ -365,14 +409,55 @@ const TncTests = () => {
         )}
 
         {/* Results meta */}
-        {!loading && (selectedGroup || browseAll) && (
+        {!showTakenTests && !loading && (selectedGroup || browseAll) && (
           <p className="mb-4 text-sm text-muted-foreground">
             Showing {quizzes.length.toLocaleString()} of {total.toLocaleString()} tests
           </p>
         )}
 
         {/* Cards */}
-        {loading ? (
+        {showTakenTests ? (
+          takenLoading ? (
+            <div className="space-y-3" aria-busy="true">
+              {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-24" />)}
+            </div>
+          ) : takenError ? (
+            <Card className="p-8 text-center text-muted-foreground">
+              Couldn’t load your taken test series. Please refresh and try again.
+            </Card>
+          ) : takenSeries.length === 0 ? (
+            <Card className="space-y-3 p-8 text-center">
+              <p className="font-medium text-foreground">No completed TNC series yet.</p>
+              <p className="text-sm text-muted-foreground">Your completed tests will appear here.</p>
+              <Button onClick={() => setShowTakenTests(false)}>Browse test series</Button>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {takenSeries.map(({ latestAttempt, attemptCount }) => {
+                const percentage = latestAttempt.totalMarks > 0
+                  ? (latestAttempt.score / latestAttempt.totalMarks) * 100
+                  : 0;
+                return (
+                  <Card key={latestAttempt.examId} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <h2 className="truncate font-semibold text-foreground">
+                        {latestAttempt.examName || "TNC test series"}
+                      </h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {attemptCount} {attemptCount === 1 ? "attempt" : "attempts"} · Latest score {percentage.toFixed(1)}% · {new Date(latestAttempt.submittedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Button asChild variant="outline" className="shrink-0 gap-2">
+                      <Link to={`/tnc-tests/${encodeURIComponent(latestAttempt.examId)}/result/${latestAttempt.attemptId}`}>
+                        <FileText className="h-4 w-4" /> View latest result
+                      </Link>
+                    </Button>
+                  </Card>
+                );
+              })}
+            </div>
+          )
+        ) : loading ? (
           <div aria-busy="true" aria-live="polite" className="space-y-5">
             <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
@@ -519,7 +604,7 @@ const TncTests = () => {
 
 
         {/* Pagination */}
-        {!loading && !showingExamDirectory && page < totalPages && (
+        {!showTakenTests && !loading && !showingExamDirectory && page < totalPages && (
           <div className="mt-8 flex items-center justify-center gap-4">
             <Button
               variant="outline"

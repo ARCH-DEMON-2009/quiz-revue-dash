@@ -810,6 +810,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           email: string
+          hide_taken_tnc_tests: boolean
           id: string
           is_blocked: boolean | null
           name: string
@@ -824,6 +825,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           email: string
+          hide_taken_tnc_tests?: boolean
           id?: string
           is_blocked?: boolean | null
           name: string
@@ -838,6 +840,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           email?: string
+          hide_taken_tnc_tests?: boolean
           id?: string
           is_blocked?: boolean | null
           name?: string
