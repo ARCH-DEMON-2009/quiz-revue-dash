@@ -3,7 +3,7 @@ import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import FloatingBackground from "@/components/FloatingBackground";
 
-const SITE = "https://test.shashanksv.com";
+const SITE = "https://test.tncnursing.site";
 
 const Disclaimer = () => {
   return (
@@ -27,7 +27,7 @@ const Disclaimer = () => {
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">General information</h2>
             <p>
-              All content on Test Sagar (https://test.shashanksv.com), operated by TRMS, is provided for
+              All content on Test Sagar (https://test.tncnursing.site), operated by TRMS, is provided for
               educational and practice purposes only. While we work hard to keep questions, solutions and exam
               patterns accurate and up to date, we make no warranties about the completeness, reliability or
               accuracy of this information. Any action you take based on the content of this site is strictly at

@@ -434,7 +434,7 @@ const Profile = () => {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}
+            onClick={() => window.open("https://t.me/Tncnursingbot", "_blank")}
           >
             <HelpCircle className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Help & Support</span>
@@ -549,7 +549,7 @@ const Profile = () => {
                           Buy Premium to unlock all
                         </Button>
                       )}
-                      <Button variant="link" size="sm" className="text-primary h-auto p-0" onClick={() => window.open("https://t.me/TestSagarHelpRobot", "_blank")}>
+                      <Button variant="link" size="sm" className="text-primary h-auto p-0" onClick={() => window.open("https://t.me/Tncnursingbot", "_blank")}>
                         Demand Custom Avatar
                       </Button>
                     </div>

@@ -28,4 +28,4 @@ Disallow: /review/
 Disallow: /quiz
 Disallow: /comparison
 
-Sitemap: https://test.shashanksv.com/sitemap.xml
+Sitemap: https://test.tncnursing.site/sitemap.xml

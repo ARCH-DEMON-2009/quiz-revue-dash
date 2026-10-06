@@ -44,7 +44,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { TncBotPopup } from "@/components/TncBotPopup";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncTest,
@@ -66,7 +65,7 @@ import { withTimeout } from "@/lib/withTimeout";
 type Phase = "instructions" | "quiz" | "results";
 
 const OPTS = ["A", "B", "C", "D"] as const;
-const SITE = "https://test.shashanksv.com";
+const SITE = "https://test.tncnursing.site";
 
 const storageKey = (id: string) => `tnc-attempt-${id}`;
 
@@ -998,7 +997,6 @@ const TncQuiz = () => {
           })}
         </div>
       </main>
-      <TncBotPopup />
     </div>
   );
 };

@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Medal, AlertCircle, RefreshCw, Crown, ArrowLeft, Clock, Star, Shield, Bot, ExternalLink, UserRound, ArrowRight } from "lucide-react";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
-import { TncBotPopup } from "@/components/TncBotPopup";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchTncGlobalLeaderboard,
@@ -25,7 +24,7 @@ import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
 import AdminNameBadge from "@/components/AdminNameBadge";
 import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
-const SITE = "https://test.shashanksv.com";
+const SITE = "https://test.tncnursing.site";
 const CACHE_KEY = "tnc_global_leaderboard_cache";
 
 const PERIODS: { value: TncLeaderboardPeriod; label: string }[] = [
@@ -325,7 +324,6 @@ const TncGlobalLeaderboard = () => {
         )}
       </main>
       <Footer />
-      <TncBotPopup />
     </div>
   );
 };

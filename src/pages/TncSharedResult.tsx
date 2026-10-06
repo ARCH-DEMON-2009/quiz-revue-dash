@@ -32,7 +32,7 @@ import TncQuestionImage from "@/components/TncQuestionImage";
 import TncExplanation from "@/components/TncExplanation";
 
 const OPTS = ["A", "B", "C", "D"] as const;
-const SITE = "https://test.shashanksv.com";
+const SITE = "https://test.tncnursing.site";
 type AnswerFilter = "all" | "correct" | "wrong" | "skipped";
 
 const pdfStageFromProgress = (p: number): "queued" | "rendering" | "saving" | "done" => {
@@ -239,7 +239,7 @@ const TncSharedResult = () => {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "TNC Tests",
-                "item": `https://test.shashanksv.com/tnc-tests`
+                "item": `https://test.tncnursing.site/tnc-tests`
               }, {
                 "@type": "ListItem",
                 "position": 3,

@@ -22,7 +22,7 @@ export const SmsBroadcastSection = () => {
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
               <Badge variant="outline" className="text-xs">
-                Help Bot: t.me/TestSagarHelpRobot
+                Help Bot: t.me/Tncnursingbot
               </Badge>
               <Badge variant="outline" className="text-xs">
                 WhatsApp: wa.me/84522122461

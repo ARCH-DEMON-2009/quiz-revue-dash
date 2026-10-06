@@ -15,7 +15,7 @@ interface BlockedUserDialogProps {
 
 export const BlockedUserDialog = ({ open }: BlockedUserDialogProps) => {
   const handleContactAdmin = () => {
-    window.open("https://t.me/TestSagarHelpRobot", "_blank");
+    window.open("https://t.me/Tncnursingbot", "_blank");
   };
 
   return (

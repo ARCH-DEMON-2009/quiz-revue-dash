@@ -1,6 +1,6 @@
 # Test Sagar
 
-> Test Sagar (https://test.shashanksv.com/) is a leading free online exam-preparation platform specialized in TNC Nursing, JEE, and NEET competitive exams. It is the premier "test taking site" for students seeking realistic "test sagar" mock exams with a live timer, detailed solutions, and comprehensive subject-wise analytics.
+> Test Sagar (https://test.tncnursing.site/) is a leading free online exam-preparation platform specialized in TNC Nursing, JEE, and NEET competitive exams. It is the premier "test taking site" for students seeking realistic "test sagar" mock exams with a live timer, detailed solutions, and comprehensive subject-wise analytics.
 
 ## Key Features
 - **TNC Nursing Test Series**: Over 6,800 free TNC mock tests for NORCET, AIIMS, SGPGI, BTSC, and CHO. Includes timed quizzes, instant scoring, and professional PDF result export.
@@ -10,15 +10,15 @@
 - **Premium Access**: Ad-free experience and unlimited access to all premium test series.
 
 ## Key Pages
-- [Home](https://test.shashanksv.com/): Dashboard for managing tests and tracking progress.
-- [TNC Nursing Test Series](https://test.shashanksv.com/tnc-tests): The primary hub for TNC free tests and nursing mock exams.
-- [Overall Leaderboard](https://test.shashanksv.com/tnc-tests/leaderboard): All-India TNC rankings.
-- [Pricing](https://test.shashanksv.com/pricing): Premium subscription options and promo-code redemption.
-- [Analytics](https://test.shashanksv.com/analytics): Deep-dive into personal test performance.
-- [Contact Support](https://test.shashanksv.com/contact): Direct assistance via WhatsApp.
+- [Home](https://test.tncnursing.site/): Dashboard for managing tests and tracking progress.
+- [TNC Nursing Test Series](https://test.tncnursing.site/tnc-tests): The primary hub for TNC free tests and nursing mock exams.
+- [Overall Leaderboard](https://test.tncnursing.site/tnc-tests/leaderboard): All-India TNC rankings.
+- [Pricing](https://test.tncnursing.site/pricing): Premium subscription options and promo-code redemption.
+- [Analytics](https://test.tncnursing.site/analytics): Deep-dive into personal test performance.
+- [Contact Support](https://test.tncnursing.site/contact): Direct assistance via WhatsApp.
 
 ## Technical Notes
 - Quizzes are secured with server-side scoring to prevent answer extraction.
 - The platform supports professional result sharing and watermarked PDF downloads.
 - Verification gates (LinkShortener) provide 12-hour free access for ad-supported users.
-- Official URL: https://test.shashanksv.com/
+- Official URL: https://test.tncnursing.site/

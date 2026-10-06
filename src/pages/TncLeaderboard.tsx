@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Trophy, Medal, AlertCircle, RefreshCw, Crown, Star, Shield, Bot, ExternalLink } from "lucide-react";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
 import { fetchTncLeaderboard, type TncLeaderboardRow } from "@/lib/tncApi";
-import { TncBotPopup } from "@/components/TncBotPopup";
 import PublicProfileLink from "@/components/PublicProfileLink";
 import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
 import AdminNameBadge from "@/components/AdminNameBadge";
@@ -26,7 +25,7 @@ interface ExtendedTncRow extends TncLeaderboardRow {
   milestoneBadgeIds?: string[];
 }
 
-const SITE = "https://test.shashanksv.com";
+const SITE = "https://test.tncnursing.site";
 
 function fmtTime(sec: number) {
   const m = Math.floor(sec / 60);
@@ -174,7 +173,6 @@ const TncLeaderboard = () => {
         )}
       </main>
       <Footer />
-      <TncBotPopup />
     </div>
   );
 };

@@ -180,12 +180,12 @@ export const BypassBlockGuard = () => {
           <p className="text-sm text-muted-foreground">
             If this was a mistake, contact support: {" "}
             <a 
-              href="https://t.me/TestSagarHelpRobot" 
+              href="https://t.me/Tncnursingbot"
               target="_blank" 
               rel="noopener noreferrer"
               className="text-primary underline"
             >
-              @TestSagarHelpRobot
+              @Tncnursingbot
             </a>
             {" "}or WhatsApp: {" "}
             <a 

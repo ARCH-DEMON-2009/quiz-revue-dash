@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { TncBotPopup } from "@/components/TncBotPopup";
 import MilestoneBadgeArt from "@/components/MilestoneBadgeArt";
 import { MILESTONE_DEFINITIONS } from "@/components/MilestoneBadges";
 import { fetchMyTncAttempts, type TncAttemptSummary } from "@/lib/tncApi";
@@ -42,7 +41,7 @@ import {
 } from "@/lib/tncApi";
 
 const LIMIT = 20;
-const SITE = "https://test.shashanksv.com";
+const SITE = "https://test.tncnursing.site";
 const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/09/89/d4/0989d4b9b55e6c4d33ec4a5f459e9e22.jpg";
 const FAVORITE_GROUPS_KEY = "tnc_favorite_exam_groups";
 const BROWSE_ALL_TESTS_KEY = "tnc_browse_all_tests";
@@ -617,7 +616,6 @@ const TncTests = () => {
           </div>
         )}
       </main>
-      <TncBotPopup />
     </div>
   );
 };

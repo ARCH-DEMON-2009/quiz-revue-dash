@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import NavigationHeader from "@/components/NavigationHeader";
 import FloatingBackground from "@/components/FloatingBackground";
-import TelegramPopup from "@/components/TelegramPopup";
 import Footer from "@/components/Footer";
 import { LinkShortenerGate } from "@/components/LinkShortenerGate";
 import Landing from "@/pages/Landing";
@@ -80,16 +79,14 @@ const Dashboard = () => {
     <Helmet>
       <title>Dashboard — Test Sagar: The Best Test Taking Site</title>
       <meta name="description" content="Manage your mock tests and track your JEE, NEET, and TNC nursing exam progress on the best test taking site, Test Sagar." />
-      <link rel="canonical" href="https://test.shashanksv.com" />
+      <link rel="canonical" href="https://test.tncnursing.site" />
       <meta property="og:title" content="My Dashboard — Test Sagar Mock Tests" />
       <meta property="og:description" content="Manage your mock tests and track your competitive exam progress." />
-      <meta property="og:url" content="https://test.shashanksv.com" />
+      <meta property="og:url" content="https://test.tncnursing.site" />
     </Helmet>
     <div className="min-h-screen bg-background relative flex flex-col">
       <FloatingBackground />
       <NavigationHeader showFullNav />
-      <TelegramPopup />
-
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>
             <div className="mb-4 sm:mb-6 lg:mb-8">

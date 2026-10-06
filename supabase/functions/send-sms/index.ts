@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
     }
 
     // Warning message with help links
-    const primaryMessage = 'Warning: verification bypass attempt detected on TestSagar. Access blocked for 24 hours. Need help? Telegram: t.me/TestSagarHelpRobot WhatsApp: wa.me/84522122461';
-    const fallbackMessage = 'TestSagar alert: bypass attempt detected. Access blocked 24 hours. If this was a mistake contact Telegram TestSagarHelpRobot or WhatsApp 84522122461.';
+    const primaryMessage = 'Warning: verification bypass attempt detected on TestSagar. Access blocked for 24 hours. Need help? Telegram: t.me/Tncnursingbot WhatsApp: wa.me/84522122461';
+    const fallbackMessage = 'TestSagar alert: bypass attempt detected. Access blocked 24 hours. If this was a mistake contact Telegram Tncnursingbot or WhatsApp 84522122461.';
 
     const sendFast2Sms = async (message: string) => {
       const response = await fetch('https://www.fast2sms.com/dev/bulkV2', {

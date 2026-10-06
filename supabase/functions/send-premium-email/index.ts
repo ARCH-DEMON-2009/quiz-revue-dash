@@ -108,7 +108,7 @@ serve(async (req: Request): Promise<Response> => {
             </ul>
 
             <div style="text-align: center; margin-top: 30px;">
-              <a href="https://test.shashanksv.com" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600;">Start Practicing Now</a>
+              <a href="https://test.tncnursing.site" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600;">Start Practicing Now</a>
             </div>
 
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">

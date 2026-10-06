@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Send, Copy, Check, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
-const BOT_URL = "https://t.me/TestSagarHelpRobot";
+const BOT_URL = "https://t.me/Tncnursingbot";
 
 export interface ManualPaymentDetails {
   name: string;

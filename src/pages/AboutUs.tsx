@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import FloatingBackground from "@/components/FloatingBackground";
 import { Target, BookOpenCheck, Users, LineChart } from "lucide-react";
 
-const SITE = "https://test.shashanksv.com";
+const SITE = "https://test.tncnursing.site";
 
 const AboutUs = () => {
   return (

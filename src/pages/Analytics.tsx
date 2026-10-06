@@ -147,10 +147,10 @@ const Analytics = () => {
       <Helmet>
         <title>My Performance Analytics | Test Sagar — Track Your Progress</title>
         <meta name="description" content="Track your Test Sagar performance with subject-wise accuracy, score trends and attempt history for JEE, NEET, and TNC Nursing exam preparation." />
-        <link rel="canonical" href="https://test.shashanksv.com/analytics" />
+        <link rel="canonical" href="https://test.tncnursing.site/analytics" />
         <meta property="og:title" content="My Performance Analytics | Test Sagar" />
         <meta property="og:description" content="Detailed subject-wise accuracy, score trends and attempt history on the best test taking site, Test Sagar." />
-        <meta property="og:url" content="https://test.shashanksv.com/analytics" />
+        <meta property="og:url" content="https://test.tncnursing.site/analytics" />
         <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <script type="application/ld+json">
@@ -159,19 +159,19 @@ const Analytics = () => {
             "@type": "WebPage",
             "name": "Performance Analytics",
             "description": "Detailed student performance analytics.",
-            "url": "https://test.shashanksv.com/analytics",
+            "url": "https://test.tncnursing.site/analytics",
             "breadcrumb": {
               "@type": "BreadcrumbList",
               "itemListElement": [{
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://test.shashanksv.com/"
+                "item": "https://test.tncnursing.site/"
               }, {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "Analytics",
-                "item": "https://test.shashanksv.com/analytics"
+                "item": "https://test.tncnursing.site/analytics"
               }]
             }
           })}

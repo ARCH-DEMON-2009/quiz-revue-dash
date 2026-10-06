@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
               </div>
 
               <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
-                <p style="color: #9ca3af; font-size: 14px;">Need help? Contact us on <a href="https://t.me/TestSagarHelpRobot" style="color: #6366f1;">Telegram</a></p>
+                <p style="color: #9ca3af; font-size: 14px;">Need help? Contact us on <a href="https://t.me/Tncnursingbot" style="color: #6366f1;">Telegram</a></p>
                 <p style="color: #9ca3af; font-size: 12px; margin-top: 10px;">© ${new Date().getFullYear()} TestSagar. All rights reserved.</p>
               </div>
             </div>
