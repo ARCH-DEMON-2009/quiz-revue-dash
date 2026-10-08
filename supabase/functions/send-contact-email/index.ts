@@ -1,3 +1,4 @@
+import { renderEmail, detailsTable } from "../_shared/email-layout.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -82,7 +83,8 @@ Deno.serve(async (request) => {
         reply_to: email,
         subject: `Contact form: ${subject}`,
         text: `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\n${message}`,
-        html: `<h2>Contact form message</h2><p><strong>Name:</strong> ${safeName}</p><p><strong>Email:</strong> ${safeEmail}</p><p><strong>Subject:</strong> ${safeSubject}</p><p>${safeMessage.replace(/\n/g, "<br>")}</p>`,
+        html: renderEmail({ badge: "Contact form", title: "New message from the website", subtitle: safeSubject,
+          body: `${detailsTable([["Name", safeName], ["Email", safeEmail], ["Subject", safeSubject]])}<div style="background:#0b1229;border-radius:14px;padding:16px;color:#e2e8f0">${safeMessage.replace(/\n/g, "<br>")}</div>` }),
       }),
     });
 
