@@ -44,3 +44,6 @@ verify_jwt = true
 
 [functions.revenue-insights]
 verify_jwt = false
+
+[functions.resend-webhook]
+verify_jwt = false
