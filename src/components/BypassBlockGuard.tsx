@@ -30,6 +30,9 @@ export const blockDevice = async (): Promise<{ until: Date; smsStatus: string }>
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       localStorage.setItem(keyFor(user.id), until.toISOString());
+      supabase.functions
+        .invoke('send-premium-email', { body: { type: 'bypass_warning' } })
+        .catch((e) => console.error('Failed to send bypass warning email:', e));
       const { data, error } = await supabase.functions.invoke('send-sms', {
         body: { mode: 'bypass_warning', user_id: user.id }
       });
