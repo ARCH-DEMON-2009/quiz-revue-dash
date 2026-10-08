@@ -60,7 +60,19 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const sendMail = async (to: string, subject: string, html: string) => {
+    const logDb = createClient(supabaseUrl, serviceKey);
+    const sendMail = async (to: string, subject: string, html: string, emailType: string, existingLogId?: string) => {
+      let logId = existingLogId;
+      if (!logId) {
+        const { data: row } = await logDb.from("email_logs")
+          .insert({ recipient: to, subject, email_type: emailType, payload: { html }, status: "queued" })
+          .select("id").single();
+        logId = row?.id;
+      }
+      const { data: prev } = logId
+        ? await logDb.from("email_logs").select("attempts").eq("id", logId).maybeSingle()
+        : { data: null };
+      const attempts = (prev?.attempts ?? 0) + 1;
       const response = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
         method: "POST",
         headers: {
@@ -73,14 +85,34 @@ serve(async (req: Request): Promise<Response> => {
       const text = await response.text();
       if (!response.ok) {
         console.error(`Resend failed [${response.status}]: ${text}`);
-        return new Response(JSON.stringify({ success: false, status: response.status, error: text }), {
+        let msg = text;
+        try { msg = JSON.parse(text)?.message ?? text; } catch { /* keep raw */ }
+        if (logId) await logDb.from("email_logs").update({
+          status: "failed", error: String(msg).slice(0, 1000), attempts, last_attempt_at: new Date().toISOString(),
+        }).eq("id", logId);
+        return new Response(JSON.stringify({ success: false, status: response.status, error: msg, log_id: logId }), {
           status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ success: true }), {
+      let resendId: string | null = null;
+      try { resendId = JSON.parse(text)?.id ?? null; } catch { /* ignore */ }
+      if (logId) await logDb.from("email_logs").update({
+        status: "sent", resend_id: resendId, error: null, attempts, last_attempt_at: new Date().toISOString(),
+      }).eq("id", logId);
+      return new Response(JSON.stringify({ success: true, log_id: logId }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     };
+
+    // ---- Admin retry of a logged email.
+    if (requestData?.type === "retry") {
+      if (!callerIsAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
+      const logId = String(requestData.log_id ?? "");
+      const { data: row } = await logDb.from("email_logs").select("*").eq("id", logId).maybeSingle();
+      if (!row) return new Response(JSON.stringify({ error: "Email not found" }), { status: 404, headers: corsHeaders });
+      if (!row.payload?.html) return new Response(JSON.stringify({ error: "Email content missing" }), { status: 400, headers: corsHeaders });
+      return await sendMail(row.recipient, row.subject, row.payload.html, row.email_type, row.id);
+    }
 
     const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
@@ -101,7 +133,7 @@ serve(async (req: Request): Promise<Response> => {
             <p style="font-size:14px;color:#6b7280">If you think this was a mistake, reply on WhatsApp support: +84 522122461.</p>
           </div>
         </div></body></html>`;
-      return await sendMail(callerEmail, "⚠️ Test Sagar: verification bypass detected", html);
+      return await sendMail(callerEmail, "⚠️ Test Sagar: verification bypass detected", html, "bypass_warning");
     }
 
     const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData as PremiumEmailRequest;
@@ -189,6 +221,7 @@ serve(async (req: Request): Promise<Response> => {
       email,
       is_admin_activation ? "🎊 Premium Activated!" : "🎉 Welcome to Test Sagar Premium!",
       emailHtml,
+      is_admin_activation ? "admin_grant" : "premium_purchase",
     );
   } catch (error: any) {
     console.error("Error sending premium email:", error);
