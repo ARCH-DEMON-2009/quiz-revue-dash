@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Crown, ExternalLink, Shield, Clock, CheckCircle2, LogOut, User } from "lucide-react";
 import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
+import { useTncTrial } from "@/hooks/useTncTrial";
 
 interface LinkShortenerGateProps {
   children: React.ReactNode;
@@ -14,15 +15,18 @@ interface LinkShortenerGateProps {
    * Persisted so the shortener round-trip can resume the exact test.
    */
   returnTo?: string;
+  /** Allow the 3-day new-account TNC trial to unlock this content. */
+  allowTrial?: boolean;
 }
 
 /** Shared localStorage key so /verify knows where to send the user back. */
 export const VERIFY_RETURN_KEY = "verify-return-to";
 const VERIFICATION_TIMEOUT_SECONDS = 30 * 60;
 
-export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps) => {
+export const LinkShortenerGate = ({ children, returnTo, allowTrial = false }: LinkShortenerGateProps) => {
   const navigate = useNavigate();
   const { isPremium, isLoading: premiumLoading } = usePremiumStatus();
+  const { trial, isLoading: trialLoading } = useTncTrial(allowTrial);
 
   // Remember where to resume once verification finishes on /verify.
   useEffect(() => {
@@ -200,11 +204,11 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
     </header>
   );
 
-  if (isPremium || accessStatus === 'verified') {
+  if (isPremium || accessStatus === 'verified' || (allowTrial && trial.active)) {
     return <>{children}</>;
   }
 
-  if (premiumLoading || accessStatus === 'loading') {
+  if (premiumLoading || trialLoading || accessStatus === 'loading') {
     return (
       <div className="flex min-h-screen flex-col bg-background">
         {accountActions}
@@ -237,6 +241,13 @@ export const LinkShortenerGate = ({ children, returnTo }: LinkShortenerGateProps
           <CardDescription>
             Complete a quick verification to access all features for 12 hours, or go premium for unlimited access.
           </CardDescription>
+          {allowTrial && (trial.status === "expired" || trial.status === "denied") && (
+            <div className="mt-3 rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+              {trial.status === "expired"
+                ? "Your 3-day free TNC trial has ended. Verify for free below to keep practising, or buy Premium for uninterrupted access."
+                : "A free trial was already used on this device or network. Verify for free below, or buy Premium for uninterrupted access."}
+            </div>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {!initiated ? (
