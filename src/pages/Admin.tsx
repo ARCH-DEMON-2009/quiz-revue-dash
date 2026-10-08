@@ -22,6 +22,7 @@ import { PromoCodeManager } from "@/components/PromoCodeManager";
 import { BypassBlocksSection } from "@/components/BypassBlocksSection";
 import { SmsBroadcastSection } from "@/components/SmsBroadcastSection";
 import { AdminAnalyticsSection } from "@/components/AdminAnalyticsSection";
+import { AdminRevenueSection } from "@/components/AdminRevenueSection";
 import { SecurityEventsSection } from "@/components/SecurityEventsSection";
 import { AdminGiftLogsSection } from "@/components/AdminGiftLogsSection";
 
@@ -772,6 +773,7 @@ const Admin = () => {
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Analytics: Verified users & Visit stats */}
         <AdminAnalyticsSection />
+        <AdminRevenueSection />
         <AdminGiftLogsSection />
 
         <Card className="mb-4">
