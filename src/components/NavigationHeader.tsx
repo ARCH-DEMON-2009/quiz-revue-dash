@@ -105,7 +105,10 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
               className="bg-gradient-to-r from-emerald-500/15 to-primary/15 border-emerald-500/40 hover:border-emerald-500 hover:bg-emerald-500/20 transition-all font-semibold"
             >
               <Target className="h-4 w-4 mr-1 sm:mr-2 text-emerald-600" />
-              <span className="hidden xs:inline sm:inline">TNC Tests</span>
+              <span>TNC</span><span className="hidden sm:inline">&nbsp;Tests</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/institutions")} aria-label="Institutions" className="sm:hidden px-2">
+              <Building2 className="h-4 w-4 text-emerald-700" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/institutions")} className="hidden sm:flex">
               <Building2 className="mr-2 h-4 w-4 text-emerald-700" />

@@ -54,7 +54,6 @@ const ContactUs = () => {
     try {
       const { error } = await supabase.functions.invoke("send-contact-email", {
         body: { name: userName, email: userEmail, subject, message, website },
-        timeout: 20_000,
       });
       if (error) throw error;
 
