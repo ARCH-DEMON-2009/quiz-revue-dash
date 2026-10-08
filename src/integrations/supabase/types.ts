@@ -170,6 +170,44 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          id: string
+          premium_user_id: string
+          reason: string | null
+          refunded_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          premium_user_id: string
+          reason?: string | null
+          refunded_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          premium_user_id?: string
+          reason?: string | null
+          refunded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_refunds_premium_user_id_fkey"
+            columns: ["premium_user_id"]
+            isOneToOne: false
+            referencedRelation: "premium_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       premium_users: {
         Row: {
           created_at: string | null
