@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, FileText, BookOpen, Loader2 } from "lucide-react";
+import { Clock, FileText, BookOpen, Loader2, Target, Building2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import NavigationHeader from "@/components/NavigationHeader";
@@ -89,8 +89,32 @@ const Dashboard = () => {
       <NavigationHeader showFullNav />
       <main className="container mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl flex-1">
         {!selectedClass ? <>
+            <section className="mb-6 sm:mb-8 grid gap-3 sm:gap-4 sm:grid-cols-2">
+              <Card className="card-hover group cursor-pointer border-emerald-500/40 bg-gradient-to-br from-emerald-500/15 to-primary/10" onClick={() => navigate("/tnc-tests")}>
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-600"><Target className="h-6 w-6" /></div>
+                    <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">7,000+ Tests</Badge>
+                  </div>
+                  <CardTitle className="mt-3 text-lg sm:text-2xl font-bold">TNC Nursing Test Series</CardTitle>
+                  <CardDescription>NORCET, AIIMS, Daily Dose, SGPGI, CHO & more</CardDescription>
+                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-emerald-600">Start TNC tests <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+                </CardHeader>
+              </Card>
+              <Card className="card-hover group cursor-pointer border-primary/40 bg-gradient-to-br from-primary/15 to-secondary/10" onClick={() => navigate("/institutions")}>
+                <CardHeader className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/20 text-primary"><Building2 className="h-6 w-6" /></div>
+                    <Badge variant="outline">Open quizzes</Badge>
+                  </div>
+                  <CardTitle className="mt-3 text-lg sm:text-2xl font-bold">Institution Quizzes</CardTitle>
+                  <CardDescription>Practice tests from many coaching institutes</CardDescription>
+                  <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-primary">Browse institutions <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
+                </CardHeader>
+              </Card>
+            </section>
             <div className="mb-4 sm:mb-6 lg:mb-8">
-              <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2 text-gradient">Select Your Class</h2>
+              <h2 className="text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2 text-gradient">JEE / NEET / Class Tests</h2>
               <p className="text-sm sm:text-base text-muted-foreground">Choose your class to view available tests</p>
             </div>
 

@@ -139,10 +139,39 @@ export default function InstitutionTests() {
   const requestId = useRef(0);
 
   useEffect(() => {
+    const EMPTY_KEY = "institution-empty-apis-v1";
+    const TTL = 12 * 60 * 60 * 1000;
+    let cancelled = false;
+    let cached: Record<string, number> = {};
+    try { cached = JSON.parse(localStorage.getItem(EMPTY_KEY) || "{}"); } catch { cached = {}; }
+    const now = Date.now();
+    const known = new Set(Object.entries(cached).filter(([, t]) => now - t < TTL).map(([api]) => api));
+    if (known.size) setEmptySeriesApis(new Set(known));
+
     fetchInstitutions()
-      .then(setInstitutions)
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Couldn't load institutions."))
-      .finally(() => setLoadingDirectory(false));
+      .then(async (list) => {
+        if (cancelled) return;
+        setInstitutions(list);
+        setLoadingDirectory(false);
+        // Background scan: hide institutions that have zero test series.
+        const queue = list.filter((i) => !known.has(i.api));
+        const worker = async () => {
+          while (queue.length && !cancelled) {
+            const item = queue.shift()!;
+            try {
+              const rows = await fetchSeries(item.api);
+              if (rows.length === 0 && !cancelled) {
+                cached[item.api] = Date.now();
+                try { localStorage.setItem(EMPTY_KEY, JSON.stringify(cached)); } catch { /* ignore */ }
+                setEmptySeriesApis((cur) => new Set(cur).add(item.api));
+              }
+            } catch { /* keep visible on network error */ }
+          }
+        };
+        await Promise.all(Array.from({ length: 6 }, worker));
+      })
+      .catch((reason) => { setError(reason instanceof Error ? reason.message : "Couldn't load institutions."); setLoadingDirectory(false); });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
