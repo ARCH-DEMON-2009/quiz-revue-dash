@@ -676,6 +676,7 @@ export type Database = {
           duration_minutes: string
           exam_id: string
           exam_no: number
+          group_name: string | null
           max_marks: number
           name: string
           negative_marks: number
@@ -692,6 +693,7 @@ export type Database = {
           duration_minutes?: string
           exam_id: string
           exam_no?: number
+          group_name?: string | null
           max_marks?: number
           name?: string
           negative_marks?: number
@@ -708,6 +710,7 @@ export type Database = {
           duration_minutes?: string
           exam_id?: string
           exam_no?: number
+          group_name?: string | null
           max_marks?: number
           name?: string
           negative_marks?: number
@@ -810,6 +813,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string | null
           email: string
+          hide_taken_tnc_tests: boolean
           id: string
           is_blocked: boolean | null
           name: string
@@ -824,6 +828,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           email: string
+          hide_taken_tnc_tests?: boolean
           id?: string
           is_blocked?: boolean | null
           name: string
@@ -838,6 +843,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string | null
           email?: string
+          hide_taken_tnc_tests?: boolean
           id?: string
           is_blocked?: boolean | null
           name?: string
@@ -1009,6 +1015,15 @@ export type Database = {
           overall_accuracy: number
           rank_percentile: number
           total_tests: number
+          user_id: string
+        }[]
+      }
+      get_public_milestone_profiles: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          badge_ids: string[]
+          name: string
           user_id: string
         }[]
       }
