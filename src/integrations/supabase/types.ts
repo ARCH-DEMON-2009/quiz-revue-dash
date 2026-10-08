@@ -804,6 +804,45 @@ export type Database = {
         }
         Relationships: []
       }
+      tnc_trials: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          expires_at: string
+          id: string
+          ip_hash: string | null
+          reason: string | null
+          started_at: string
+          status: string
+          ua_hash: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          expires_at: string
+          id?: string
+          ip_hash?: string | null
+          reason?: string | null
+          started_at?: string
+          status?: string
+          ua_hash?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          expires_at?: string
+          id?: string
+          ip_hash?: string | null
+          reason?: string | null
+          started_at?: string
+          status?: string
+          ua_hash?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_analytics: {
         Row: {
           average_score: number | null

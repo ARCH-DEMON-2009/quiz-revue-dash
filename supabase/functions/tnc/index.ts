@@ -194,6 +194,12 @@ async function hasValidVerification(userId: string) {
  */
 async function resolveTncAccess(user: { id: string; email?: string | null }) {
   if (await isPremiumUser(user)) return { ok: true as const, premium: true };
+  {
+    const { data: trial } = await adminClient()
+      .from("tnc_trials").select("id").eq("user_id", user.id).eq("status", "active")
+      .gt("expires_at", new Date().toISOString()).maybeSingle();
+    if (trial) return { ok: true as const, premium: false };
+  }
   if (await hasValidVerification(user.id)) return { ok: true as const, premium: false };
   return { ok: false as const, premium: false };
 }

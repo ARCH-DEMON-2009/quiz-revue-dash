@@ -485,7 +485,7 @@ const TncQuiz = () => {
           <meta name="twitter:card" content="summary_large_image" />
         </Helmet>
         <NavigationHeader />
-        <LinkShortenerGate returnTo={`/tnc-tests/${examId ?? ""}`}>
+        <LinkShortenerGate allowTrial returnTo={`/tnc-tests/${examId ?? ""}`}>
           <TncAccessGranted onReady={loadExam} />
         </LinkShortenerGate>
       </div>

@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import MilestoneBadgeArt from "@/components/MilestoneBadgeArt";
 import { MILESTONE_DEFINITIONS } from "@/components/MilestoneBadges";
+import { TncTrialBanner } from "@/components/TncTrialBanner";
 import { fetchMyTncAttempts, type TncAttemptSummary } from "@/lib/tncApi";
 import {
   fetchTncTests,
@@ -266,6 +267,7 @@ const TncTests = () => {
         </script>
       </Helmet>
       <NavigationHeader />
+      <TncTrialBanner />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl text-gradient">
