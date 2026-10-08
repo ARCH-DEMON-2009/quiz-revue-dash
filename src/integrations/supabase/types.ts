@@ -676,6 +676,7 @@ export type Database = {
           duration_minutes: string
           exam_id: string
           exam_no: number
+          group_name: string | null
           max_marks: number
           name: string
           negative_marks: number
@@ -692,6 +693,7 @@ export type Database = {
           duration_minutes?: string
           exam_id: string
           exam_no?: number
+          group_name?: string | null
           max_marks?: number
           name?: string
           negative_marks?: number
@@ -708,6 +710,7 @@ export type Database = {
           duration_minutes?: string
           exam_id?: string
           exam_no?: number
+          group_name?: string | null
           max_marks?: number
           name?: string
           negative_marks?: number
@@ -1003,15 +1006,6 @@ export type Database = {
     }
     Functions: {
       get_admin_user_ids: { Args: never; Returns: string[] }
-      get_public_milestone_profiles: {
-        Args: { p_user_ids: string[] }
-        Returns: {
-          avatar_url: string | null
-          badge_ids: string[]
-          name: string
-          user_id: string
-        }[]
-      }
       get_leaderboard_data: {
         Args: never
         Returns: {
@@ -1021,6 +1015,15 @@ export type Database = {
           overall_accuracy: number
           rank_percentile: number
           total_tests: number
+          user_id: string
+        }[]
+      }
+      get_public_milestone_profiles: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          badge_ids: string[]
+          name: string
           user_id: string
         }[]
       }
