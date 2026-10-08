@@ -125,6 +125,51 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          attempts: number
+          created_at: string
+          email_type: string
+          error: string | null
+          id: string
+          last_attempt_at: string | null
+          payload: Json
+          recipient: string
+          resend_id: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          email_type: string
+          error?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          payload?: Json
+          recipient: string
+          resend_id?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          email_type?: string
+          error?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          payload?: Json
+          recipient?: string
+          resend_id?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exam_attempts: {
         Row: {
           answers: Json
