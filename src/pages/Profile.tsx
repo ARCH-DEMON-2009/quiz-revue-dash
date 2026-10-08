@@ -12,6 +12,7 @@ import NavigationHeader from "@/components/NavigationHeader";
 import Footer from "@/components/Footer";
 import IdentityPreviewCard from "@/components/IdentityPreviewCard";
 import MilestoneBadges from "@/components/MilestoneBadges";
+import { AdminIdentityCard } from "@/components/AdminIdentityCard";
 import AdminNameBadge from "@/components/AdminNameBadge";
 import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
@@ -343,10 +344,6 @@ const Profile = () => {
           console.error("Failed to load earned milestone badges:", badgeError);
         }
       }
-            <MilestoneBadges
-              stats={{ totalTests: stats.totalTests, overallAccuracy: stats.overallAccuracy, bestScore, streakDays }}
-              earnedIds={earnedBadgeIds ?? undefined}
-            />
 
       if (results && results.length > 0) {
         const totalTests = results.length;
@@ -785,6 +782,8 @@ const Profile = () => {
                 streakDays,
               }}
             />
+
+            {isAdmin && <AdminIdentityCard />}
 
 
 
