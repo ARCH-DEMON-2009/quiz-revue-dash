@@ -1006,15 +1006,6 @@ export type Database = {
     }
     Functions: {
       get_admin_user_ids: { Args: never; Returns: string[] }
-      get_public_milestone_profiles: {
-        Args: { p_user_ids: string[] }
-        Returns: {
-          avatar_url: string | null
-          badge_ids: string[]
-          name: string
-          user_id: string
-        }[]
-      }
       get_leaderboard_data: {
         Args: never
         Returns: {
