@@ -66,7 +66,7 @@ export class TncApiError extends Error {
 }
 
 async function call<T>(body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("tnc", { body, timeout: 30_000 });
+  const { data, error } = await supabase.functions.invoke("tnc", { body});
   if (error) {
     // '''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
     //                                         
