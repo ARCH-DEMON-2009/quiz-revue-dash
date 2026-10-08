@@ -23,6 +23,7 @@ import { BypassBlocksSection } from "@/components/BypassBlocksSection";
 import { SmsBroadcastSection } from "@/components/SmsBroadcastSection";
 import { AdminAnalyticsSection } from "@/components/AdminAnalyticsSection";
 import { AdminRevenueSection } from "@/components/AdminRevenueSection";
+import { AdminEmailLogSection } from "@/components/AdminEmailLogSection";
 import { SecurityEventsSection } from "@/components/SecurityEventsSection";
 import { AdminGiftLogsSection } from "@/components/AdminGiftLogsSection";
 
@@ -774,6 +775,7 @@ const Admin = () => {
         {/* Analytics: Verified users & Visit stats */}
         <AdminAnalyticsSection />
         <AdminRevenueSection />
+        <AdminEmailLogSection />
         <AdminGiftLogsSection />
 
         <Card className="mb-4">
@@ -1018,138 +1020,6 @@ const Admin = () => {
                 {shortenerLoading ? "Saving..." : "Save"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-3 sm:mb-4">
-          <CardHeader className="p-3 sm:p-4">
-            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              Admin Identity Configuration
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 pt-0">
-            <p className="text-xs text-muted-foreground mb-3">
-              Configure how Administrators appear on leaderboards and profiles.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-medium">Avatar Frame</label>
-                <Select 
-                  value={adminBadgeConfig.frame_type} 
-                  onValueChange={(v) => setAdminBadgeConfig(prev => ({ ...prev, frame_type: v }))}
-                >
-                  <SelectTrigger className="text-xs sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card">
-                    <SelectItem value="f3">Admin Frame (f3)</SelectItem>
-                    <SelectItem value="f1">Frame (f1)</SelectItem>
-                    <SelectItem value="f2">Frame (f2)</SelectItem>
-                    <SelectItem value="rainbow">Rainbow Spin</SelectItem>
-                    <SelectItem value="gold">Golden Glow</SelectItem>
-                    <SelectItem value="none">None</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-medium">Badge Icon</label>
-                <div className="flex items-center gap-3 p-2 bg-muted/50 rounded-lg border mb-2">
-                  <div className="text-[10px] text-muted-foreground">Live Preview:</div>
-                  {['b1', 'b2', 'b3'].includes(adminBadgeConfig.badge_icon) && (
-                    <div className="relative w-10 h-10">
-                      <img src={`/badges/${adminBadgeConfig.badge_icon}.png`} alt="Preview" className="w-full h-full object-contain" />
-                    </div>
-                  )}
-                </div>
-                <Select 
-                  value={adminBadgeConfig.badge_icon} 
-                  onValueChange={(v) => setAdminBadgeConfig(prev => ({ ...prev, badge_icon: v }))}
-                >
-                  <SelectTrigger className="text-xs sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card">
-                    <SelectItem value="b1">Premium Badge (b1)</SelectItem>
-                    <SelectItem value="b2">Pro Badge (b2)</SelectItem>
-                    <SelectItem value="b3">Admin Badge (b3)</SelectItem>
-                    <SelectItem value="star">Star Icon</SelectItem>
-                    <SelectItem value="shield">Shield Icon</SelectItem>
-                    <SelectItem value="crown">Crown Icon</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-                      <div className="relative">
-                        <div className="absolute -inset-0 z-0 pointer-events-none">
-                          {['f1', 'f2', 'f3'].includes(adminBadgeConfig.frame_type) ? (
-                            <img 
-                              src={`/frames/${adminBadgeConfig.frame_type}.png`} 
-                              alt="Frame Preview" 
-                              className="absolute -inset-[15%] w-[130%] h-[130%] object-contain" 
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/frames/f3.png";
-                              }}
-                            />
-                          ) : adminBadgeConfig.frame_type === 'rainbow' ? (
-                            <div className="absolute -inset-1.5 bg-gradient-to-r from-red-600 via-purple-600 to-blue-600 rounded-full animate-spin-slow blur-[1px]" />
-                          ) : adminBadgeConfig.frame_type === 'gold' ? (
-                            <div className="absolute -inset-1.5 rounded-full blur-[2px] animate-pulse bg-amber-500/20 border border-amber-500" />
-                          ) : null}
-                        </div>
-                        <div className={cn(
-                          "w-24 h-24 rounded-full border-4 overflow-hidden bg-muted relative z-0",
-                          adminBadgeConfig.frame_type === 'gold' ? 'border-amber-500' : 
-                          adminBadgeConfig.frame_type === 'rainbow' ? 'border-transparent' : 
-                          ['f1', 'f2', 'f3'].includes(adminBadgeConfig.frame_type) ? 'border-transparent' : 'border-purple-500'
-                        )}>
-                          <img 
-                            src="/admin-avatar.png" 
-                            alt="Admin" 
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "https://api.dicebear.com/7.x/initials/svg?seed=Admin";
-                            }}
-                          />
-                        </div>
-                        <div className="absolute -top-6 -right-6 w-16 h-16 z-10 animate-pulse">
-                          {['b1', 'b2', 'b3'].includes(adminBadgeConfig.badge_icon) ? (
-                            <img 
-                              src={`/badges/${adminBadgeConfig.badge_icon}.png`} 
-                              alt="Badge Preview" 
-                              className="w-full h-full object-contain" 
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = "/badges/b3.png";
-                              }}
-                            />
-                          ) : adminBadgeConfig.badge_icon === 'shield' ? (
-                            <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-2 border-2 border-white shadow-lg">
-                              <ShieldCheck className="h-8 w-8 text-white fill-white" />
-                            </div>
-                          ) : (
-                            <div className="bg-gradient-to-br from-red-600 to-purple-700 rounded-full p-2 border-2 border-white shadow-lg">
-                              <Star className="h-8 w-8 text-white fill-white" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
-                <div className="space-y-0.5">
-                  <label className="text-xs font-medium block">Anti-Extraction Protection</label>
-                  <p className="text-[10px] text-muted-foreground">Disable right-click, selection, and copy on quiz pages.</p>
-                </div>
-                <Switch 
-                  checked={adminBadgeConfig.anti_extraction}
-                  onCheckedChange={(checked) => setAdminBadgeConfig(prev => ({ ...prev, anti_extraction: checked }))}
-                />
-              </div>
-            </div>
-            <Button 
-              className="mt-4 w-full sm:w-auto" 
-              onClick={() => saveAdminBadgeConfig(adminBadgeConfig)}
-              disabled={badgeConfigLoading}
-            >
-              {badgeConfigLoading ? "Saving..." : "Save Identity Config"}
-            </Button>
           </CardContent>
         </Card>
 
