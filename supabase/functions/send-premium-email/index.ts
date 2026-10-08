@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,28 +26,91 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const requestData: PremiumEmailRequest = await req.json();
-    const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData;
-    
-    console.log(`Email from request: ${email}`);
-
-    // COMPLETELY BYPASS AUTH FOR NOW TO ENSURE THIS WORKS
-    // The previous attempts to check headers might have failed if the environment or tool
-    // is stripping them or adding mandatory ones.
-    if (email !== 'ssv01@duck.com') {
-      const authHeader = req.headers.get("Authorization") ?? "";
-      if (!authHeader.includes("Bearer")) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
-      }
+    const requestData: any = await req.json();
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+    }
+    const token = authHeader.slice(7);
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const isService = token === serviceKey;
+    let callerEmail = "";
+    let callerId = "";
+    let callerIsAdmin = false;
+    if (!isService) {
+      const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: u } = await userClient.auth.getUser();
+      if (!u?.user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      callerEmail = (u.user.email ?? "").toLowerCase();
+      callerId = u.user.id;
+      const { data: adm } = await userClient.rpc("is_admin");
+      callerIsAdmin = !!adm;
     }
 
-    const RESEND_API_KEY = Deno.env.get("resend_api_key") ?? Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) {
-      console.error("RESEND_API_KEY not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    if (!LOVABLE_API_KEY || !RESEND_API_KEY) {
+      console.error("Email service not configured");
       return new Response(
         JSON.stringify({ success: false, error: "Email service not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const sendMail = async (to: string, subject: string, html: string) => {
+      const response = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "X-Connection-Api-Key": RESEND_API_KEY,
+        },
+        body: JSON.stringify({ from: "Test Sagar <team@tncnursing.site>", to: [to], subject, html }),
+      });
+      const text = await response.text();
+      if (!response.ok) {
+        console.error(`Resend failed [${response.status}]: ${text}`);
+        return new Response(JSON.stringify({ success: false, status: response.status, error: text }), {
+          status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    };
+
+    const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
+
+    // ---- Bypass warning: always sent to the signed-in caller only.
+    if (requestData?.type === "bypass_warning") {
+      if (isService || !callerEmail) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+      const admin = createClient(supabaseUrl, serviceKey);
+      const { data: prof } = await admin.from("user_profiles").select("name").eq("user_id", callerId).maybeSingle();
+      const until = new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });
+      const html = `<!DOCTYPE html><html><body style="font-family:Segoe UI,Arial,sans-serif;background:#f4f4f5;margin:0;padding:20px">
+        <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1)">
+          <div style="background:#dc2626;padding:30px;text-align:center"><h1 style="color:#fff;margin:0;font-size:24px">⚠️ Verification bypass detected</h1></div>
+          <div style="padding:30px;color:#374151;line-height:1.7">
+            <p>Hi ${esc(prof?.name || "Student")},</p>
+            <p>We noticed an attempt to skip the access verification step on Test Sagar from your account. As a result, free access is paused for <b>24 hours</b> (until about <b>${esc(until)} IST</b>).</p>
+            <p>To keep practising without interruptions, you can complete verification normally once the block ends, or upgrade to Premium for uninterrupted access.</p>
+            <div style="text-align:center;margin:28px 0"><a href="https://test.tncnursing.site/pricing" style="background:#6366f1;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">View Premium plans</a></div>
+            <p style="font-size:14px;color:#6b7280">If you think this was a mistake, reply on WhatsApp support: +84 522122461.</p>
+          </div>
+        </div></body></html>`;
+      return await sendMail(callerEmail, "⚠️ Test Sagar: verification bypass detected", html);
+    }
+
+    const { email, name, plan_name, plan_days, amount, payment_id, expiry_date, is_admin_activation } = requestData as PremiumEmailRequest;
+    if (!email || typeof email !== "string") {
+      return new Response(JSON.stringify({ error: "Missing email" }), { status: 400, headers: corsHeaders });
+    }
+    // Only the server, an admin, or the recipient themself may send a premium email.
+    if (!isService && !callerIsAdmin && email.toLowerCase() !== callerEmail) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
     }
 
     const formattedExpiry = new Date(expiry_date).toLocaleDateString('en-IN', { 
@@ -66,7 +130,7 @@ serve(async (req: Request): Promise<Response> => {
         <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 16px 16px 0 0; padding: 40px 30px; text-align: center;">
             <h1 style="color: white; margin: 0; font-size: 28px;">${is_admin_activation ? '🎊 Premium Activated!' : '🎉 Welcome to Premium!'}</h1>
-            <p style="color: rgba(255,255,255,0.9); margin-top: 10px; font-size: 16px;">${is_admin_activation ? 'An administrator has granted you premium access.' : 'Thank you for upgrading!'} Enjoy your stay, ${name}!</p>
+            <p style="color: rgba(255,255,255,0.9); margin-top: 10px; font-size: 16px;">${is_admin_activation ? 'An administrator has granted you premium access.' : 'Thank you for upgrading!'} Enjoy your stay, ${esc(name)}!</p>
           </div>
           
           <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -76,7 +140,7 @@ serve(async (req: Request): Promise<Response> => {
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 10px 0; color: #64748b;">Plan:</td>
-                  <td style="padding: 10px 0; color: #1f2937; font-weight: 600; text-align: right;">${plan_name}</td>
+                  <td style="padding: 10px 0; color: #1f2937; font-weight: 600; text-align: right;">${esc(plan_name)}</td>
                 </tr>
                 <tr>
                   <td style="padding: 10px 0; color: #64748b;">Duration:</td>
@@ -92,7 +156,7 @@ serve(async (req: Request): Promise<Response> => {
                 </tr>
                 <tr>
                   <td style="padding: 10px 0; color: #64748b;">Payment ID:</td>
-                  <td style="padding: 10px 0; color: #1f2937; font-size: 12px; text-align: right;">${payment_id}</td>
+                  <td style="padding: 10px 0; color: #1f2937; font-size: 12px; text-align: right;">${esc(payment_id)}</td>
                 </tr>
               </table>
             </div>
@@ -121,36 +185,11 @@ serve(async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "Test Sagar <team@tncnursing.site>",
-        to: [email],
-        subject: is_admin_activation ? "🎊 Premium Activated!" : "🎉 Welcome to Test Sagar Premium!",
-        html: emailHtml,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Resend API error:", data);
-      return new Response(
-        JSON.stringify({ success: false, error: data }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log("Email sent successfully:", data);
-
-    return new Response(JSON.stringify({ success: true, data }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return await sendMail(
+      email,
+      is_admin_activation ? "🎊 Premium Activated!" : "🎉 Welcome to Test Sagar Premium!",
+      emailHtml,
+    );
   } catch (error: any) {
     console.error("Error sending premium email:", error);
     return new Response(
