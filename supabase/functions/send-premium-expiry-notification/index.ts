@@ -1,3 +1,4 @@
+import { renderEmail, esc, button, list, callout, SITE } from "../_shared/email-layout.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -86,57 +87,14 @@ Deno.serve(async (req) => {
         year: 'numeric',
       });
 
-      const emailHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f5;">
-          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); border-radius: 16px 16px 0 0; padding: 40px 30px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 28px;">⏰ Premium Expiring Soon!</h1>
-              <p style="color: rgba(255,255,255,0.9); margin-top: 10px; font-size: 16px;">Hi ${user.name}, your subscription expires in 3 days.</p>
-            </div>
-            
-            <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-              <h2 style="color: #1f2937; margin-top: 0;">Don't lose your premium access!</h2>
-              
-              <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 16px; margin: 20px 0;">
-                <p style="margin: 0; color: #92400e; font-weight: 600;">
-                  ⚠️ Your premium subscription expires on <strong>${formattedExpiry}</strong>
-                </p>
-              </div>
-
-              <p style="color: #4b5563; line-height: 1.8;">
-                After expiry, you will lose access to:
-              </p>
-              <ul style="color: #4b5563; line-height: 1.8;">
-                <li>❌ Unlimited test attempts</li>
-                <li>❌ Detailed performance analytics</li>
-                <li>❌ Subject-wise analysis</li>
-                <li>❌ Ad-free experience</li>
-                <li>❌ Access to all tests</li>
-              </ul>
-
-              <p style="color: #4b5563; line-height: 1.8;">
-                Renew now to continue your preparation without interruption!
-              </p>
-
-              <div style="text-align: center; margin-top: 30px;">
-                <a href="https://testsagar.com/pricing" style="display: inline-block; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 16px;">Renew Premium Now</a>
-              </div>
-
-              <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
-                <p style="color: #9ca3af; font-size: 14px;">Need help? Contact us on <a href="https://t.me/Tncnursingbot" style="color: #6366f1;">Telegram</a></p>
-                <p style="color: #9ca3af; font-size: 12px; margin-top: 10px;">© ${new Date().getFullYear()} TestSagar. All rights reserved.</p>
-              </div>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
+      const emailHtml = renderEmail({
+        tone: "warning", badge: "Renewal reminder", title: "⏰ Premium expires in 3 days",
+        subtitle: `Hi ${esc(user.name || "Student")}, keep your preparation streak going.`,
+        body: `${callout(`Your Premium ends on <b>${esc(formattedExpiry)}</b>`, "warning")}
+          <p style="margin:0 0 4px;color:#f1f5f9;font-weight:700">After expiry you'll lose</p>
+          ${list(["Unlimited test attempts", "Full TNC Nursing test series", "Detailed analytics", "Ad-free, verification-free practice"], "✕", "#f87171")}
+          ${button(`${SITE}/pricing`, "Renew Premium")}`,
+      });
 
       try {
         const response = await fetch('https://api.resend.com/emails', {
