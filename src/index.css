@@ -772,3 +772,47 @@ a[href*="lovable.app/projects"],
 @keyframes opt-ripple { from { opacity: .8; transform: scale(.6); } to { opacity: 0; transform: scale(1.6); } }
 .q-slide { animation: q-slide-in .28s ease-out; }
 @keyframes q-slide-in { from { opacity: 0; transform: translateX(var(--q-dir, 16px)); } to { opacity: 1; transform: none; } }
+
+/* Public study landing: inherit site typography and semantic theme roles. */
+.study-landing {
+  --study-photo-foreground: 0 0% 100%;
+  --study-photo-muted: 150 15% 84%;
+  --study-photo-shade: 158 58% 7%;
+  font-family: 'Poppins', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+.study-hero {
+  --foreground: var(--study-photo-foreground);
+  --muted-foreground: var(--study-photo-muted);
+  --secondary: 158 70% 62%;
+  --secondary-foreground: 158 58% 7%;
+  min-height: 520px;
+  color: hsl(var(--foreground));
+}
+.study-hero-shade {
+  background: linear-gradient(90deg, hsl(var(--study-photo-shade) / .97) 0%, hsl(var(--study-photo-shade) / .85) 32%, hsl(var(--study-photo-shade) / .22) 75%);
+}
+.study-hero-button {
+  border-color: hsl(var(--study-photo-foreground) / .35);
+  background: hsl(var(--study-photo-shade) / .3);
+  color: hsl(var(--study-photo-foreground));
+}
+.study-hero-button:hover {
+  background: hsl(var(--study-photo-foreground) / .12);
+  color: hsl(var(--study-photo-foreground));
+}
+.study-landing summary:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 5px;
+}
+@media (max-width: 640px) {
+  .study-hero { min-height: 520px; }
+  .study-hero-shade { background: hsl(var(--study-photo-shade) / .83); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .study-landing *, .study-landing *::before, .study-landing *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto;
+  }
+}
