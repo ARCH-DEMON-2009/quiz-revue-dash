@@ -135,10 +135,12 @@ const PrivacyPolicy = () => {
                 Cookies help us improve your experience by remembering your preferences and understanding usage.
               </p>
               <p className="text-muted-foreground">
-                <strong>Google AdSense & DoubleClick Cookie:</strong> Google, as a third-party vendor, uses cookies to serve ads on our site. 
-                Google's use of the DART cookie enables it and its partners to serve ads to our users based on their visit to our 
-                sites and/or other sites on the Internet. Users may opt out of personalized advertising by visiting 
-                <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"> Ads Settings</a>.
+                <strong>Google advertising:</strong> If Google ads are enabled, Google and other third-party vendors may use
+                cookies to serve ads based on previous visits to this website or other websites. Google's advertising cookies
+                allow Google and its partners to personalise those ads. You can manage personalised advertising through
+                <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"> My Ad Center</a>
+                {" "}or learn about other vendors' opt-out choices at
+                <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"> aboutads.info</a>.
               </p>
             </section>
 
