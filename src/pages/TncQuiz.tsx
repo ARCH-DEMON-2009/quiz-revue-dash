@@ -61,6 +61,9 @@ import { downloadTncResultPdf } from "@/lib/tncPdf";
 import { handleMobilePdfDownload } from "@/lib/mobilePdf";
 import { getPdfIdentity } from "@/lib/userIdentity";
 import { withTimeout } from "@/lib/withTimeout";
+import { BookOpen, Moon, Volume2, VolumeX } from "lucide-react";
+import { celebrate, getPaperMode, getSoundOn, playMove, playSubmit, playTap, setPaperMode, setSoundOn } from "@/lib/quizFx";
+import { renderStoryCard } from "@/lib/storyCard";
 
 type Phase = "instructions" | "quiz" | "results";
 
@@ -300,6 +303,31 @@ const TncQuiz = () => {
 
   const questions = exam?.questions ?? [];
   const answeredCount = Object.keys(answers).length;
+  const [paper, setPaper] = useState(getPaperMode);
+  const [soundOn, setSound] = useState(getSoundOn);
+  const [slideDir, setSlideDir] = useState(1);
+  const [storyBusy, setStoryBusy] = useState(false);
+  const touchRef = useRef<{ x: number; y: number } | null>(null);
+  const kbRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  kbRef.current = (e: KeyboardEvent) => {
+    if (phase !== "quiz" || confirmOpen || navOpen) return;
+    const t = e.target as HTMLElement;
+    if (t?.tagName === "INPUT" || t?.tagName === "TEXTAREA" || e.ctrlKey || e.metaKey || e.altKey) return;
+    const q = questions[current];
+    if (!q) return;
+    const k = e.key.toLowerCase();
+    const idx = ["1", "2", "3", "4"].indexOf(k) >= 0 ? ["1", "2", "3", "4"].indexOf(k) : ["a", "b", "c", "d"].indexOf(k);
+    if (idx >= 0) { e.preventDefault(); playTap(); setAnswers((p) => ({ ...p, [q.rowId]: OPTS[idx] })); return; }
+    if (k === " ") { e.preventDefault(); setBookmarks((b) => (b.includes(q.rowId) ? b.filter((id) => id !== q.rowId) : [...b, q.rowId])); return; }
+    if (k === "backspace" || k === "x") { e.preventDefault(); setAnswers((p) => { const { [q.rowId]: _o, ...rest } = p; return rest; }); return; }
+    if (k === "enter" || k === "arrowright") { e.preventDefault(); go(1); return; }
+    if (k === "arrowleft") { e.preventDefault(); go(-1); }
+  };
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => kbRef.current(e);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
   const isLow = timeLeft < 120;
 
   // Score comes from the server after submission (answers are never on the
@@ -335,6 +363,12 @@ const TncQuiz = () => {
         wrong: res.wrongCount,
         skipped: res.skippedCount,
       });
+      playSubmit();
+      const attempted = res.correctCount + res.wrongCount;
+      if (attempted > 0 && res.correctCount / attempted >= 0.8) {
+        celebrate();
+        toast.success("🎉 Outstanding! 80%+ accuracy — share your score card!");
+      }
       if (res.attemptId) setAttemptId(res.attemptId);
       // Merge the answer key + explanations (only now available) into the
       // questions so the review section can highlight correct answers.
@@ -367,6 +401,28 @@ const TncQuiz = () => {
       setSaving(false);
     }
   };
+
+  const go = (delta: number) => {
+    setSlideDir(delta > 0 ? 1 : -1);
+    setCurrent((c) => {
+      const n = Math.min(Math.max(c + delta, 0), Math.max(questions.length - 1, 0));
+      if (n !== c) playMove();
+      return n;
+    });
+  };
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const s = touchRef.current;
+    touchRef.current = null;
+    if (!s) return;
+    const dx = e.changedTouches[0].clientX - s.x;
+    const dy = e.changedTouches[0].clientY - s.y;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(dx < 0 ? 1 : -1);
+  };
+  const togglePaper = () => setPaper((p) => { setPaperMode(!p); return !p; });
+  const toggleSound = () => setSound((s) => { setSoundOn(!s); return !s; });
 
 
   const toggleBookmark = (rowId: string) =>
@@ -667,14 +723,32 @@ const TncQuiz = () => {
       </>
     );
     return (
-      <div className="min-h-screen bg-background">
+      <div className={`min-h-screen bg-background ${paper ? "paper-mode" : ""}`}>
         <NavigationHeader />
         <main className="container mx-auto max-w-5xl px-4 py-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-medium text-muted-foreground">
               Q{current + 1} of {questions.length}
+              <span className="ml-2 hidden text-xs lg:inline">· Keys: 1-4 / A-D pick · Space bookmark · Enter next</span>
             </span>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={togglePaper}
+                aria-label={paper ? "Switch to dark mode" : "Switch to paper mode"}
+                title={paper ? "Midnight mode" : "Paper mode"}
+              >
+                {paper ? <Moon className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSound}
+                aria-label={soundOn ? "Mute sounds" : "Turn sounds on"}
+              >
+                {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -705,25 +779,32 @@ const TncQuiz = () => {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_240px]">
-            <Card className="p-6">
+            <Card
+              key={q.rowId}
+              className="q-slide touch-pan-y p-6"
+              style={{ ["--q-dir" as string]: `${slideDir * 16}px` }}
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+            >
               <Html className="block text-lg font-medium text-foreground" html={q.questionText} />
               {q.imageUrl && <TncQuestionImage url={q.imageUrl} />}
               <div className="mt-5 space-y-3">
-                {OPTS.map((opt) => {
+                {OPTS.map((opt, oi) => {
                   const selected = answers[q.rowId] === opt;
                   const text = q[`option${opt}` as keyof TncQuestion] as string;
                   return (
                     <button
                       key={opt}
-                      onClick={() => selectOption(q.rowId, opt)}
-                      className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-colors ${
+                      data-selected={selected}
+                      onClick={() => { playTap(); selectOption(q.rowId, opt); }}
+                      className={`option-pill flex w-full items-start gap-3 rounded-2xl border p-3.5 text-left ${
                         selected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted"
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/40 hover:bg-muted"
                       }`}
                     >
                       <span
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold ${
+                        className={`option-dot relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-sm font-semibold ${
                           selected
                             ? "border-primary bg-primary text-primary-foreground"
                             : "border-border"
@@ -731,7 +812,8 @@ const TncQuiz = () => {
                       >
                         {opt}
                       </span>
-                      <Html className="pt-0.5 text-foreground" html={text} />
+                      <Html className="flex-1 pt-0.5 text-foreground" html={text} />
+                      <kbd className="hidden rounded border border-border px-1.5 text-[10px] text-muted-foreground lg:inline">{oi + 1}</kbd>
                     </button>
                   );
                 })}
