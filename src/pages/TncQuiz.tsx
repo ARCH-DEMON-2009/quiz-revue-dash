@@ -833,13 +833,13 @@ const TncQuiz = () => {
                 <Button
                   variant="outline"
                   disabled={current === 0}
-                  onClick={() => setCurrent((c) => c - 1)}
+                  onClick={() => go(-1)}
                   className="gap-2"
                 >
                   <ArrowLeft className="h-4 w-4" /> Prev
                 </Button>
                 {current < questions.length - 1 ? (
-                  <Button onClick={() => setCurrent((c) => c + 1)} className="gap-2">
+                  <Button onClick={() => go(1)} className="gap-2">
                     Next <ArrowRight className="h-4 w-4" />
                   </Button>
                 ) : (
