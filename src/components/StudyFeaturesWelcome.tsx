@@ -15,8 +15,14 @@ const SEEN_KEY = "institution_quiz_welcome_v1";
 
 const StudyFeaturesWelcome = () => {
   const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
+    // Keep public content and account/legal screens unobstructed.
+    if (!['/institutions'].includes(pathname)) {
+      setOpen(false);
+      return;
+    }
     try {
       if (localStorage.getItem(SEEN_KEY)) return;
       localStorage.setItem(SEEN_KEY, "1");
@@ -24,7 +30,7 @@ const StudyFeaturesWelcome = () => {
       // The in-memory dialog still works when browser storage is disabled.
     }
     setOpen(true);
-  }, []);
+  }, [pathname]);
 
   const dismiss = () => setOpen(false);
 

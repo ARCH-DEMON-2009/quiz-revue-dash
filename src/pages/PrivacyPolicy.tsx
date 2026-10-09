@@ -129,11 +129,18 @@ const PrivacyPolicy = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold mb-3">7. Cookies and Tracking</h2>
+              <h2 className="text-2xl font-semibold mb-3">7. Advertising and Cookies</h2>
+              <p className="text-muted-foreground mb-3">
+                We use cookies and similar tracking technologies to track activity on our service and hold certain information. 
+                Cookies help us improve your experience by remembering your preferences and understanding usage.
+              </p>
               <p className="text-muted-foreground">
-                We use cookies and similar tracking technologies to track activity on our service 
-                and hold certain information. Cookies help us improve your experience by remembering 
-                your preferences and understanding how you use our platform.
+                <strong>Google advertising:</strong> If Google ads are enabled, Google and other third-party vendors may use
+                cookies to serve ads based on previous visits to this website or other websites. Google's advertising cookies
+                allow Google and its partners to personalise those ads. You can manage personalised advertising through
+                <a href="https://myadcenter.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"> My Ad Center</a>
+                {" "}or learn about other vendors' opt-out choices at
+                <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline"> aboutads.info</a>.
               </p>
             </section>
 
