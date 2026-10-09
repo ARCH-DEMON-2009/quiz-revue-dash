@@ -864,6 +864,41 @@ const TncQuiz = () => {
     }
   };
 
+  const handleStoryCard = async () => {
+    if (storyBusy) return;
+    setStoryBusy(true);
+    try {
+      const identity = await getPdfIdentity();
+      const blob = await renderStoryCard({
+        name: identity.name,
+        avatarUrl: identity.avatarUrl,
+        examName: stripHtml(exam.name),
+        score: r.score,
+        maxMarks: exam.maxMarks,
+        correct: r.correct,
+        wrong: r.wrong,
+        skipped: r.skipped,
+      });
+      const file = new File([blob], "test-sagar-score.png", { type: "image/png" });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "My Test Sagar score", text: `I scored ${pct.toFixed(0)}% on ${stripHtml(exam.name)}! Try it: ${SITE}/tnc-tests/${examId}` });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "test-sagar-score.png";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        toast.success("Score card saved — share it on WhatsApp or Instagram!");
+      }
+    } catch (e) {
+      if ((e as Error)?.name !== "AbortError") toast.error("Could not create the score card.");
+    } finally {
+      setStoryBusy(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -924,6 +959,20 @@ const TncQuiz = () => {
               <p className="mt-2 text-xs text-destructive">Generation failed. Tap the button above to try again.</p>
             )}
           </div>
+
+          <div className="mt-3">
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full gap-2 border-primary/40 sm:w-auto sm:px-8"
+              onClick={handleStoryCard}
+              disabled={storyBusy}
+            >
+              {storyBusy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Share2 className="h-5 w-5" />}
+              Share my score card (WhatsApp / Instagram)
+            </Button>
+          </div>
+
 
 
           <div className="mt-4 flex flex-wrap justify-center gap-3">
