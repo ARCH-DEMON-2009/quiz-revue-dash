@@ -24,6 +24,7 @@ import { SmsBroadcastSection } from "@/components/SmsBroadcastSection";
 import { AdminAnalyticsSection } from "@/components/AdminAnalyticsSection";
 import { AdminRevenueSection } from "@/components/AdminRevenueSection";
 import { AdminEmailLogSection } from "@/components/AdminEmailLogSection";
+import { AdminTrialMonitorSection } from "@/components/AdminTrialMonitorSection";
 import { SecurityEventsSection } from "@/components/SecurityEventsSection";
 import { AdminGiftLogsSection } from "@/components/AdminGiftLogsSection";
 
@@ -776,6 +777,7 @@ const Admin = () => {
         <AdminAnalyticsSection />
         <AdminRevenueSection />
         <AdminEmailLogSection />
+        <AdminTrialMonitorSection />
         <AdminGiftLogsSection />
 
         <Card className="mb-4">

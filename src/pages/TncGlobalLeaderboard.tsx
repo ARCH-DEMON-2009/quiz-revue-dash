@@ -40,7 +40,7 @@ const fmtTime = (sec: number) => {
 };
 
 const TncGlobalLeaderboard = () => {
-  const [period, setPeriod] = useState<TncLeaderboardPeriod>("all");
+  const [period, setPeriod] = useState<TncLeaderboardPeriod>("daily");
   const [rows, setRows] = useState<(TncGlobalLeaderboardRow & { isAdmin?: boolean; avatarUrl?: string | null; planType?: string; milestoneBadgeIds?: string[] })[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
