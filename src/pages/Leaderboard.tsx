@@ -197,10 +197,10 @@ const Leaderboard = () => {
       <Helmet>
         <title>All-India Leaderboard & Rankings | Test Sagar — JEE, NEET & TNC</title>
         <meta name="description" content="See where you rank on the Test Sagar all-India leaderboard. Live rankings by average score, accuracy and tests taken for JEE, NEET, and TNC nursing exams." />
-        <link rel="canonical" href="https://test.tncnursing.site/leaderboard" />
+        <link rel="canonical" href="https://tncnursing.site/leaderboard" />
         <meta property="og:title" content="All-India Leaderboard & Rankings | Test Sagar" />
         <meta property="og:description" content="Live all-India rankings by average score and accuracy. Compete with students across India on the best test taking site." />
-        <meta property="og:url" content="https://test.tncnursing.site/leaderboard" />
+        <meta property="og:url" content="https://tncnursing.site/leaderboard" />
         <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <script type="application/ld+json">
@@ -209,19 +209,19 @@ const Leaderboard = () => {
             "@type": "WebPage",
             "name": "All-India Leaderboard",
             "description": "Rankings of students on Test Sagar.",
-            "url": "https://test.tncnursing.site/leaderboard",
+            "url": "https://tncnursing.site/leaderboard",
             "breadcrumb": {
               "@type": "BreadcrumbList",
               "itemListElement": [{
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://test.tncnursing.site/"
+                "item": "https://tncnursing.site/"
               }, {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "Leaderboard",
-                "item": "https://test.tncnursing.site/leaderboard"
+                "item": "https://tncnursing.site/leaderboard"
               }]
             }
           })}

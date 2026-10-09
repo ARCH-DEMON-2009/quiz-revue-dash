@@ -6,7 +6,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    hostname: 'test.tncnursing.site'
+    hostname: 'tncnursing.site'
   },
   plugins: {
     StatusBar: {

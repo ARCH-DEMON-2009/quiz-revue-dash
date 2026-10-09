@@ -45,7 +45,7 @@ export interface UserData {
 }
 
 const ITEMS_PER_PAGE = 20;
-const PASSWORD_RESET_REDIRECT_URL = "https://test.tncnursing.site/forgot-password";
+const PASSWORD_RESET_REDIRECT_URL = "https://tncnursing.site/forgot-password";
 
 const Admin = () => {
   const navigate = useNavigate();

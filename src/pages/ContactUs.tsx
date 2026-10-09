@@ -73,10 +73,10 @@ const ContactUs = () => {
       <Helmet>
         <title>Contact & Support | Test Sagar — WhatsApp Assistance</title>
         <meta name="description" content="Need help with Test Sagar? Reach our support team on WhatsApp for account, payment, and TNC/JEE/NEET test-related queries. We are here to help." />
-        <link rel="canonical" href="https://test.tncnursing.site/contact" />
+        <link rel="canonical" href="https://tncnursing.site/contact" />
         <meta property="og:title" content="Contact & Support | Test Sagar" />
         <meta property="og:description" content="Get instant help from the Test Sagar support team on WhatsApp for the best test taking experience." />
-        <meta property="og:url" content="https://test.tncnursing.site/contact" />
+        <meta property="og:url" content="https://tncnursing.site/contact" />
         <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <script type="application/ld+json">
@@ -85,19 +85,19 @@ const ContactUs = () => {
             "@type": "ContactPage",
             "name": "Contact Us",
             "description": "Support page for Test Sagar.",
-            "url": "https://test.tncnursing.site/contact",
+            "url": "https://tncnursing.site/contact",
             "breadcrumb": {
               "@type": "BreadcrumbList",
               "itemListElement": [{
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://test.tncnursing.site/"
+                "item": "https://tncnursing.site/"
               }, {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "Contact",
-                "item": "https://test.tncnursing.site/contact"
+                "item": "https://tncnursing.site/contact"
               }]
             }
           })}

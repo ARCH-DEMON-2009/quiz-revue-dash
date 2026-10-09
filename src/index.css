@@ -747,3 +747,28 @@ a[href*="lovable.app/projects"],
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* Paper Mode — warm printed exam sheet look for quiz screens */
+.paper-mode {
+  --background: 43 50% 95%;
+  --foreground: 30 8% 16%;
+  --card: 44 60% 98%;
+  --card-foreground: 30 8% 16%;
+  --popover: 44 60% 98%;
+  --popover-foreground: 30 8% 16%;
+  --muted: 40 30% 90%;
+  --muted-foreground: 30 8% 38%;
+  --border: 38 25% 82%;
+  --input: 38 25% 82%;
+  --primary: 222 60% 40%;
+  --primary-foreground: 0 0% 100%;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+.option-pill { transition: transform .25s cubic-bezier(.34,1.56,.64,1), box-shadow .25s, border-color .2s, background-color .2s; position: relative; overflow: hidden; }
+.option-pill:active { transform: scale(.985); }
+.option-pill[data-selected="true"] { transform: scale(1.01); box-shadow: 0 0 0 2px hsl(var(--primary) / .35), 0 8px 24px -10px hsl(var(--primary) / .55); }
+.option-pill[data-selected="true"] .option-dot::after { content: ""; position: absolute; inset: -6px; border-radius: 9999px; border: 2px solid hsl(var(--primary)); animation: opt-ripple .5s ease-out forwards; }
+@keyframes opt-ripple { from { opacity: .8; transform: scale(.6); } to { opacity: 0; transform: scale(1.6); } }
+.q-slide { animation: q-slide-in .28s ease-out; }
+@keyframes q-slide-in { from { opacity: 0; transform: translateX(var(--q-dir, 16px)); } to { opacity: 1; transform: none; } }
