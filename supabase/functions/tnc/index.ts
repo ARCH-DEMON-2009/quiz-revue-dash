@@ -41,11 +41,24 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function crmToken(): string {
+  const token = Deno.env.get("TNC_CRM_TOKEN")?.trim();
+  if (!token) {
+    throw new Error(
+      "CRM login token is not configured. Log in to the CRM in a browser, copy the _token value from localStorage key _au, and save it as the TNC_CRM_TOKEN secret.",
+    );
+  }
+  return token;
+}
+
 async function fetchFromCRM(payload: Record<string, unknown>) {
   await waitForCrmRequestSlot();
   const res = await fetch(CRM_ENDPOINT, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${crmToken()}`,
+    },
     body: JSON.stringify({ payload: JSON.stringify(payload) }),
     signal: AbortSignal.timeout(CRM_REQUEST_TIMEOUT_MS),
   });
@@ -58,6 +71,11 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
           : Number(retryAfter) * 1000
         : 30_000;
       crmCooldownUntil = Math.max(crmCooldownUntil, Date.now() + Math.min(retryAfterMs, 60_000));
+    }
+    if (res.status === 401) {
+      throw new Error(
+        "CRM login token expired or invalid. Log in to the CRM again in a browser and update the TNC_CRM_TOKEN secret with the new _token value.",
+      );
     }
     throw new Error(`CRM error ${res.status}`);
   }
