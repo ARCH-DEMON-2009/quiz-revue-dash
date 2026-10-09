@@ -153,7 +153,7 @@ export async function renderStoryCard(d: StoryCardData): Promise<Blob> {
 
   c.fillStyle = "#e2e8f0";
   c.font = "600 42px Poppins, sans-serif";
-  wrap(c, d.examName, W / 2, 1000 - 40, 900, 52, 2);
+  wrap(c, d.examName, W / 2, 930, 900, 52, 2);
 
   c.fillStyle = "#34d399";
   c.font = "600 44px Poppins, sans-serif";
