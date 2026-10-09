@@ -23,7 +23,7 @@ interface PdfArgs {
 }
 
 const OPTS = ["A", "B", "C", "D"] as const;
-const DEFAULT_SITE = "https://test.tncnursing.site/";
+const DEFAULT_SITE = "https://tncnursing.site/";
 const DEFAULT_BRAND = "Test Sagar";
 const LOGO_PATH = "/logo.png";
 

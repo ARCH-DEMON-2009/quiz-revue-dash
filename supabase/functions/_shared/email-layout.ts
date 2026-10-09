@@ -1,5 +1,5 @@
 // Shared Test Sagar email layout: midnight indigo/emerald glass look matching the website.
-export const SITE = "https://test.tncnursing.site";
+export const SITE = "https://tncnursing.site";
 export const WHATSAPP = "https://wa.me/84522122461";
 
 export const esc = (v: unknown) =>
@@ -53,7 +53,7 @@ export function renderEmail(opts: { tone?: Tone; badge: string; title: string; s
   <div style="padding:10px 30px 32px;color:#cbd5e1;font-size:15px;line-height:1.75">${opts.body}</div>
 </td></tr>
 <tr><td style="padding:24px 10px;text-align:center;color:#64748b;font-size:12px;line-height:1.7">
-  Need help? <a href="${WHATSAPP}" style="color:#34d399;text-decoration:none;font-weight:600">WhatsApp support</a> · <a href="${SITE}" style="color:#a5b4fc;text-decoration:none">test.tncnursing.site</a><br>
+  Need help? <a href="${WHATSAPP}" style="color:#34d399;text-decoration:none;font-weight:600">WhatsApp support</a> · <a href="${SITE}" style="color:#a5b4fc;text-decoration:none">tncnursing.site</a><br>
   © ${new Date().getFullYear()} Test Sagar. Practice smarter, rank higher.
 </td></tr>
 </table></td></tr></table></body></html>`;

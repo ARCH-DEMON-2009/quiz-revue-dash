@@ -17,7 +17,7 @@ function extractQuestions(payload) {
 
 export default async function handler(request, response) {
   if (request.method !== "GET") return sendMethodNotAllowed(response);
-  const requestUrl = new URL(request.url, "https://test.tncnursing.site");
+  const requestUrl = new URL(request.url, "https://tncnursing.site");
   const questionUrl = requestUrl.searchParams.get("url");
   if (!validQuestionUrl(questionUrl)) {
     return sendJson(response, 400, { error: "The question URL is not from a trusted HTTPS host." });

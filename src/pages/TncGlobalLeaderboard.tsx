@@ -24,7 +24,7 @@ import MilestoneBadgeStrip from "@/components/MilestoneBadgeStrip";
 import AdminNameBadge from "@/components/AdminNameBadge";
 import { fetchPublicMilestoneProfiles } from "@/lib/publicMilestones";
 
-const SITE = "https://test.tncnursing.site";
+const SITE = "https://tncnursing.site";
 const CACHE_KEY = "tnc_global_leaderboard_cache";
 
 const PERIODS: { value: TncLeaderboardPeriod; label: string }[] = [

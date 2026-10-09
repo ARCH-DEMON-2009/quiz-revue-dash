@@ -25,7 +25,7 @@ interface ExtendedTncRow extends TncLeaderboardRow {
   milestoneBadgeIds?: string[];
 }
 
-const SITE = "https://test.tncnursing.site";
+const SITE = "https://tncnursing.site";
 
 function fmtTime(sec: number) {
   const m = Math.floor(sec / 60);

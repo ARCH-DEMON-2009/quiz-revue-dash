@@ -15,7 +15,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const SITE = "https://test.tncnursing.site";
+const SITE = "https://tncnursing.site";
 
 const FEATURES = [
   {

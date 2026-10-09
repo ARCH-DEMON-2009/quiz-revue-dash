@@ -65,7 +65,7 @@ import { withTimeout } from "@/lib/withTimeout";
 type Phase = "instructions" | "quiz" | "results";
 
 const OPTS = ["A", "B", "C", "D"] as const;
-const SITE = "https://test.tncnursing.site";
+const SITE = "https://tncnursing.site";
 
 const storageKey = (id: string) => `tnc-attempt-${id}`;
 

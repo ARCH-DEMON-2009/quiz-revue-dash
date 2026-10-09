@@ -263,10 +263,10 @@ const Pricing = () => {
       <Helmet>
         <title>Premium Plans & Pricing | Test Sagar — Ad-Free Mock Tests</title>
         <meta name="description" content="Upgrade to Test Sagar Premium for unlimited ad-free mock tests, detailed solutions, and analytics for JEE, NEET, and TNC. Best test taking site for competitive exams." />
-        <link rel="canonical" href="https://test.tncnursing.site/pricing" />
+        <link rel="canonical" href="https://tncnursing.site/pricing" />
         <meta property="og:title" content="Premium Plans & Pricing | Test Sagar" />
         <meta property="og:description" content="Flexible premium plans from 1 week to 2 years for unlimited ad-free mock tests and analytics. Use promo codes for extra discounts." />
-        <meta property="og:url" content="https://test.tncnursing.site/pricing" />
+        <meta property="og:url" content="https://tncnursing.site/pricing" />
         <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/8e5rLwi05IUp3glqNPHnHEmvlvs2/social-images/social-1766994335179-thumbnail.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <script type="application/ld+json">
@@ -275,19 +275,19 @@ const Pricing = () => {
             "@type": "WebPage",
             "name": "Premium Plans & Pricing",
             "description": "Subscription plans for Test Sagar Premium.",
-            "url": "https://test.tncnursing.site/pricing",
+            "url": "https://tncnursing.site/pricing",
             "breadcrumb": {
               "@type": "BreadcrumbList",
               "itemListElement": [{
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://test.tncnursing.site/"
+                "item": "https://tncnursing.site/"
               }, {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "Pricing",
-                "item": "https://test.tncnursing.site/pricing"
+                "item": "https://tncnursing.site/pricing"
               }]
             }
           })}
