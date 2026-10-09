@@ -22,6 +22,59 @@ Deno.serve(async (req) => {
     const user = u.user;
 
     const body = await req.json().catch(() => ({}));
+
+    // Admin-only: list all trials with privacy-safe repeat indicators.
+    if (body?.mode === "admin") {
+      const { data: isAdmin } = await admin.rpc("is_admin");
+      // is_admin() reads auth.uid() from the JWT, which is absent here; verify role directly.
+      let adminOk = false;
+      if (isAdmin === true) adminOk = true;
+      else {
+        const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+        adminOk = !!roleRow;
+      }
+      if (!adminOk) return json({ error: "Forbidden" }, 403);
+
+      const { data: trials, error: tErr } = await admin
+        .from("tnc_trials").select("*").order("created_at", { ascending: false }).limit(500);
+      if (tErr) throw tErr;
+      const rows = trials ?? [];
+      const ids = rows.map((r: any) => r.user_id);
+      const { data: profiles } = ids.length
+        ? await admin.from("user_profiles").select("user_id,name,email").in("user_id", ids)
+        : { data: [] };
+      const pmap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
+
+      const deviceCount = new Map<string, number>();
+      const netCount = new Map<string, number>();
+      for (const r of rows) {
+        if (r.device_id) deviceCount.set(r.device_id, (deviceCount.get(r.device_id) ?? 0) + 1);
+        if (r.ip_hash && r.ua_hash) {
+          const k = r.ip_hash + "|" + r.ua_hash;
+          netCount.set(k, (netCount.get(k) ?? 0) + 1);
+        }
+      }
+      const list = rows.map((r: any) => {
+        const p = pmap.get(r.user_id) as any;
+        const active = r.status === "active" && new Date(r.expires_at).getTime() > Date.now();
+        return {
+          userId: r.user_id,
+          name: p?.name ?? "Unknown",
+          email: p?.email ?? "",
+          status: active ? "active" : r.status,
+          startedAt: r.started_at,
+          expiresAt: r.expires_at,
+          reason: r.reason,
+          // Privacy-safe: only counts and shortened hashes, never raw IP/device data.
+          sharedDeviceCount: r.device_id ? deviceCount.get(r.device_id) ?? 0 : 0,
+          sharedNetworkCount: r.ip_hash && r.ua_hash ? netCount.get(r.ip_hash + "|" + r.ua_hash) ?? 0 : 0,
+          deviceTag: r.device_id ? String(r.device_id).slice(0, 8) : null,
+          networkTag: r.ip_hash ? String(r.ip_hash).slice(0, 8) : null,
+        };
+      });
+      return json({ trials: list });
+    }
+
     const rawDevice = typeof body?.deviceId === "string" ? body.deviceId.slice(0, 128) : "";
     const fp = typeof body?.fingerprint === "string" ? body.fingerprint.slice(0, 256) : "";
 
