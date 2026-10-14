@@ -97,6 +97,9 @@ const TncTests = () => {
   }, []);
   useEffect(() => { refreshCrmStatus(); }, [refreshCrmStatus]);
 
+  // When TNC is not connected we show a login gate instead of any (cached) tests.
+  const needsLogin = crmStatus !== null && !crmStatus.connected;
+
   const showingExamDirectory = !showTakenTests && !selectedGroup && !browseAll;
 
   useEffect(() => {
