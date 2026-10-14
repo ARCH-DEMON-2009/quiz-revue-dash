@@ -607,18 +607,18 @@ function latestByExamGroup(exams: any[]) {
 const EXAM_NUMBER_BATCH_SIZE = 1000;
 
 async function fetchExamsByNumbers(examNumbers: number[]) {
-  const exams: any[] = [];
+  const batches: Promise<any[]>[] = [];
   for (let i = 0; i < examNumbers.length; i += EXAM_NUMBER_BATCH_SIZE) {
-    const batch = await fetchFromCRM({
+    batches.push(fetchFromCRM({
       fn: "common_fn",
       se: "fe",
       sch: "t_ex",
       data: { json: "*", qu_refid: "*", examno: "*", row_id: "*", cr_on: "*" },
       cond: { examno: examNumbers.slice(i, i + EXAM_NUMBER_BATCH_SIZE) },
-    });
-    exams.push(...batch);
+    }));
   }
-  return exams;
+  // Requests still respect the CRM's shared throttle, but network waits overlap.
+  return (await Promise.all(batches)).flat();
 }
 
 async function listTestsLive(page: number, limit: number, search = "", category = "All", group = "", includeExamGroups = true, hiddenExamIds = new Set<string>()) {
@@ -926,58 +926,12 @@ async function listTestsFromCache(page: number, limit: number, search: string, c
 }
 
 async function listTests(page: number, limit: number, search = "", category = "All", group = "", includeExamGroups = true, hiddenExamIds = new Set<string>()) {
-  try {
-    const cached = await listTestsFromCache(page, limit, search, category, group, includeExamGroups, hiddenExamIds);
-    if (cached) {
-      refreshCatalogInBackground();
-      return cached;
-    }
-  } catch (error) {
-    console.error("TNC catalogue mirror unavailable", error);
-  }
-
-  try {
-    const live = await listTestsLive(page, limit, search, category, group, includeExamGroups, hiddenExamIds);
-    keepAlive(syncExams(live.all ?? []));
-    const { all: _all, ...rest } = live as any;
-    return { ...rest, cached: false };
-  } catch (e) {
-    console.error("CRM list failed, falling back to cache", e);
-    if (hiddenExamIds.size) throw e;
-    const admin = adminClient();
-    let query = admin.from("tnc_exam_cache").select("*", { count: "exact" });
-    const q = search.trim();
-    if (q) query = query.ilike("name", `%${q}%`);
-    // Filtering now uses the stored category column instead of name matching.
-    if (category !== "All") query = query.eq("category", category);
-    if (group) query = query.eq("group_name", group);
-    const { data, count } = await query
-      .order("crm_created_at", { ascending: false, nullsFirst: false })
-      .order("exam_no", { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
-    if (!data) throw e;
-    let categoryCounts: Record<string, number> | undefined;
-    try {
-      categoryCounts = await cachedCategoryCounts();
-    } catch { /* counts are non-critical */ }
-    let examGroups: Record<string, number> | undefined;
-    let examGroupLatest: Record<string, string | null> | undefined;
-    if (includeExamGroups) {
-      try {
-        ({ examGroups, examGroupLatest } = await cachedExamGroupStats());
-      } catch { /* group metadata is non-critical */ }
-    }
-    return {
-      quizzes: data.map(rowToExam),
-      total: count ?? data.length,
-      page,
-      limit,
-      categoryCounts,
-      examGroups,
-      examGroupLatest,
-      cached: true,
-    };
-  }
+  // Never return the offline mirror as a live catalogue, even on CRM failure.
+  await getActiveCrmToken();
+  const live = await listTestsLive(page, limit, search, category, group, includeExamGroups, hiddenExamIds);
+  keepAlive(syncExams(live.all ?? []));
+  const { all: _all, ...rest } = live;
+  return { ...rest, cached: false };
 }
 
 async function getTest(examId: string) {
@@ -1347,7 +1301,7 @@ Deno.serve(async (req) => {
     if (action === "crmSessionStatus") {
       const s = await readSession(true);
       const connected = s?.status === "active" || (!s && !!Deno.env.get("TNC_CRM_TOKEN"));
-      return json({ connected, studentName: s?.studentName ?? null, mobileMasked: s?.mobileMasked ?? null, connectedAt: s?.connectedAt ?? null });
+      return json({ connected, connectedAt: s?.connectedAt ?? null });
     }
 
     if (action === "crmLogin" || action === "crmSendOtp" || action === "crmResetAndLogin") {

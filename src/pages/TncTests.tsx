@@ -79,7 +79,6 @@ const TncTests = () => {
   });
   const [error, setError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [cached, setCached] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [examGroups, setExamGroups] = useState<Record<string, number>>({});
   const [examGroupLatest, setExamGroupLatest] = useState<Record<string, string | null>>({});
@@ -93,7 +92,11 @@ const TncTests = () => {
   const [crmStatus, setCrmStatus] = useState<TncCrmStatus | null>(null);
   const [tncLoginOpen, setTncLoginOpen] = useState(false);
   const refreshCrmStatus = useCallback(() => {
-    getTncCrmStatus().then(setCrmStatus).catch(() => setCrmStatus(null));
+    getTncCrmStatus().then(setCrmStatus).catch(() => {
+      setErrorMsg("Couldn't check the TNC connection. Please try again.");
+      setError(true);
+      setLoading(false);
+    });
   }, []);
   useEffect(() => { refreshCrmStatus(); }, [refreshCrmStatus]);
 
@@ -159,11 +162,13 @@ const TncTests = () => {
 
   const loadTests = useCallback(() => {
     const currentRequestId = ++requestId.current;
+    if (crmStatus === null) return;
     if (needsLogin) {
       // Not connected to TNC: don't show cached tests, ask for a login instead.
       setQuizzes([]);
       setTotal(0);
-      setCached(false);
+      setExamGroups({});
+      setExamGroupLatest({});
       setError(false);
       setLoading(false);
       setLoadingMore(false);
@@ -180,19 +185,25 @@ const TncTests = () => {
           // Connected but the live fetch failed: never show cached tests.
           setQuizzes([]);
           setTotal(0);
-          setCached(false);
           setErrorMsg("Couldn't load the live test series from TNC. Please try again in a moment.");
           setError(true);
           return;
         }
         setQuizzes((current) => appendPage ? [...current, ...res.quizzes] : res.quizzes);
         setTotal(res.total);
-        setCached(false);
         if (res.examGroups) setExamGroups(res.examGroups);
         if (res.examGroupLatest) setExamGroupLatest(res.examGroupLatest);
       })
       .catch((e) => {
         if (currentRequestId !== requestId.current) return;
+        if (e?.code === "TNC_LOGIN_REQUIRED") {
+          setCrmStatus({ connected: false, connectedAt: null });
+          setQuizzes([]);
+          setExamGroups({});
+          setExamGroupLatest({});
+          setTotal(0);
+          return;
+        }
         console.error(e);
         const raw = String(e?.message ?? "");
         // Distinguish a TNC provider outage from a local network problem so the
@@ -215,7 +226,7 @@ const TncTests = () => {
         setLoading(false);
         setLoadingMore(false);
       });
-  }, [browseAll, debouncedSearch, page, selectedGroup, needsLogin]);
+  }, [browseAll, debouncedSearch, page, selectedGroup, needsLogin, crmStatus]);
 
   useEffect(() => {
     if (!showTakenTests) loadTests();
@@ -300,7 +311,7 @@ const TncTests = () => {
       {crmStatus && (
         <div className="container mx-auto px-4 pt-3">
           {crmStatus.connected ? (
-            <p className="text-xs text-muted-foreground">● TNC live connected{crmStatus.studentName ? ` (via ${crmStatus.studentName})` : ""}</p>
+            <p className="text-xs text-muted-foreground">● TNC live data is connected</p>
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
               <span>TNC needs a login to load questions. One student logging in unlocks it for everyone.</span>
@@ -309,7 +320,7 @@ const TncTests = () => {
           )}
         </div>
       )}
-      <TncLoginDialog open={tncLoginOpen} onOpenChange={setTncLoginOpen} onConnected={() => { refreshCrmStatus(); }} />
+      <TncLoginDialog open={tncLoginOpen} onOpenChange={setTncLoginOpen} onConnected={() => { setPage(1); setCrmStatus({ connected: true, connectedAt: null }); }} />
       <TncTrialBanner />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
@@ -529,7 +540,7 @@ const TncTests = () => {
             <p className="max-w-md text-muted-foreground">
               {errorMsg || "Couldn't load the test series. Check your connection and try again."}
             </p>
-            <Button className="gap-2" onClick={loadTests}>
+            <Button className="gap-2" onClick={() => crmStatus === null ? refreshCrmStatus() : loadTests()}>
               <RefreshCw className="h-4 w-4" /> Retry
             </Button>
           </Card>

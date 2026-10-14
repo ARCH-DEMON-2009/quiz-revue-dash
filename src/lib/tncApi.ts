@@ -90,8 +90,16 @@ async function call<T>(body: Record<string, unknown>): Promise<T> {
   return data as T;
 }
 
+// Share only concurrent identical requests; never reuse a saved catalogue.
+const pendingTestLists = new Map<string, Promise<TncListResponse>>();
 export function fetchTncTests(page: number, limit = 20, search = "", category = "All", group = "", includeExamGroups = true) {
-  return call<TncListResponse>({ action: "tests", page, limit, search, category, group, includeExamGroups });
+  const body = { action: "tests", page, limit, search, category, group, includeExamGroups };
+  const key = JSON.stringify(body);
+  const pending = pendingTestLists.get(key);
+  if (pending) return pending;
+  const request = call<TncListResponse>(body).finally(() => pendingTestLists.delete(key));
+  pendingTestLists.set(key, request);
+  return request;
 }
 
 export function fetchTncTest(examId: string) {
@@ -388,7 +396,7 @@ export function getCategory(name = ""): string {
 }
 
 // ---------- Shared TNC login ----------
-export interface TncCrmStatus { connected: boolean; studentName: string | null; mobileMasked: string | null; connectedAt: string | null }
+export interface TncCrmStatus { connected: boolean; connectedAt: string | null }
 export const getTncCrmStatus = () => call<TncCrmStatus>({ action: "crmSessionStatus" });
 export const loginTncCrm = (mob: string, pass: string) =>
   call<{ connected?: boolean; otpRequired?: boolean; validFor?: number }>({ action: "crmLogin", mob, pass });
