@@ -1,3 +1,4 @@
+import TncLoginDialog from "@/components/TncLoginDialog";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -137,6 +138,7 @@ const TncQuiz = () => {
   const [exam, setExam] = useState<TncExamWithQuestions | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [tncLoginOpen, setTncLoginOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("instructions");
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -185,6 +187,9 @@ const TncQuiz = () => {
           setIsAuthed(false);
           setAuthChecked(true);
           toast.error("Please log in to access this test.");
+        } else if (e instanceof TncApiError && e.code === "TNC_LOGIN_REQUIRED") {
+          setLoadError(true);
+          setTncLoginOpen(true);
         } else {
           setLoadError(true);
           toast.error("Failed to load this test. Please try again.");
@@ -567,9 +572,11 @@ const TncQuiz = () => {
                 <RefreshCw className="h-4 w-4" /> Retry
               </Button>
             )}
+            {loadError && <Button variant="secondary" onClick={() => setTncLoginOpen(true)}>Connect TNC</Button>}
             <Button onClick={() => navigate("/tnc-tests")}>Back to Test Series</Button>
           </div>
         </div>
+        <TncLoginDialog open={tncLoginOpen} onOpenChange={setTncLoginOpen} onConnected={loadExam} />
       </div>
     );
   }

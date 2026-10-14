@@ -1,3 +1,5 @@
+import TncLoginDialog from "@/components/TncLoginDialog";
+import { getTncCrmStatus, type TncCrmStatus } from "@/lib/tncApi";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -88,6 +90,12 @@ const TncTests = () => {
   const [takenError, setTakenError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const requestId = useRef(0);
+  const [crmStatus, setCrmStatus] = useState<TncCrmStatus | null>(null);
+  const [tncLoginOpen, setTncLoginOpen] = useState(false);
+  const refreshCrmStatus = useCallback(() => {
+    getTncCrmStatus().then(setCrmStatus).catch(() => setCrmStatus(null));
+  }, []);
+  useEffect(() => { refreshCrmStatus(); }, [refreshCrmStatus]);
 
   const showingExamDirectory = !showTakenTests && !selectedGroup && !browseAll;
 
