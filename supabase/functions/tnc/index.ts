@@ -1410,7 +1410,11 @@ Deno.serve(async (req) => {
       const examId = body.examId ?? url.searchParams.get("examId");
       if (!examId) return json({ error: "examId required" }, 400);
       const result = await getTest(String(examId));
-      if (!result) return json({ error: "Not found" }, 404);
+      if (!result) {
+        const s = await readSession(true);
+        if (s?.status !== "active") return json({ error: "TNC login required", code: "TNC_LOGIN_REQUIRED" }, 401);
+        return json({ error: "Not found" }, 404);
+      }
 
       // SECURITY: premium-gated exams require either an active premium plan OR a
       // valid free access verification (same ad-verify model as the main site).
