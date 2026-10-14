@@ -501,6 +501,16 @@ const TncTests = () => {
               })}
             </div>
           )
+        ) : needsLogin ? (
+          <Card className="flex flex-col items-center gap-4 p-12 text-center">
+            <AlertCircle className="h-10 w-10 text-destructive" />
+            <h2 className="text-lg font-semibold text-foreground">TNC login required</h2>
+            <p className="max-w-md text-muted-foreground">
+              Test series are loaded live from TNC. One student logging in connects it for everyone —
+              no tests are shown until TNC is connected.
+            </p>
+            <Button className="gap-2" onClick={() => setTncLoginOpen(true)}>Connect TNC</Button>
+          </Card>
         ) : loading ? (
           <div aria-busy="true" aria-live="polite" className="space-y-5">
             <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
