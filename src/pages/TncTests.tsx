@@ -159,6 +159,16 @@ const TncTests = () => {
 
   const loadTests = useCallback(() => {
     const currentRequestId = ++requestId.current;
+    if (needsLogin) {
+      // Not connected to TNC: don't show cached tests, ask for a login instead.
+      setQuizzes([]);
+      setTotal(0);
+      setCached(false);
+      setError(false);
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
     const appendPage = page > 1;
     setLoading(!appendPage);
     setLoadingMore(appendPage);
@@ -166,9 +176,18 @@ const TncTests = () => {
     fetchTncTests(page, LIMIT, debouncedSearch, "All", selectedGroup, !browseAll)
       .then((res) => {
         if (currentRequestId !== requestId.current) return;
+        if (res.cached) {
+          // Connected but the live fetch failed: never show cached tests.
+          setQuizzes([]);
+          setTotal(0);
+          setCached(false);
+          setErrorMsg("Couldn't load the live test series from TNC. Please try again in a moment.");
+          setError(true);
+          return;
+        }
         setQuizzes((current) => appendPage ? [...current, ...res.quizzes] : res.quizzes);
         setTotal(res.total);
-        setCached(!!res.cached);
+        setCached(false);
         if (res.examGroups) setExamGroups(res.examGroups);
         if (res.examGroupLatest) setExamGroupLatest(res.examGroupLatest);
       })
