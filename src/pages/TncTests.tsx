@@ -97,6 +97,9 @@ const TncTests = () => {
   }, []);
   useEffect(() => { refreshCrmStatus(); }, [refreshCrmStatus]);
 
+  // When TNC is not connected we show a login gate instead of any (cached) tests.
+  const needsLogin = crmStatus !== null && !crmStatus.connected;
+
   const showingExamDirectory = !showTakenTests && !selectedGroup && !browseAll;
 
   useEffect(() => {
@@ -156,6 +159,16 @@ const TncTests = () => {
 
   const loadTests = useCallback(() => {
     const currentRequestId = ++requestId.current;
+    if (needsLogin) {
+      // Not connected to TNC: don't show cached tests, ask for a login instead.
+      setQuizzes([]);
+      setTotal(0);
+      setCached(false);
+      setError(false);
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
     const appendPage = page > 1;
     setLoading(!appendPage);
     setLoadingMore(appendPage);
@@ -163,9 +176,18 @@ const TncTests = () => {
     fetchTncTests(page, LIMIT, debouncedSearch, "All", selectedGroup, !browseAll)
       .then((res) => {
         if (currentRequestId !== requestId.current) return;
+        if (res.cached) {
+          // Connected but the live fetch failed: never show cached tests.
+          setQuizzes([]);
+          setTotal(0);
+          setCached(false);
+          setErrorMsg("Couldn't load the live test series from TNC. Please try again in a moment.");
+          setError(true);
+          return;
+        }
         setQuizzes((current) => appendPage ? [...current, ...res.quizzes] : res.quizzes);
         setTotal(res.total);
-        setCached(!!res.cached);
+        setCached(false);
         if (res.examGroups) setExamGroups(res.examGroups);
         if (res.examGroupLatest) setExamGroupLatest(res.examGroupLatest);
       })
@@ -193,7 +215,7 @@ const TncTests = () => {
         setLoading(false);
         setLoadingMore(false);
       });
-  }, [browseAll, debouncedSearch, page, selectedGroup]);
+  }, [browseAll, debouncedSearch, page, selectedGroup, needsLogin]);
 
   useEffect(() => {
     if (!showTakenTests) loadTests();
@@ -287,7 +309,7 @@ const TncTests = () => {
           )}
         </div>
       )}
-      <TncLoginDialog open={tncLoginOpen} onOpenChange={setTncLoginOpen} onConnected={refreshCrmStatus} />
+      <TncLoginDialog open={tncLoginOpen} onOpenChange={setTncLoginOpen} onConnected={() => { refreshCrmStatus(); }} />
       <TncTrialBanner />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
@@ -479,6 +501,16 @@ const TncTests = () => {
               })}
             </div>
           )
+        ) : needsLogin ? (
+          <Card className="flex flex-col items-center gap-4 p-12 text-center">
+            <AlertCircle className="h-10 w-10 text-destructive" />
+            <h2 className="text-lg font-semibold text-foreground">TNC login required</h2>
+            <p className="max-w-md text-muted-foreground">
+              Test series are loaded live from TNC. One student logging in connects it for everyone —
+              no tests are shown until TNC is connected.
+            </p>
+            <Button className="gap-2" onClick={() => setTncLoginOpen(true)}>Connect TNC</Button>
+          </Card>
         ) : loading ? (
           <div aria-busy="true" aria-live="polite" className="space-y-5">
             <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
@@ -505,17 +537,6 @@ const TncTests = () => {
           <div className="py-16 text-center text-muted-foreground">No tests found.</div>
         ) : (
           <>
-          {cached && (
-            <Card className="mb-4 flex items-start gap-3 border-amber-500/40 bg-amber-500/10 p-4">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
-              <p className="text-sm text-muted-foreground">
-                The TNC provider is temporarily unreachable, so you're seeing your saved test
-                series. Newly added tests may be missing until the provider is back — everything
-                shown here can still be attempted normally.
-              </p>
-            </Card>
-          )}
-
           {showingExamDirectory ? (
             examGroupCards.length === 0 ? (
               <div className="py-16 text-center text-muted-foreground">No exams match your search.</div>
