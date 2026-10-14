@@ -215,7 +215,7 @@ const TncTests = () => {
         setLoading(false);
         setLoadingMore(false);
       });
-  }, [browseAll, debouncedSearch, page, selectedGroup]);
+  }, [browseAll, debouncedSearch, page, selectedGroup, needsLogin]);
 
   useEffect(() => {
     if (!showTakenTests) loadTests();
@@ -309,7 +309,7 @@ const TncTests = () => {
           )}
         </div>
       )}
-      <TncLoginDialog open={tncLoginOpen} onOpenChange={setTncLoginOpen} onConnected={refreshCrmStatus} />
+      <TncLoginDialog open={tncLoginOpen} onOpenChange={setTncLoginOpen} onConnected={() => { refreshCrmStatus(); }} />
       <TncTrialBanner />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
