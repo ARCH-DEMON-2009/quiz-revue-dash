@@ -1608,6 +1608,7 @@ Deno.serve(async (req) => {
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("tnc error:", e);
+    if ((e as any)?.code === "TNC_LOGIN_REQUIRED") return json({ error: "TNC login required", code: "TNC_LOGIN_REQUIRED" }, 401);
     return json({ error: e instanceof Error ? e.message : "Server error" }, 500);
   }
 });
