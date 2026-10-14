@@ -41,23 +41,84 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function crmToken(): string {
-  const token = Deno.env.get("TNC_CRM_TOKEN")?.trim();
-  if (!token) {
-    throw new Error(
-      "CRM login token is not configured. Log in to the CRM in a browser, copy the _token value from localStorage key _au, and save it as the TNC_CRM_TOKEN secret.",
-    );
+// ---------- Shared CRM session (one student login unlocks TNC for everyone) ----------
+const SESSION_KEY = "tnc_crm_session";
+type CrmSession = { token: string; status: "active" | "expired"; studentName?: string; mobileMasked?: string; connectedAt?: string; expiredAt?: string };
+let sessionCache: { s: CrmSession | null; at: number } | null = null;
+
+async function readSession(force = false): Promise<CrmSession | null> {
+  if (!force && sessionCache && Date.now() - sessionCache.at < 30_000) return sessionCache.s;
+  const { data } = await adminClient().from("system_config").select("config_value").eq("config_key", SESSION_KEY).maybeSingle();
+  let s: CrmSession | null = null;
+  try { s = data?.config_value ? JSON.parse(data.config_value) : null; } catch { s = null; }
+  sessionCache = { s, at: Date.now() };
+  return s;
+}
+
+async function writeSession(s: CrmSession) {
+  await adminClient().from("system_config").upsert(
+    { config_key: SESSION_KEY, config_value: JSON.stringify(s), description: "Shared TNC CRM login session (service role only)" },
+    { onConflict: "config_key" },
+  );
+  sessionCache = { s, at: Date.now() };
+}
+
+async function markSessionExpired(badToken: string) {
+  const s = await readSession(true);
+  if (s && s.token === badToken && s.status === "active") {
+    await writeSession({ ...s, status: "expired", expiredAt: new Date().toISOString() });
   }
-  return token;
+}
+
+async function getActiveCrmToken(): Promise<string> {
+  const s = await readSession();
+  if (s?.status === "active" && s.token) return s.token;
+  const env = Deno.env.get("TNC_CRM_TOKEN")?.trim();
+  if (env && !s) return env;
+  const err = new Error("TNC login required") as Error & { code?: string };
+  err.code = "TNC_LOGIN_REQUIRED";
+  throw err;
+}
+
+function loginRequiredError() {
+  const err = new Error("TNC login required") as Error & { code?: string };
+  err.code = "TNC_LOGIN_REQUIRED";
+  return err;
+}
+
+/** Raw CRM call (used for login/OTP). Returns parsed body; never throws on status:1. */
+async function crmRaw(se: string, data: Record<string, unknown>, token?: string) {
+  const res = await fetch(CRM_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ payload: JSON.stringify({ fn: "common_fn", se, data }) }),
+    signal: AbortSignal.timeout(CRM_REQUEST_TIMEOUT_MS),
+  });
+  const body = await res.json().catch(() => ({ status: 1, msg: `CRM error ${res.status}` }));
+  return body as { status?: number; msg?: string; token?: string; otp_token?: string; user?: any; valid_for?: number; resend_left?: number };
+}
+
+function maskMobile(m: string) {
+  return m.length > 4 ? `${"*".repeat(m.length - 4)}${m.slice(-4)}` : "****";
+}
+
+async function saveLogin(mob: string, r: { token?: string; user?: any }) {
+  let name: string | undefined;
+  try {
+    const j = typeof r.user?.json === "string" ? JSON.parse(r.user.json) : r.user?.json;
+    name = String(j?._us_na ?? "").split(" ")[0] || undefined;
+  } catch { /* ignore */ }
+  await writeSession({ token: r.token!, status: "active", studentName: name, mobileMasked: maskMobile(mob), connectedAt: new Date().toISOString() });
 }
 
 async function fetchFromCRM(payload: Record<string, unknown>) {
   await waitForCrmRequestSlot();
+  const token = await getActiveCrmToken();
   const res = await fetch(CRM_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${crmToken()}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ payload: JSON.stringify(payload) }),
     signal: AbortSignal.timeout(CRM_REQUEST_TIMEOUT_MS),
@@ -73,13 +134,16 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
       crmCooldownUntil = Math.max(crmCooldownUntil, Date.now() + Math.min(retryAfterMs, 60_000));
     }
     if (res.status === 401) {
-      throw new Error(
-        "CRM login token expired or invalid. Log in to the CRM again in a browser and update the TNC_CRM_TOKEN secret with the new _token value.",
-      );
+      await markSessionExpired(token);
+      throw loginRequiredError();
     }
     throw new Error(`CRM error ${res.status}`);
   }
   const data = await res.json();
+  if (!Array.isArray(data) && data?.status === 1 && /login|token|expire/i.test(String(data?.msg ?? ""))) {
+    await markSessionExpired(token);
+    throw loginRequiredError();
+  }
   return Array.isArray(data) ? data : [];
 }
 
