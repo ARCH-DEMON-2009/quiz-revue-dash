@@ -386,3 +386,12 @@ export function examCategoryReason(exam: TncExam): string {
 export function getCategory(name = ""): string {
   return classifyCategory(name).category;
 }
+
+// ---------- Shared TNC login ----------
+export interface TncCrmStatus { connected: boolean; studentName: string | null; mobileMasked: string | null; connectedAt: string | null }
+export const getTncCrmStatus = () => call<TncCrmStatus>({ action: "crmSessionStatus" });
+export const loginTncCrm = (mob: string, pass: string) =>
+  call<{ connected?: boolean; otpRequired?: boolean; validFor?: number }>({ action: "crmLogin", mob, pass });
+export const sendTncCrmOtp = (mob: string) => call<{ sent: boolean; validFor: number }>({ action: "crmSendOtp", mob });
+export const resetAndLoginTncCrm = (mob: string, pass: string, otp: string) =>
+  call<{ connected: boolean }>({ action: "crmResetAndLogin", mob, pass, otp });

@@ -41,23 +41,84 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function crmToken(): string {
-  const token = Deno.env.get("TNC_CRM_TOKEN")?.trim();
-  if (!token) {
-    throw new Error(
-      "CRM login token is not configured. Log in to the CRM in a browser, copy the _token value from localStorage key _au, and save it as the TNC_CRM_TOKEN secret.",
-    );
+// ---------- Shared CRM session (one student login unlocks TNC for everyone) ----------
+const SESSION_KEY = "tnc_crm_session";
+type CrmSession = { token: string; status: "active" | "expired"; studentName?: string; mobileMasked?: string; connectedAt?: string; expiredAt?: string };
+let sessionCache: { s: CrmSession | null; at: number } | null = null;
+
+async function readSession(force = false): Promise<CrmSession | null> {
+  if (!force && sessionCache && Date.now() - sessionCache.at < 30_000) return sessionCache.s;
+  const { data } = await adminClient().from("system_config").select("config_value").eq("config_key", SESSION_KEY).maybeSingle();
+  let s: CrmSession | null = null;
+  try { s = data?.config_value ? JSON.parse(data.config_value) : null; } catch { s = null; }
+  sessionCache = { s, at: Date.now() };
+  return s;
+}
+
+async function writeSession(s: CrmSession) {
+  await adminClient().from("system_config").upsert(
+    { config_key: SESSION_KEY, config_value: JSON.stringify(s), description: "Shared TNC CRM login session (service role only)" },
+    { onConflict: "config_key" },
+  );
+  sessionCache = { s, at: Date.now() };
+}
+
+async function markSessionExpired(badToken: string) {
+  const s = await readSession(true);
+  if (s && s.token === badToken && s.status === "active") {
+    await writeSession({ ...s, status: "expired", expiredAt: new Date().toISOString() });
   }
-  return token;
+}
+
+async function getActiveCrmToken(): Promise<string> {
+  const s = await readSession();
+  if (s?.status === "active" && s.token) return s.token;
+  const env = Deno.env.get("TNC_CRM_TOKEN")?.trim();
+  if (env && !s) return env;
+  const err = new Error("TNC login required") as Error & { code?: string };
+  err.code = "TNC_LOGIN_REQUIRED";
+  throw err;
+}
+
+function loginRequiredError() {
+  const err = new Error("TNC login required") as Error & { code?: string };
+  err.code = "TNC_LOGIN_REQUIRED";
+  return err;
+}
+
+/** Raw CRM call (used for login/OTP). Returns parsed body; never throws on status:1. */
+async function crmRaw(se: string, data: Record<string, unknown>, token?: string) {
+  const res = await fetch(CRM_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify({ payload: JSON.stringify({ fn: "common_fn", se, data }) }),
+    signal: AbortSignal.timeout(CRM_REQUEST_TIMEOUT_MS),
+  });
+  const body = await res.json().catch(() => ({ status: 1, msg: `CRM error ${res.status}` }));
+  return body as { status?: number; msg?: string; token?: string; otp_token?: string; user?: any; valid_for?: number; resend_left?: number };
+}
+
+function maskMobile(m: string) {
+  return m.length > 4 ? `${"*".repeat(m.length - 4)}${m.slice(-4)}` : "****";
+}
+
+async function saveLogin(mob: string, r: { token?: string; user?: any }) {
+  let name: string | undefined;
+  try {
+    const j = typeof r.user?.json === "string" ? JSON.parse(r.user.json) : r.user?.json;
+    name = String(j?._us_na ?? "").split(" ")[0] || undefined;
+  } catch { /* ignore */ }
+  await writeSession({ token: r.token!, status: "active", studentName: name, mobileMasked: maskMobile(mob), connectedAt: new Date().toISOString() });
 }
 
 async function fetchFromCRM(payload: Record<string, unknown>) {
   await waitForCrmRequestSlot();
+  const token = await getActiveCrmToken();
   const res = await fetch(CRM_ENDPOINT, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${crmToken()}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ payload: JSON.stringify(payload) }),
     signal: AbortSignal.timeout(CRM_REQUEST_TIMEOUT_MS),
@@ -73,13 +134,16 @@ async function fetchFromCRM(payload: Record<string, unknown>) {
       crmCooldownUntil = Math.max(crmCooldownUntil, Date.now() + Math.min(retryAfterMs, 60_000));
     }
     if (res.status === 401) {
-      throw new Error(
-        "CRM login token expired or invalid. Log in to the CRM again in a browser and update the TNC_CRM_TOKEN secret with the new _token value.",
-      );
+      await markSessionExpired(token);
+      throw loginRequiredError();
     }
     throw new Error(`CRM error ${res.status}`);
   }
   const data = await res.json();
+  if (!Array.isArray(data) && data?.status === 1 && /login|token|expire/i.test(String(data?.msg ?? ""))) {
+    await markSessionExpired(token);
+    throw loginRequiredError();
+  }
   return Array.isArray(data) ? data : [];
 }
 
@@ -1279,6 +1343,58 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ---------- Shared TNC login ----------
+    if (action === "crmSessionStatus") {
+      const s = await readSession(true);
+      const connected = s?.status === "active" || (!s && !!Deno.env.get("TNC_CRM_TOKEN"));
+      return json({ connected, studentName: s?.studentName ?? null, mobileMasked: s?.mobileMasked ?? null, connectedAt: s?.connectedAt ?? null });
+    }
+
+    if (action === "crmLogin" || action === "crmSendOtp" || action === "crmResetAndLogin") {
+      const user = await getAuthUser(req);
+      if (!user) return json({ error: "Please sign in to Test Sagar first.", code: "auth_required" }, 401);
+      const mob = String(body.mob ?? "").replace(/\D/g, "");
+      if (!/^\d{10}$/.test(mob)) return json({ error: "Enter a valid 10-digit mobile number." }, 400);
+      const pass = String(body.pass ?? "");
+
+      if (action === "crmSendOtp") {
+        const r = await crmRaw("se_ot", { mob });
+        if (r.status !== 0) return json({ error: r.msg ?? "Could not send OTP." }, 400);
+        return json({ sent: true, validFor: r.valid_for ?? 10, resendLeft: r.resend_left ?? null });
+      }
+
+      if (!pass || pass.length > 200) return json({ error: "Enter your TNC password." }, 400);
+
+      if (action === "crmLogin") {
+        const r = await crmRaw("lo_us", { mob, pass });
+        if (r.status === 0 && r.token) {
+          await saveLogin(mob, r);
+          return json({ connected: true });
+        }
+        if (/already logged/i.test(r.msg ?? "")) {
+          const o = await crmRaw("se_ot", { mob });
+          if (o.status !== 0) return json({ error: o.msg ?? "Could not send OTP.", code: "device_conflict" }, 400);
+          return json({ otpRequired: true, validFor: o.valid_for ?? 10, resendLeft: o.resend_left ?? null });
+        }
+        return json({ error: r.msg ?? "Login failed." }, 400);
+      }
+
+      // crmResetAndLogin: verify OTP -> reset device -> login -> save token
+      const otp = String(body.otp ?? "").replace(/\D/g, "");
+      if (!/^\d{4,8}$/.test(otp)) return json({ error: "Enter the OTP sent to your phone." }, 400);
+      const v = await crmRaw("ve_ot", { mob, otp });
+      if (v.status !== 0) return json({ error: v.msg ?? "OTP is incorrect or expired." }, 400);
+      let reset = await crmRaw("re_de", { mob }, v.otp_token);
+      if (reset.status !== 0) reset = await crmRaw("re_de", { mob });
+      if (reset.status !== 0) return json({ error: reset.msg ?? "Device reset failed." }, 400);
+      const r = await crmRaw("lo_us", { mob, pass });
+      if (r.status === 0 && r.token) {
+        await saveLogin(mob, r);
+        return json({ connected: true });
+      }
+      return json({ error: r.msg ?? "Login failed after device reset." }, 400);
+    }
+
     if (action === "tests") {
       const page = Math.max(1, parseInt(String(body.page ?? url.searchParams.get("page") ?? "1")) || 1);
       const limit = Math.min(50, Math.max(1, parseInt(String(body.limit ?? url.searchParams.get("limit") ?? "20")) || 20));
@@ -1294,7 +1410,11 @@ Deno.serve(async (req) => {
       const examId = body.examId ?? url.searchParams.get("examId");
       if (!examId) return json({ error: "examId required" }, 400);
       const result = await getTest(String(examId));
-      if (!result) return json({ error: "Not found" }, 404);
+      if (!result) {
+        const s = await readSession(true);
+        if (s?.status !== "active") return json({ error: "TNC login required", code: "TNC_LOGIN_REQUIRED" }, 401);
+        return json({ error: "Not found" }, 404);
+      }
 
       // SECURITY: premium-gated exams require either an active premium plan OR a
       // valid free access verification (same ad-verify model as the main site).
@@ -1488,6 +1608,7 @@ Deno.serve(async (req) => {
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("tnc error:", e);
+    if ((e as any)?.code === "TNC_LOGIN_REQUIRED") return json({ error: "TNC login required", code: "TNC_LOGIN_REQUIRED" }, 401);
     return json({ error: e instanceof Error ? e.message : "Server error" }, 500);
   }
 });

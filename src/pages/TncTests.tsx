@@ -1,3 +1,5 @@
+import TncLoginDialog from "@/components/TncLoginDialog";
+import { getTncCrmStatus, type TncCrmStatus } from "@/lib/tncApi";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -88,6 +90,12 @@ const TncTests = () => {
   const [takenError, setTakenError] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const requestId = useRef(0);
+  const [crmStatus, setCrmStatus] = useState<TncCrmStatus | null>(null);
+  const [tncLoginOpen, setTncLoginOpen] = useState(false);
+  const refreshCrmStatus = useCallback(() => {
+    getTncCrmStatus().then(setCrmStatus).catch(() => setCrmStatus(null));
+  }, []);
+  useEffect(() => { refreshCrmStatus(); }, [refreshCrmStatus]);
 
   const showingExamDirectory = !showTakenTests && !selectedGroup && !browseAll;
 
@@ -267,6 +275,19 @@ const TncTests = () => {
         </script>
       </Helmet>
       <NavigationHeader />
+      {crmStatus && (
+        <div className="container mx-auto px-4 pt-3">
+          {crmStatus.connected ? (
+            <p className="text-xs text-muted-foreground">● TNC live connected{crmStatus.studentName ? ` (via ${crmStatus.studentName})` : ""}</p>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
+              <span>TNC needs a login to load questions. One student logging in unlocks it for everyone.</span>
+              <Button size="sm" onClick={() => setTncLoginOpen(true)}>Connect TNC</Button>
+            </div>
+          )}
+        </div>
+      )}
+      <TncLoginDialog open={tncLoginOpen} onOpenChange={setTncLoginOpen} onConnected={refreshCrmStatus} />
       <TncTrialBanner />
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
