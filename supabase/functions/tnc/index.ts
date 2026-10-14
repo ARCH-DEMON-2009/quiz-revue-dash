@@ -1343,6 +1343,58 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ---------- Shared TNC login ----------
+    if (action === "crmSessionStatus") {
+      const s = await readSession(true);
+      const connected = s?.status === "active" || (!s && !!Deno.env.get("TNC_CRM_TOKEN"));
+      return json({ connected, studentName: s?.studentName ?? null, mobileMasked: s?.mobileMasked ?? null, connectedAt: s?.connectedAt ?? null });
+    }
+
+    if (action === "crmLogin" || action === "crmSendOtp" || action === "crmResetAndLogin") {
+      const user = await getAuthUser(req);
+      if (!user) return json({ error: "Please sign in to Test Sagar first.", code: "auth_required" }, 401);
+      const mob = String(body.mob ?? "").replace(/\D/g, "");
+      if (!/^\d{10}$/.test(mob)) return json({ error: "Enter a valid 10-digit mobile number." }, 400);
+      const pass = String(body.pass ?? "");
+
+      if (action === "crmSendOtp") {
+        const r = await crmRaw("se_ot", { mob });
+        if (r.status !== 0) return json({ error: r.msg ?? "Could not send OTP." }, 400);
+        return json({ sent: true, validFor: r.valid_for ?? 10, resendLeft: r.resend_left ?? null });
+      }
+
+      if (!pass || pass.length > 200) return json({ error: "Enter your TNC password." }, 400);
+
+      if (action === "crmLogin") {
+        const r = await crmRaw("lo_us", { mob, pass });
+        if (r.status === 0 && r.token) {
+          await saveLogin(mob, r);
+          return json({ connected: true });
+        }
+        if (/already logged/i.test(r.msg ?? "")) {
+          const o = await crmRaw("se_ot", { mob });
+          if (o.status !== 0) return json({ error: o.msg ?? "Could not send OTP.", code: "device_conflict" }, 400);
+          return json({ otpRequired: true, validFor: o.valid_for ?? 10, resendLeft: o.resend_left ?? null });
+        }
+        return json({ error: r.msg ?? "Login failed." }, 400);
+      }
+
+      // crmResetAndLogin: verify OTP -> reset device -> login -> save token
+      const otp = String(body.otp ?? "").replace(/\D/g, "");
+      if (!/^\d{4,8}$/.test(otp)) return json({ error: "Enter the OTP sent to your phone." }, 400);
+      const v = await crmRaw("ve_ot", { mob, otp });
+      if (v.status !== 0) return json({ error: v.msg ?? "OTP is incorrect or expired." }, 400);
+      let reset = await crmRaw("re_de", { mob }, v.otp_token);
+      if (reset.status !== 0) reset = await crmRaw("re_de", { mob });
+      if (reset.status !== 0) return json({ error: reset.msg ?? "Device reset failed." }, 400);
+      const r = await crmRaw("lo_us", { mob, pass });
+      if (r.status === 0 && r.token) {
+        await saveLogin(mob, r);
+        return json({ connected: true });
+      }
+      return json({ error: r.msg ?? "Login failed after device reset." }, 400);
+    }
+
     if (action === "tests") {
       const page = Math.max(1, parseInt(String(body.page ?? url.searchParams.get("page") ?? "1")) || 1);
       const limit = Math.min(50, Math.max(1, parseInt(String(body.limit ?? url.searchParams.get("limit") ?? "20")) || 20));
