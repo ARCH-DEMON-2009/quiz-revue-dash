@@ -1,6 +1,6 @@
 # Roadmap
-- [ ] Hide the connecting student's identity in TNC status
-- [ ] Reduce unnecessary TNC loading work and verify connection states
+- [x] Hide the connecting student's identity in TNC status
+- [x] Reduce unnecessary TNC loading work and verify connection states
 - [x] ads.txt with pub-1281450261924955 (already present)
 - [x] Move site address to tncnursing.site
 - [x] TNC quiz: swipe, paper mode, tactile options, keyboard shortcuts, confetti/sound, story card
