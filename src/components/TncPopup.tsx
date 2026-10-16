@@ -43,7 +43,10 @@ const TncPopup = () => {
           <Target className="h-7 w-7 text-primary" />
         </div>
 
-        <h2 className="text-2xl font-bold text-foreground">🎯 TNC Test Series</h2>
+        <h2 className="text-2xl font-bold text-foreground">
+          <Target className="mr-2 inline-block h-5 w-5 align-[-2px] text-primary" aria-hidden="true" />
+          TNC Test Series
+        </h2>
         <p className="mt-2 text-muted-foreground">
           6,800+ Free Mock Tests — NORCET · AIIMS · SGPGI · BTSC · CHO
         </p>

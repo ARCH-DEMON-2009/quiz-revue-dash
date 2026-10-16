@@ -29,6 +29,7 @@ import {
   Award,
   X,
   CalendarDays,
+  Target,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -325,7 +326,8 @@ const TncTests = () => {
       <main className="container mx-auto max-w-6xl px-4 py-8">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl text-gradient">
-            🎯 {selectedGroup ? `${selectedGroup} Test Series` : browseAll ? "All Test Series" : "TNC Exams"}
+            <Target className="mr-2 inline-block h-7 w-7 align-[-3px] text-primary sm:h-8 sm:w-8" aria-hidden="true" />
+            {selectedGroup ? `${selectedGroup} Test Series` : browseAll ? "All Test Series" : "TNC Exams"}
           </h1>
           <p className="mt-2 text-muted-foreground">
             {showingExamDirectory

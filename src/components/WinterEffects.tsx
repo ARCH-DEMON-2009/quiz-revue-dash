@@ -63,11 +63,11 @@ const readPreferences = (): WinterPreferences => {
 const makeParticle = (width: number, height: number, initial = false): SnowflakeParticle => ({
   x: Math.random() * width,
   y: initial ? Math.random() * height : -8,
-  radius: 0.65 + Math.random() * 1.55,
+  radius: 1.25 + Math.random() * 1.75,
   speed: 0.32 + Math.random() * 0.7,
   drift: (Math.random() - 0.5) * 0.55,
   phase: Math.random() * Math.PI * 2,
-  opacity: 0.22 + Math.random() * 0.52,
+  opacity: 0.3 + Math.random() * 0.52,
 });
 
 const WinterEffects = () => {
