@@ -4,8 +4,8 @@
   "description": "Online examination platform offering JEE, NEET & TNC mock tests, analytics, and rankings.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1089D3",
+  "background_color": "#080D18",
+  "theme_color": "#080D18",
   "icons": [
     {
       "src": "/logo.png",

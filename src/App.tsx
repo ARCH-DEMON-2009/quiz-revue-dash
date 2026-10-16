@@ -49,6 +49,7 @@ import { MaintenanceModeGuard } from "./components/MaintenanceModeGuard";
 
 import AppErrorBoundary from "./components/AppErrorBoundary";
 import AvatarOnboardingPrompt from "./components/AvatarOnboardingPrompt";
+import WinterEffects from "./components/WinterEffects";
 
 const queryClient = new QueryClient();
 
@@ -69,7 +70,7 @@ const App = () => {
       // Configure Status Bar
       try {
         await StatusBar.setStyle({ style: Style.Dark });
-        await StatusBar.setBackgroundColor({ color: '#0f172a' }); // Deep indigo from theme
+        await StatusBar.setBackgroundColor({ color: '#080D18' });
       } catch (e) {
         console.warn('StatusBar not available', e);
       }
@@ -91,6 +92,7 @@ const App = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <WinterEffects />
         <AvatarOnboardingPrompt />
         
         <MaintenanceModeGuard>

@@ -8,6 +8,7 @@ import { usePremiumStatus } from "@/hooks/usePremiumStatus";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
+import BrandLogo from "@/components/BrandLogo";
 
 interface NavigationHeaderProps {
   showFullNav?: boolean;
@@ -69,10 +70,9 @@ const NavigationHeader = ({ showFullNav = false }: NavigationHeaderProps) => {
           className="flex items-center gap-2 cursor-pointer" 
           onClick={() => navigate("/")}
         >
-          <img 
-            src="/logo.png" 
-            alt="Test Sagar Logo" 
-            className="h-8 w-8 sm:h-10 sm:w-10 object-contain rounded-xl shadow-md"
+          <BrandLogo
+            alt="Test Sagar Logo"
+            className="brand-logo-winter h-8 w-8 rounded-xl object-contain shadow-md sm:h-10 sm:w-10"
           />
           <div className="text-lg sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Test Sagar

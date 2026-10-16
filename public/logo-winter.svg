@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" role="img" aria-labelledby="title">
+  <title id="title">Test Sagar winter logo</title>
+  <defs>
+    <filter id="ice-edge" x="-12%" y="-12%" width="124%" height="124%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2.4" result="blur" />
+      <feFlood flood-color="#8BDCF5" flood-opacity="0.5" result="ice" />
+      <feComposite in="ice" in2="blur" operator="in" result="glow" />
+      <feMerge>
+        <feMergeNode in="glow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <linearGradient id="frost-wash" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5FAFF" stop-opacity="0.24" />
+      <stop offset="0.48" stop-color="#8BDCF5" stop-opacity="0.08" />
+      <stop offset="1" stop-color="#C7D2E0" stop-opacity="0.2" />
+    </linearGradient>
+    <mask id="logo-alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="500" style="mask-type: alpha">
+      <image href="/logo.png" width="500" height="500" />
+    </mask>
+  </defs>
+  <image href="/logo.png" width="500" height="500" filter="url(#ice-edge)" />
+  <rect width="500" height="500" fill="url(#frost-wash)" mask="url(#logo-alpha)" />
+  <path d="M174 116 C185 94 201 88 215 86 C229 69 245 70 258 78 C275 71 291 78 302 92 C320 93 333 106 338 121" fill="none" stroke="#F5FAFF" stroke-linecap="round" stroke-width="4" opacity="0.46" />
+</svg>

@@ -1,5 +1,6 @@
 import { Wrench, Clock, Mail } from "lucide-react";
 import FloatingBackground from "@/components/FloatingBackground";
+import BrandLogo from "@/components/BrandLogo";
 
 const MaintenancePage = () => {
   return (
@@ -44,10 +45,9 @@ const MaintenancePage = () => {
 
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 opacity-70">
-          <img 
-            src="/logo.png" 
-            alt="Test Sagar Logo" 
-            className="h-10 w-10 object-contain rounded-xl"
+          <BrandLogo
+            alt="Test Sagar Logo"
+            className="brand-logo-winter h-10 w-10 rounded-xl object-contain"
           />
           <span className="text-xl font-bold text-gradient">Test Sagar</span>
         </div>
