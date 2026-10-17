@@ -29,8 +29,8 @@ const plans: PricingPlan[] = [
     name: "1 Week", 
     duration: "7 days", 
     durationDays: 7, 
-    price: 35,
-    perMonth: 140,
+    price: 49,
+    perMonth: 196,
     features: ["Standard Badge", "Basic Analytics", "Unlimited Mock Tests"]
   },
   { 
@@ -38,8 +38,8 @@ const plans: PricingPlan[] = [
     name: "1 Month", 
     duration: "30 days", 
     durationDays: 30, 
-    price: 110,
-    perMonth: 110,
+    price: 139,
+    perMonth: 139,
     features: ["Emerald Name Color", "Premium Badge", "TNC Mock Tests"]
   },
   { 
@@ -47,9 +47,9 @@ const plans: PricingPlan[] = [
     name: "3 Months", 
     duration: "90 days", 
     durationDays: 90, 
-    price: 170,
-    originalPrice: 330,
-    perMonth: 57,
+    price: 219,
+    originalPrice: 417,
+    perMonth: 73,
     popular: true,
     features: ["Emerald Name Color", "Premium Badge", "Detailed Analytics", "Priority Support"]
   },
@@ -58,9 +58,9 @@ const plans: PricingPlan[] = [
     name: "6 Months", 
     duration: "180 days", 
     durationDays: 180, 
-    price: 220,
-    originalPrice: 660,
-    perMonth: 37,
+    price: 299,
+    originalPrice: 834,
+    perMonth: 50,
     features: ["Blue Name Color", "Premium Badge", "Premium Avatar Frame", "Detailed Analytics"]
   },
   { 
@@ -68,9 +68,9 @@ const plans: PricingPlan[] = [
     name: "1 Year", 
     duration: "365 days", 
     durationDays: 365, 
-    price: 290,
-    originalPrice: 1320,
-    perMonth: 24,
+    price: 399,
+    originalPrice: 1668,
+    perMonth: 33,
     features: ["Golden Name Color", "VIP Badge", "Animated Avatar Frame", "Full Access to All Tests"]
   },
   { 
@@ -78,9 +78,9 @@ const plans: PricingPlan[] = [
     name: "2 Years", 
     duration: "730 days", 
     durationDays: 730, 
-    price: 420,
-    originalPrice: 2640,
-    perMonth: 18,
+    price: 599,
+    originalPrice: 3336,
+    perMonth: 25,
     features: ["Golden Name Color", "VIP Badge", "Exclusive Avatars", "Personal Mentor Support"]
   },
 ];

@@ -13,12 +13,12 @@ const corsHeaders = {
  * user cannot pay for a cheap plan and then request a longer duration.
  */
 const PLAN_CATALOG: Record<string, { days: number; price: number; name: string }> = {
-  "1week": { days: 7, price: 35, name: "1 Week" },
-  "1month": { days: 30, price: 110, name: "1 Month" },
-  "3months": { days: 90, price: 170, name: "3 Months" },
-  "6months": { days: 180, price: 220, name: "6 Months" },
-  "1year": { days: 365, price: 290, name: "1 Year" },
-  "2years": { days: 730, price: 420, name: "2 Years" },
+  "1week": { days: 7, price: 49, name: "1 Week" },
+  "1month": { days: 30, price: 139, name: "1 Month" },
+  "3months": { days: 90, price: 219, name: "3 Months" },
+  "6months": { days: 180, price: 299, name: "6 Months" },
+  "1year": { days: 365, price: 399, name: "1 Year" },
+  "2years": { days: 730, price: 599, name: "2 Years" },
 };
 
 serve(async (req) => {
