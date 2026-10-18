@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             mode: 'expiry',
-            message: 'Your TestSagar premium subscription expires in 3 days! Renew now at testsagar.com/pricing to keep your access.',
+            message: 'Your TestSagar premium subscription expires soon! Renew now at tncnursing.site/pricing to keep your access.',
           }),
         }
       );
@@ -158,9 +158,10 @@ Deno.serve(async (req) => {
         count: expiringUsers?.length || 0,
         sent: sentCount,
         failed: failedCount,
+        skipped: skippedCount,
         smsSuccess: !!smsResult?.success,
 
-        message: `Processed ${expiringUsers?.length || 0} premium users expiring in 3 days`,
+        message: `Processed ${expiringUsers?.length || 0} premium users expiring within 3 days`,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
