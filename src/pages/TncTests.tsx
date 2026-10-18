@@ -46,7 +46,7 @@ import {
 
 const LIMIT = 20;
 const SITE = "https://tncnursing.site";
-const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/09/89/d4/0989d4b9b55e6c4d33ec4a5f459e9e22.jpg";
+const EXAM_CARD_IMAGE = "https://i.pinimg.com/736x/34/71/e5/3471e5af8f38be1bc8dd839450892029.jpg";
 const FAVORITE_GROUPS_KEY = "tnc_favorite_exam_groups";
 const BROWSE_ALL_TESTS_KEY = "tnc_browse_all_tests";
 const ACHIEVEMENT_PROMO_LAST_SHOWN_KEY = "tnc_achievement_promo_last_shown";
