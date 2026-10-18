@@ -52,79 +52,80 @@ Deno.serve(async (req) => {
     console.log('Starting premium expiry notification check...');
 
 
-    // Find premium users expiring in exactly 3 days
-    const threeDaysFromNow = new Date();
-    threeDaysFromNow.setDate(threeDaysFromNow.getDate() + 3);
-    const windowStart = new Date(threeDaysFromNow);
-    windowStart.setHours(0, 0, 0, 0);
-    const windowEnd = new Date(threeDaysFromNow);
-    windowEnd.setHours(23, 59, 59, 999);
+    // Active premium users whose plan ends within the next 3 days.
+    const now = new Date();
+    const windowEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const CONNECTOR_KEY = Deno.env.get('RESEND_API_KEY');
 
     const { data: expiringUsers, error } = await supabase
       .from('premium_users')
       .select('user_id, email, name, expiry_date, plan_months')
       .eq('status', 'active')
-      .gte('expiry_date', windowStart.toISOString())
+      .gte('expiry_date', now.toISOString())
       .lte('expiry_date', windowEnd.toISOString());
 
-    if (error) {
-      console.error('Error fetching expiring premium users:', error);
-      throw error;
-    }
+    if (error) throw error;
 
-    console.log(`Found ${expiringUsers?.length || 0} premium users expiring in 3 days`);
-
-    // Aggregate counters only — never per-user contact details in the response.
     let sentCount = 0;
     let failedCount = 0;
-
+    let skippedCount = 0;
 
     for (const user of expiringUsers || []) {
+      if (!user.email) continue;
+      // One reminder per user per plan period: skip if reminded in the last 4 days.
+      const since = new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString();
+      const { data: prior } = await supabase.from('email_logs').select('id')
+        .eq('recipient', user.email).eq('email_type', 'expiry_reminder')
+        .in('status', ['sent', 'delivered', 'queued', 'delayed']).gte('created_at', since).limit(1);
+      if (prior && prior.length) { skippedCount++; continue; }
+
       const expiryDate = new Date(user.expiry_date);
-      const formattedExpiry = expiryDate.toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      });
+      const formattedExpiry = expiryDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
+      const daysLeft = Math.max(1, Math.ceil((expiryDate.getTime() - now.getTime()) / 86400000));
+      const subject = `Your Test Sagar Premium ends in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`;
 
       const emailHtml = renderEmail({
-        tone: "warning", badge: "Renewal reminder", title: "⏰ Premium expires in 3 days",
-        subtitle: `Hi ${esc(user.name || "Student")}, keep your preparation streak going.`,
-        body: `${callout(`Your Premium ends on <b>${esc(formattedExpiry)}</b>`, "warning")}
-          <p style="margin:0 0 4px;color:#f1f5f9;font-weight:700">After expiry you'll lose</p>
-          ${list(["Unlimited test attempts", "Full TNC Nursing test series", "Detailed analytics", "Ad-free, verification-free practice"], "✕", "#f87171")}
+        tone: "warning", badge: "Renewal reminder",
+        title: `Your Premium ends in ${daysLeft} day${daysLeft > 1 ? 's' : ''}`,
+        preheader: `Your Premium plan ends on ${formattedExpiry}. Renew to keep your access.`,
+        subtitle: `Hi ${esc(user.name || "Student")}, a quick note so your practice isn't interrupted.`,
+        body: `${callout(`Your Premium plan ends on <b>${esc(formattedExpiry)}</b>.`, "warning", "Plan expiring soon")}
+          <p style="margin:0 0 4px;color:#332f28;font-family:Georgia,serif;font-size:17px">Renew to keep</p>
+          ${list(["Unlimited test attempts", "The full TNC Nursing test series", "Detailed analytics and subject-wise reports", "Practice without ads or verification"])}
           ${button(`${SITE}/pricing`, "Renew Premium")}`,
       });
 
+      const { data: logRow } = await supabase.from('email_logs')
+        .insert({ recipient: user.email, subject, email_type: 'expiry_reminder', payload: { html: emailHtml }, status: 'queued' })
+        .select('id').single();
+
       try {
-        const response = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-          },
-          body: JSON.stringify({
-            from: 'Test Sagar <team@tncnursing.site>',
-            to: [user.email],
-            subject: '⏰ Your TestSagar Premium expires in 3 days — Renew Now!',
-            html: emailHtml,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error(`Failed to send expiry email for user ${user.user_id}:`, data);
-          failedCount++;
-        } else {
-          console.log(`Expiry email sent for user ${user.user_id}`);
-          sentCount++;
-        }
+        const response = LOVABLE_API_KEY && CONNECTOR_KEY
+          ? await fetch('https://connector-gateway.lovable.dev/resend/emails', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${LOVABLE_API_KEY}`, 'X-Connection-Api-Key': CONNECTOR_KEY },
+              body: JSON.stringify({ from: 'Test Sagar <team@tncnursing.site>', to: [user.email], subject, html: emailHtml }),
+            })
+          : await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${RESEND_API_KEY}` },
+              body: JSON.stringify({ from: 'Test Sagar <team@tncnursing.site>', to: [user.email], subject, html: emailHtml }),
+            });
+        const text = await response.text();
+        let resendId: string | null = null;
+        try { resendId = JSON.parse(text)?.id ?? null; } catch { /* ignore */ }
+        if (logRow?.id) await supabase.from('email_logs').update({
+          status: response.ok ? 'sent' : 'failed', resend_id: resendId, error: response.ok ? null : text.slice(0, 1000),
+          attempts: 1, last_attempt_at: new Date().toISOString(),
+        }).eq('id', logRow.id);
+        if (response.ok) sentCount++; else failedCount++;
       } catch (emailError: any) {
-        console.error(`Error sending expiry email for user ${user.user_id}:`, emailError);
+        if (logRow?.id) await supabase.from('email_logs').update({ status: 'failed', error: String(emailError?.message ?? emailError), attempts: 1 }).eq('id', logRow.id);
         failedCount++;
       }
     }
+
 
 
     // Also trigger SMS notifications for expiring users
@@ -140,7 +141,7 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             mode: 'expiry',
-            message: 'Your TestSagar premium subscription expires in 3 days! Renew now at testsagar.com/pricing to keep your access.',
+            message: 'Your TestSagar premium subscription expires soon! Renew now at tncnursing.site/pricing to keep your access.',
           }),
         }
       );
@@ -157,9 +158,10 @@ Deno.serve(async (req) => {
         count: expiringUsers?.length || 0,
         sent: sentCount,
         failed: failedCount,
+        skipped: skippedCount,
         smsSuccess: !!smsResult?.success,
 
-        message: `Processed ${expiringUsers?.length || 0} premium users expiring in 3 days`,
+        message: `Processed ${expiringUsers?.length || 0} premium users expiring within 3 days`,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
