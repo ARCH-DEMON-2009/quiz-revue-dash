@@ -7,3 +7,5 @@
 - [x] Redesign public landing with clear TNC entry and useful study content
 - [x] Review Google's publisher guidance and address verified on-site gaps
 - [x] Verify landing navigation, small-screen layout and current errors
+- [x] Replace TNC exam card picture with the new image
+- [x] Point every support bot link to https://t.me/Tncnursingbot
