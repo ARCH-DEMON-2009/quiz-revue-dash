@@ -23,6 +23,9 @@ interface EmailLog {
 
 const TYPE_LABEL: Record<string, string> = {
   premium_purchase: "Purchase",
+  expiry_reminder: "Expiry reminder",
+  broadcast: "Broadcast",
+  broadcast_test: "Broadcast test",
   admin_grant: "Admin grant",
   bypass_warning: "Bypass warning",
 };
