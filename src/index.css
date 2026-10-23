@@ -884,3 +884,26 @@ html[data-winter-motion="off"] .winter-ambient::after {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Anti-extraction: no selection / long-press callouts on protected pages */
+html.anti-extract body, html.anti-extract body * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+html.anti-extract input, html.anti-extract textarea, html.anti-extract [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+html.anti-extract img { -webkit-user-drag: none; }
+@media print {
+  html.anti-extract body * { visibility: hidden !important; }
+  html.anti-extract body::after {
+    content: "Printing or exporting Test Sagar questions is prohibited.";
+    visibility: visible;
+    display: block;
+    text-align: center;
+    margin-top: 200px;
+    font-size: 22px;
+  }
+}

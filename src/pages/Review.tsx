@@ -11,6 +11,7 @@ import { CheckCircle2, XCircle, Circle, ChevronLeft, Info } from "lucide-react";
 import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import { cleanHtml } from "@/lib/sanitizeHtml";
+import { useAntiExtraction } from "@/hooks/useAntiExtraction";
 
 
 interface Question {
@@ -32,6 +33,7 @@ interface UserAnswer {
 }
 
 const Review = () => {
+  useAntiExtraction();
   const { resultId } = useParams();
   const navigate = useNavigate();
   const [questions, setQuestions] = useState<Question[]>([]);
