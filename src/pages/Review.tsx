@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import NavigationHeader from "@/components/NavigationHeader";
 import { cleanHtml } from "@/lib/sanitizeHtml";
 import { useAntiExtraction } from "@/hooks/useAntiExtraction";
-import ForensicWatermark from "@/components/ForensicWatermark";
 
 
 interface Question {
@@ -34,7 +33,7 @@ interface UserAnswer {
 }
 
 const Review = () => {
-  const protectedView = useAntiExtraction();
+  useAntiExtraction();
   const { resultId } = useParams();
   const navigate = useNavigate();
   const [questions, setQuestions] = useState<Question[]>([]);

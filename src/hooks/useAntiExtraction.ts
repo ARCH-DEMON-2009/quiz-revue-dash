@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useAdminBadgeConfig } from "@/hooks/useAdminBadgeConfig";
+import { supabase } from "@/integrations/supabase/client";
 
 const NOTICE = "Content © Test Sagar (tncnursing.site). Copying or sharing questions is prohibited.";
 
@@ -40,6 +41,23 @@ export function useAntiExtraction(enabled = true) {
     document.addEventListener("cut", onCopy);
     document.addEventListener("keydown", onKey);
     document.documentElement.classList.add("anti-extract");
+
+    // Forensic watermark: faint tiled student identity so screenshots/photos are traceable.
+    const mark = document.createElement("div");
+    mark.setAttribute("aria-hidden", "true");
+    mark.style.cssText = "position:fixed;inset:0;z-index:60;pointer-events:none;background-repeat:repeat;";
+    const paint = (label: string) => {
+      const safe = label.replace(/[<>&'"]/g, "");
+      const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='220'><text x='10' y='120' transform='rotate(-24 210 110)' font-family='sans-serif' font-size='15' fill='rgb(120,120,140)' fill-opacity='0.14'>${safe}</text></svg>`;
+      mark.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+    };
+    paint("Test Sagar • tncnursing.site");
+    document.body.appendChild(mark);
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      paint(`Test Sagar • ${u.email || u.phone || "student"} • ${u.id.slice(0, 6)} • ${new Date().toLocaleDateString("en-IN")}`);
+    });
     return () => {
       document.removeEventListener("contextmenu", prevent);
       document.removeEventListener("selectstart", prevent);
@@ -48,6 +66,7 @@ export function useAntiExtraction(enabled = true) {
       document.removeEventListener("cut", onCopy);
       document.removeEventListener("keydown", onKey);
       document.documentElement.classList.remove("anti-extract");
+      mark.remove();
     };
   }, [active]);
 
