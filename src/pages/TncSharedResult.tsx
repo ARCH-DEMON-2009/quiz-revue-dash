@@ -30,6 +30,8 @@ import { cleanHtml, stripHtml } from "@/lib/sanitizeHtml";
 import { downloadTncResultPdf } from "@/lib/tncPdf";
 import TncQuestionImage from "@/components/TncQuestionImage";
 import TncExplanation from "@/components/TncExplanation";
+import { useAntiExtraction } from "@/hooks/useAntiExtraction";
+import ForensicWatermark from "@/components/ForensicWatermark";
 
 const OPTS = ["A", "B", "C", "D"] as const;
 const SITE = "https://tncnursing.site";
@@ -65,6 +67,7 @@ function grade(pct: number) {
 }
 
 const TncSharedResult = () => {
+  const protectedView = useAntiExtraction();
   const { examId, attemptId } = useParams<{ examId: string; attemptId: string }>();
   const navigate = useNavigate();
 

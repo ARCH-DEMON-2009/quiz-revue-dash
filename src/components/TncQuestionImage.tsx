@@ -80,13 +80,15 @@ const TncQuestionImage = ({ url }: { url: string }) => {
   }
 
   return (
-    <div className="my-3">
+    <div className="my-3 relative inline-block" onContextMenu={(e) => e.preventDefault()}>
       <img
         src={src}
         alt="Question illustration"
         loading="lazy"
-        className="max-h-72 rounded-lg border object-contain"
+        draggable={false}
+        className="max-h-72 rounded-lg border object-contain pointer-events-none select-none"
       />
+      <div className="absolute inset-0" aria-hidden="true" />
     </div>
   );
 };

@@ -65,6 +65,8 @@ import { withTimeout } from "@/lib/withTimeout";
 import { BookOpen, Moon, Volume2, VolumeX } from "lucide-react";
 import { celebrate, getPaperMode, getSoundOn, playMove, playSubmit, playTap, setPaperMode, setSoundOn } from "@/lib/quizFx";
 import { renderStoryCard } from "@/lib/storyCard";
+import { useAntiExtraction } from "@/hooks/useAntiExtraction";
+import ForensicWatermark from "@/components/ForensicWatermark";
 
 type Phase = "instructions" | "quiz" | "results";
 
@@ -132,6 +134,7 @@ function grade(pct: number) {
 
 
 const TncQuiz = () => {
+  const protectedView = useAntiExtraction();
   const { examId } = useParams<{ examId: string }>();
   const navigate = useNavigate();
 
